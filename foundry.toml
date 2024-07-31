@@ -1,0 +1,17 @@
+[profile.default]
+src = "src"
+out = "out"
+libs = ["lib"]
+ffi = true
+via_ir = false
+evm_version = "cancun"
+remappings = [
+    '@oz-upgradeable/=lib/openzeppelin-contracts-upgradeable/contracts/',
+    '@oz/=lib/openzeppelin-contracts/contracts/',
+    "forge-std/=lib/forge-std/src",
+]
+
+[rpc_endpoints]
+arbitrum = "https://arb1.arbitrum.io/rpc"
+
+# See more config options https://github.com/foundry-rs/foundry/tree/master/config

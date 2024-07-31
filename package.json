@@ -1,0 +1,15 @@
+{
+  "name": "kopio-lib",
+  "module": "utils/ffi.ts",
+  "type": "module",
+  "devDependencies": {
+    "@trezor/connect": "^9.2.4",
+    "@types/bun": "latest",
+    "eth-provider": "^0.13.6",
+    "glob": "^10.4.2",
+    "viem": "^2.16.0"
+  },
+  "peerDependencies": {
+    "typescript": "^5.0.0"
+  }
+}
