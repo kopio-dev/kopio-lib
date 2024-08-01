@@ -2,7 +2,7 @@
 // solhint-disable
 
 pragma solidity ^0.8.0;
-import {IERC165} from "../core/IERC165.sol";
+import {IERC165} from "../vendor/IERC165.sol";
 
 // node_modules/@openzeppelin/contracts-upgradeable/access/IAccessControlUpgradeable.sol
 

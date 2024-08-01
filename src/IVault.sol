@@ -1,24 +1,10 @@
-// SPDX-License-Identifier: MIT
+// SPDX-License-Identifier: BUSL-1.1
+// solhint-disable
 pragma solidity ^0.8.0;
-import {IERC20} from "../token/IERC20.sol";
-import {IAggregatorV3} from "../vendor/IAggregatorV3.sol";
 
-/**
- * @notice Vault configuration struct
- * @param seqUptimeFeed The feed address for the sequencer uptime
- * @param seqGracePeriod The grace period time for the sequencer
- * @param governance The governance address
- * @param feeRecipient The fee recipient address
- * @param oracleDecimals The oracle decimals
- */
-struct VaultConfig {
-    address seqUptimeFeed;
-    uint96 seqGracePeriod;
-    address governance;
-    address pendingGovernance;
-    address feeRecipient;
-    uint8 oracleDecimals;
-}
+import {IERC20Permit} from "./token/IERC20Permit.sol";
+import {IERC20} from "./token/IERC20.sol";
+import {IAggregatorV3} from "./vendor/IAggregatorV3.sol";
 
 /**
  * @notice Asset struct for deposit assets in contract
@@ -41,11 +27,36 @@ struct VaultAsset {
     bool enabled;
 }
 
-interface IKopioVault is IERC20 {
+/**
+ * @notice Vault configuration struct
+ * @param sequencerUptimeFeed The feed address for the sequencer uptime
+ * @param sequencerGracePeriodTime The grace period time for the sequencer
+ * @param governance The governance address
+ * @param feeRecipient The fee recipient address
+ * @param oracleDecimals The oracle decimals
+ */
+struct VaultConfiguration {
+    address sequencerUptimeFeed;
+    uint96 sequencerGracePeriodTime;
+    address governance;
+    address pendingGovernance;
+    address feeRecipient;
+    uint8 oracleDecimals;
+}
+
+interface VEvent {
     /* -------------------------------------------------------------------------- */
     /*                                   Events                                   */
     /* -------------------------------------------------------------------------- */
 
+    /**
+     * @notice Emitted when a deposit/mint is made
+     * @param caller Caller of the deposit/mint
+     * @param receiver Receiver of the minted assets
+     * @param asset Asset that was deposited/minted
+     * @param assetsIn Amount of assets deposited
+     * @param sharesOut Amount of shares minted
+     */
     event Deposit(
         address indexed caller,
         address indexed receiver,
@@ -54,6 +65,14 @@ interface IKopioVault is IERC20 {
         uint256 sharesOut
     );
 
+    /**
+     * @notice Emitted when a new oracle is set for an asset
+     * @param asset Asset that was updated
+     * @param feed Feed that was set
+     * @param staletime Time in seconds for the feed to be considered stale
+     * @param price Price at the time of setting the feed
+     * @param timestamp Timestamp of the update
+     */
     event OracleSet(
         address indexed asset,
         address indexed feed,
@@ -62,6 +81,16 @@ interface IKopioVault is IERC20 {
         uint256 timestamp
     );
 
+    /**
+     * @notice Emitted when a new asset is added to the shares contract
+     * @param asset Address of the asset
+     * @param feed Price feed of the asset
+     * @param symbol Asset symbol
+     * @param staletime Time in seconds for the feed to be considered stale
+     * @param price Price of the asset
+     * @param depositLimit Deposit limit of the asset
+     * @param timestamp Timestamp of the addition
+     */
     event AssetAdded(
         address indexed asset,
         address indexed feed,
@@ -72,14 +101,33 @@ interface IKopioVault is IERC20 {
         uint256 timestamp
     );
 
+    /**
+     * @notice Emitted when a previously existing asset is removed from the shares contract
+     * @param asset Asset that was removed
+     * @param timestamp Timestamp of the removal
+     */
     event AssetRemoved(address indexed asset, uint256 timestamp);
-
+    /**
+     * @notice Emitted when the enabled status for asset is changed
+     * @param asset Asset that was removed
+     * @param enabled Enabled status set
+     * @param timestamp Timestamp of the removal
+     */
     event AssetEnabledChange(
         address indexed asset,
         bool enabled,
         uint256 timestamp
     );
 
+    /**
+     * @notice Emitted when a withdraw/redeem is made
+     * @param caller Caller of the withdraw/redeem
+     * @param receiver Receiver of the withdrawn assets
+     * @param asset Asset that was withdrawn/redeemed
+     * @param owner Owner of the withdrawn assets
+     * @param assetsOut Amount of assets withdrawn
+     * @param sharesIn Amount of shares redeemed
+     */
     event Withdraw(
         address indexed caller,
         address indexed receiver,
@@ -88,6 +136,12 @@ interface IKopioVault is IERC20 {
         uint256 assetsOut,
         uint256 sharesIn
     );
+}
+
+interface IVault is IERC20Permit, VEvent {
+    /* -------------------------------------------------------------------------- */
+    /*                                Functionality                               */
+    /* -------------------------------------------------------------------------- */
 
     /**
      * @notice This function deposits `assetsIn` of `asset`, regardless of the amount of vault shares minted.
@@ -165,7 +219,10 @@ interface IKopioVault is IERC20 {
      * @notice Returns the current vault configuration
      * @return config Vault configuration struct
      */
-    function getConfig() external view returns (VaultConfig memory config);
+    function getConfig()
+        external
+        view
+        returns (VaultConfiguration memory config);
 
     /**
      * @notice Returns the total value of all assets in the shares contract in USD WAD precision.
@@ -291,6 +348,8 @@ interface IKopioVault is IERC20 {
     /*                                    Admin                                   */
     /* -------------------------------------------------------------------------- */
 
+    function setBaseRate(uint256 newBaseRate) external;
+
     /**
      * @notice Adds a new asset to the vault
      * @param assetConfig Asset to add
@@ -365,4 +424,8 @@ interface IKopioVault is IERC20 {
      * @param newWithdrawFee Fee to set
      */
     function setWithdrawFee(address assetAddr, uint16 newWithdrawFee) external;
+
+    /* -------------------------------------------------------------------------- */
+    /*                                   Errors                                   */
+    /* -------------------------------------------------------------------------- */
 }

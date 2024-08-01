@@ -2,11 +2,10 @@
 pragma solidity ^0.8.0;
 import {IData} from "../core/IData.sol";
 import {Log} from "./VmLibs.s.sol";
-import {Asset, Oracle, RawPrice} from "../core/types/Data.sol";
+import {IKopioProtocol, Asset, Oracle, RawPrice} from "../IKopioProtocol.sol";
 import {IERC20} from "../token/IERC20.sol";
 import {PythView} from "../vendor/Pyth.sol";
 import {ArbDeploy} from "../info/ArbDeploy.sol";
-import {IKopioProtocol} from "../core/IKopioProtocol.sol";
 import {Utils} from "../utils/Libs.sol";
 
 // solhint-disable
@@ -26,13 +25,13 @@ abstract contract Inspector is ArbDeploy {
         Log.sr();
         account.clg("Account");
         Log.hr();
-        acc.minter.totals.cr.plg("Minter CR");
-        acc.minter.totals.valColl.dlg("Minter Collateral", 8);
-        acc.minter.totals.valDebt.dlg("Minter Debt", 8);
+        acc.icdp.totals.cr.plg("ICDP CR");
+        acc.icdp.totals.valColl.dlg("ICDP Collateral", 8);
+        acc.icdp.totals.valDebt.dlg("ICDP Debt", 8);
 
         Log.hr();
-        _logAccMinter(account, pythView);
-        uint256 totalVal = _logAccSCDPDeposits(acc) + acc.minter.totals.valColl;
+        _logAccICDP(account, pythView);
+        uint256 totalVal = _logAccSCDPDeposits(acc) + acc.icdp.totals.valColl;
         Log.sr();
         _logAccBals(account, pythView);
         Log.sr();
@@ -58,24 +57,24 @@ abstract contract Inspector is ArbDeploy {
         }
     }
 
-    function _logAccMinter(
+    function _logAccICDP(
         address account,
         PythView memory pythView
     ) internal view {
         IData.A memory acc = data.getAccount(pythView, account, extTokens);
-        for (uint256 i; i < acc.minter.deposits.length; i++) {
-            acc.minter.deposits[i].symbol.clg("Deposits");
-            acc.minter.deposits[i].amount.dlg(
+        for (uint256 i; i < acc.icdp.deposits.length; i++) {
+            acc.icdp.deposits[i].symbol.clg("Deposits");
+            acc.icdp.deposits[i].amount.dlg(
                 "Amount",
-                acc.minter.deposits[i].config.decimals
+                acc.icdp.deposits[i].config.decimals
             );
-            acc.minter.deposits[i].val.dlg("Value", 8);
+            acc.icdp.deposits[i].val.dlg("Value", 8);
         }
 
-        for (uint256 i; i < acc.minter.debts.length; i++) {
-            acc.minter.debts[i].symbol.clg("Debt");
-            acc.minter.debts[i].amount.dlg("Amount");
-            acc.minter.debts[i].val.dlg("Value", 8);
+        for (uint256 i; i < acc.icdp.debts.length; i++) {
+            acc.icdp.debts[i].symbol.clg("Debt");
+            acc.icdp.debts[i].amount.dlg("Amount");
+            acc.icdp.debts[i].val.dlg("Value", 8);
         }
     }
 
@@ -166,10 +165,10 @@ abstract contract Inspector is ArbDeploy {
             ((price1 * 1e8) / price2).dlg("Ratio", 8);
         }
         ("Types").h2();
-        config.isMinterMintable.clg("Minter Mintable");
-        config.isMinterCollateral.clg("Minter Collateral");
+        config.isKopio.clg("ICDP Mintable");
+        config.isCollateral.clg("ICDP Collateral");
         config.isSwapMintable.clg("SCDP Swappable");
-        config.isSharedCollateral.clg("SCDP Depositable");
+        config.isGlobalDepositable.clg("SCDP Depositable");
         config.isCoverAsset.clg("SCDP Cover");
         peekSCDPAsset(asset);
         config.dFactor.plg("dFactor");
@@ -177,17 +176,17 @@ abstract contract Inspector is ArbDeploy {
         Log.hr();
         config.depositLimitSCDP.dlg("SCDP Deposit Limit", config.decimals);
         protocol.getValue(asset, config.depositLimitSCDP).dlg("Value", 8);
-        config.maxDebtMinter.dlg("Minter Debt Limit", config.decimals);
-        protocol.getValue(asset, config.maxDebtMinter).dlg("Value", 8);
-        config.maxDebtSCDP.dlg("SCDP Debt Limit", config.decimals);
-        protocol.getValue(asset, config.maxDebtSCDP).dlg("Value", 8);
+        config.mintLimit.dlg("ICDP Mint Limit", config.decimals);
+        protocol.getValue(asset, config.mintLimit).dlg("Value", 8);
+        config.mintLimitSCDP.dlg("SCDP Mint Limit", config.decimals);
+        protocol.getValue(asset, config.mintLimitSCDP).dlg("Value", 8);
         ("Config").h2();
         config.liqIncentiveSCDP.plg("SCDP Liquidation Incentive");
-        config.liqIncentive.plg("Minter Liquidation Incentive");
-        config.openFee.plg("Minter Open Fee");
-        config.closeFee.plg("Minter Close Fee");
-        config.swapInFeeSCDP.plg("SCDP Swap In Fee");
-        config.swapOutFeeSCDP.plg("SCDP Swap Out Fee");
+        config.liqIncentive.plg("ICDP Liquidation Incentive");
+        config.openFee.plg("ICDP Open Fee");
+        config.closeFee.plg("ICDP Close Fee");
+        config.swapInFee.plg("SCDP Swap In Fee");
+        config.swapOutFee.plg("SCDP Swap Out Fee");
         config.protocolFeeShareSCDP.plg("SCDP Protocol Fee");
     }
 

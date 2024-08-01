@@ -4,17 +4,14 @@ pragma solidity ^0.8.0;
 
 import {ArbDeployAddr} from "./ArbDeployAddr.sol";
 import {ILZ1155} from "../token/ILZ1155.sol";
-import {IONE} from "../core/IONE.sol";
-import {IKopio, IFixedKopio} from "../core/IKopio.sol";
-import {IKopioVault} from "../core/IKopioVault.sol";
-import {IPyth} from "../vendor/Pyth.sol";
-import {IMarketStatus} from "../core/IMarketStatus.sol";
 import {IDeploymentFactory} from "../core/IDeploymentFactory.sol";
 import {ISwapRouter} from "../vendor/ISwapRouter.sol";
 import {IQuoterV2} from "../vendor/IQuoterV2.sol";
+import {IPyth, IONE, IKopio, IMarketStatus, IKopioShare} from "../IKopioProtocol.sol";
+import {IVault} from "../IVault.sol";
 
 abstract contract ArbDeploy is ArbDeployAddr {
-    IKopioVault constant vault = IKopioVault(vaultAddr);
+    IVault constant vault = IVault(vaultAddr);
     IONE constant one = IONE(kissAddr);
     IDeploymentFactory constant factory = IDeploymentFactory(factoryAddr);
 
@@ -28,15 +25,15 @@ abstract contract ArbDeploy is ArbDeployAddr {
     IKopio constant kXAG = IKopio(kXAGAddr);
     IKopio constant kDOGE = IKopio(kDOGEAddr);
 
-    IFixedKopio constant fkETH = IFixedKopio(fkETHAddr);
-    IFixedKopio constant fkBTC = IFixedKopio(fkBTCAddr);
-    IFixedKopio constant fkSOL = IFixedKopio(fkSOLAddr);
-    IFixedKopio constant fkEUR = IFixedKopio(fkEURAddr);
-    IFixedKopio constant fkJPY = IFixedKopio(fkJPYAddr);
-    IFixedKopio constant fkGBP = IFixedKopio(fkGBPAddr);
-    IFixedKopio constant fkXAU = IFixedKopio(fkXAUAddr);
-    IFixedKopio constant fkXAG = IFixedKopio(fkXAGAddr);
-    IFixedKopio constant fkDOGE = IFixedKopio(fkDOGEAddr);
+    IKopioShare constant fkETH = IKopioShare(fkETHAddr);
+    IKopioShare constant fkBTC = IKopioShare(fkBTCAddr);
+    IKopioShare constant fkSOL = IKopioShare(fkSOLAddr);
+    IKopioShare constant fkEUR = IKopioShare(fkEURAddr);
+    IKopioShare constant fkJPY = IKopioShare(fkJPYAddr);
+    IKopioShare constant fkGBP = IKopioShare(fkGBPAddr);
+    IKopioShare constant fkXAU = IKopioShare(fkXAUAddr);
+    IKopioShare constant fkXAG = IKopioShare(fkXAGAddr);
+    IKopioShare constant fkDOGE = IKopioShare(fkDOGEAddr);
 
     IPyth constant pythEP = IPyth(pythAddr);
     IMarketStatus constant marketStatus = IMarketStatus(marketStatusAddr);

@@ -392,7 +392,7 @@ library Utils {
 
 library Meta {
     using Utils for string;
-    struct KopioMetadata {
+    struct Result {
         string name;
         string symbol;
         string fkName;
@@ -403,7 +403,7 @@ library Meta {
 
     struct Salts {
         bytes32 kopio;
-        bytes32 fixedKopio;
+        bytes32 share;
     }
 
     struct SaltResult {
@@ -413,15 +413,15 @@ library Meta {
         address fkImpl;
     }
 
-    bytes32 constant SALT_VERSION = "1";
-    bytes32 constant ONE_SALT = bytes32("ONE");
-    bytes32 constant VAULT_SALT = bytes32("vONE");
+    bytes32 constant SALT_ID = "_1";
+    bytes32 constant ONE_SALT = "ONE";
+    bytes32 constant VAULT_SALT = "vONE";
 
-    string constant NAME_PREFIX = "Kopio ";
-    string constant KISS_PREFIX = "Kopio ";
+    string constant KOPIO_NAME_PREFIX = "Kopio ";
+    string constant ONE_PREFIX = "Kopio ";
 
-    string constant FIXED_NAME_PREFIX = "Fixed Kopio ";
-    string constant FIXED_SYMBOL_PREFIX = "fk";
+    string constant SHARE_NAME_PREFIX = "Kopio Share: ";
+    string constant SHARE_SYMBOL_PREFIX = "s";
 
     string constant VAULT_NAME_PREFIX = "Kopio Vault: ";
     string constant VAULT_SYMBOL_PREFIX = "kv";
@@ -430,20 +430,20 @@ library Meta {
         string memory name,
         string memory symbol
     ) internal pure returns (string memory, string memory) {
-        return (NAME_PREFIX.cc(name), symbol);
+        return (KOPIO_NAME_PREFIX.cc(name), symbol);
     }
 
     function fKopioMeta(
         string memory name,
         string memory symbol
     ) internal pure returns (string memory, string memory) {
-        return (FIXED_NAME_PREFIX.cc(name), FIXED_SYMBOL_PREFIX.cc(symbol));
+        return (SHARE_NAME_PREFIX.cc(name), SHARE_SYMBOL_PREFIX.cc(symbol));
     }
 
     function getSalts(
         string memory symbol
     ) internal pure returns (Salts memory) {
-        return getSalts(symbol, FIXED_SYMBOL_PREFIX.cc(symbol));
+        return getSalts(symbol, SHARE_SYMBOL_PREFIX.cc(symbol));
     }
 
     function pathV3(
@@ -474,19 +474,19 @@ library Meta {
         (, _data) = factory.staticcall(bytes.concat(sig, salts.kopio));
         (addrs.proxy, addrs.impl) = abi.decode(_data, (address, address));
 
-        (, _data) = factory.staticcall(bytes.concat(sig, salts.fixedKopio));
+        (, _data) = factory.staticcall(bytes.concat(sig, salts.share));
         (addrs.fkProxy, addrs.fkImpl) = abi.decode(_data, (address, address));
     }
 
     function getSalts(
         string memory ksymbol,
         string memory fsymbol
-    ) internal pure returns (Salts memory addrs) {
-        addrs.kopio = bytes32(
-            bytes.concat(bytes(ksymbol), bytes(fsymbol), SALT_VERSION)
+    ) internal pure returns (Salts memory res) {
+        res.kopio = bytes32(
+            bytes.concat(bytes(ksymbol), bytes(fsymbol), SALT_ID)
         );
-        addrs.fixedKopio = bytes32(
-            bytes.concat(bytes(fsymbol), bytes(ksymbol), SALT_VERSION)
+        res.share = bytes32(
+            bytes.concat(bytes(fsymbol), bytes(ksymbol), SALT_ID)
         );
     }
 }

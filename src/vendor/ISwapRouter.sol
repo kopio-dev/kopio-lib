@@ -10,7 +10,7 @@ interface ISwapRouter is IUniswapV3SwapCallback {
         uint24 fee;
         address recipient;
         uint256 amountIn;
-        uint256 amountOutMinimum;
+        uint256 minOut;
         uint160 sqrtPriceLimitX96;
     }
 
@@ -22,7 +22,7 @@ interface ISwapRouter is IUniswapV3SwapCallback {
         bytes path;
         address recipient;
         uint256 amountIn;
-        uint256 amountOutMinimum;
+        uint256 minOut;
     }
 
     function exactInput(
@@ -35,7 +35,7 @@ interface ISwapRouter is IUniswapV3SwapCallback {
         uint24 fee;
         address recipient;
         uint256 amountOut;
-        uint256 amountInMaximum;
+        uint256 maxIn;
         uint160 sqrtPriceLimitX96;
     }
 
@@ -47,7 +47,7 @@ interface ISwapRouter is IUniswapV3SwapCallback {
         bytes path;
         address recipient;
         uint256 amountOut;
-        uint256 amountInMaximum;
+        uint256 maxIn;
     }
 
     function exactOutput(

@@ -3,12 +3,11 @@ pragma solidity ^0.8.0;
 
 import {ERC20} from "./ERC20.sol";
 import {SafeTransfer} from "./SafeTransfer.sol";
+import {__revert} from "../utils/Funcs.sol";
+import {IWETHBase} from "./IWETH9.sol";
 
-contract WETH9 is ERC20("Wrapped Ether", "WETH", 18) {
+contract WETH9 is ERC20("Wrapped Ether", "WETH", 18), IWETHBase {
     using SafeTransfer for address payable;
-
-    event Deposit(address indexed dst, uint256 wad);
-    event Withdrawal(address indexed src, uint256 wad);
 
     function deposit() public payable virtual {
         _mint(msg.sender, msg.value);
@@ -26,6 +25,35 @@ contract WETH9 is ERC20("Wrapped Ether", "WETH", 18) {
 
     function totalSupply() public view override returns (uint256) {
         return address(this).balance;
+    }
+    function depositTo(address to) external payable virtual {
+        _mint(to, msg.value);
+    }
+    function withdrawTo(address to) external payable virtual {
+        _burn(msg.sender, msg.value);
+        (bool success, bytes memory err) = payable(to).call{value: msg.value}(
+            ""
+        );
+        if (!success) __revert(err);
+    }
+
+    function transferAndCall(
+        address to,
+        uint256 amount,
+        bytes memory data
+    ) external returns (bool) {
+        transfer(to, amount);
+
+        (bool success, bytes memory err) = to.call(
+            abi.encodeWithSignature(
+                "onTokenTransfer(address,uint256,bytes)",
+                msg.sender,
+                amount,
+                data
+            )
+        );
+        if (!success) __revert(err);
+        return true;
     }
 
     receive() external payable virtual {

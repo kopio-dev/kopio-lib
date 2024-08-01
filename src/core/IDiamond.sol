@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 // solhint-disable
 pragma solidity ^0.8.0;
-import {IERC165} from "./IERC165.sol";
+import {IERC165} from "../vendor/IERC165.sol";
 
 struct Facet {
     address facetAddress;

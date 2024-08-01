@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
-import {VaultAsset} from "./IKopioVault.sol";
-import {View} from "./types/Views.sol";
+import {VaultAsset} from "../IVault.sol";
+import {View} from "../IKopioProtocol.sol";
 import {PythView} from "../vendor/Pyth.sol";
 
 interface IData {
@@ -52,7 +52,7 @@ interface IData {
 
     struct G {
         View.SCDP scdp;
-        View.Minter minter;
+        View.ICDP icdp;
         V vault;
         View.AssetView[] assets;
         Tkn[] tokens;
@@ -90,7 +90,7 @@ interface IData {
     struct A {
         address addr;
         uint256 chainId;
-        View.MAccount minter;
+        View.MAccount icdp;
         View.SAccount scdp;
         C[] collections;
         Tkn[] tokens;

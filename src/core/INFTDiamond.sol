@@ -3,8 +3,8 @@
 
 pragma solidity ^0.8.0;
 import {IDiamond} from "./IDiamond.sol";
-import {IERC165} from "./IERC165.sol";
-import {IERC173} from "./IERC173.sol";
+import {IERC165} from "../vendor/IERC165.sol";
+import {IERC173} from "../vendor/IERC173.sol";
 
 // lib/solidstate/contracts/access/access_control/IAccessControlInternal.sol
 

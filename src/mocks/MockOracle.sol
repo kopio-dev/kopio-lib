@@ -4,7 +4,7 @@ pragma solidity ^0.8.0;
 import {IAggregatorV3} from "../vendor/IAggregatorV3.sol";
 
 contract MockOracle is IAggregatorV3 {
-    uint8 public decimals = 8;
+    uint8 public immutable decimals = 8;
     string public override description;
     uint256 public override version = 1;
     int256 public initialAnswer;
