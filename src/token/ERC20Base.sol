@@ -25,8 +25,8 @@ abstract contract ERC20Base is IERC20Permit {
     /*                                    READ                                    */
     /* -------------------------------------------------------------------------- */
 
-    function balanceOf(address _account) public view virtual returns (uint256) {
-        return _balances[_account];
+    function balanceOf(address account) public view virtual returns (uint256) {
+        return _balances[account];
     }
 
     function totalSupply() public view virtual returns (uint256) {
@@ -34,10 +34,10 @@ abstract contract ERC20Base is IERC20Permit {
     }
 
     function allowance(
-        address _owner,
-        address _spender
+        address owner,
+        address spender
     ) public view virtual returns (uint256) {
-        return _allowances[_owner][_spender];
+        return _allowances[owner][spender];
     }
 
     /* -------------------------------------------------------------------------- */
@@ -59,17 +59,7 @@ abstract contract ERC20Base is IERC20Permit {
         address to,
         uint256 amount
     ) public virtual returns (bool) {
-        _balances[msg.sender] -= amount;
-
-        // Cannot overflow because the sum of all user
-        // balances can't exceed the max uint256 value.
-        unchecked {
-            _balances[to] += amount;
-        }
-
-        emit Transfer(msg.sender, to, amount);
-
-        return true;
+        return _transfer(msg.sender, to, amount);
     }
 
     function transferFrom(
@@ -81,6 +71,16 @@ abstract contract ERC20Base is IERC20Permit {
 
         if (allowed != type(uint256).max)
             _allowances[from][msg.sender] = allowed - amount;
+
+        return _transfer(from, to, amount);
+    }
+
+    function _transfer(
+        address from,
+        address to,
+        uint256 amount
+    ) internal virtual returns (bool) {
+        _beforeTokenTransfer(from, to, amount);
 
         _balances[from] -= amount;
 
@@ -175,6 +175,8 @@ abstract contract ERC20Base is IERC20Permit {
     /* -------------------------------------------------------------------------- */
 
     function _mint(address to, uint256 amount) internal virtual {
+        _beforeTokenTransfer(address(0), to, amount);
+
         _totalSupply += amount;
 
         // Cannot overflow because the sum of all user
@@ -187,6 +189,8 @@ abstract contract ERC20Base is IERC20Permit {
     }
 
     function _burn(address from, uint256 amount) internal virtual {
+        _beforeTokenTransfer(from, address(0), amount);
+
         _balances[from] -= amount;
 
         // Cannot underflow because a user's balance
@@ -196,5 +200,20 @@ abstract contract ERC20Base is IERC20Permit {
         }
 
         emit Transfer(from, address(0), amount);
+    }
+
+    /**
+     * @dev See {ERC20-_beforeTokenTransfer}.
+     *
+     * Requirements:
+     *
+     * - the contract must not be paused.
+     */
+    function _beforeTokenTransfer(
+        address from,
+        address to,
+        uint256 amount
+    ) internal virtual {
+        //
     }
 }
