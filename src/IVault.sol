@@ -2,8 +2,7 @@
 // solhint-disable
 pragma solidity ^0.8.0;
 
-import {IERC20Permit} from "./token/IERC20Permit.sol";
-import {IERC20} from "./token/IERC20.sol";
+import {IERC20Permit, IERC20} from "./token/IERC20Permit.sol";
 import {IAggregatorV3} from "./vendor/IAggregatorV3.sol";
 
 /**

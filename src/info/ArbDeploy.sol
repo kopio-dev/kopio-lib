@@ -7,8 +7,9 @@ import {ILZ1155} from "../token/ILZ1155.sol";
 import {IDeploymentFactory} from "../core/IDeploymentFactory.sol";
 import {ISwapRouter} from "../vendor/ISwapRouter.sol";
 import {IQuoterV2} from "../vendor/IQuoterV2.sol";
-import {IPyth, IONE, IKopio, IMarketStatus, IKopioShare} from "../IKopioProtocol.sol";
-import {IVault} from "../IVault.sol";
+import {IMarketStatus, IKopio, IKopioShare} from "../IKopioProtocol.sol";
+import {IPyth} from "../vendor/Pyth.sol";
+import {IONE, IVault} from "../IONE.sol";
 
 abstract contract ArbDeploy is ArbDeployAddr {
     IVault constant vault = IVault(vaultAddr);

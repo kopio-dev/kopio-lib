@@ -1,10 +1,13 @@
 // SPDX-License-Identifier: BUSL-1.1
+// solhint-disable
 pragma solidity ^0.8.0;
-import {IKopio} from "./IKopio.sol";
 
-/**
- * @dev External interface of AccessControl declared to support ERC165 detection.
- */
+import {IERC20, IERC20Permit} from "./token/IERC20Permit.sol";
+import {IAggregatorV3} from "./vendor/IAggregatorV3.sol";
+import {IKopio} from "./IKopio.sol";
+import {IERC165} from "./vendor/IERC165.sol";
+import {PythView} from "./vendor/Pyth.sol";
+
 interface IAccessControl {
     /**
      * @dev The `account` is missing a role.
@@ -119,13 +122,6 @@ library EnumerableSet {
         // Position 0 is used to mean a value is not in the set.
         mapping(bytes32 value => uint256) _positions;
     }
-
-    /**
-     * @dev Add a value to a set. O(1).
-     *
-     * Returns true if the value was added to the set, that is if it was not
-     * already present.
-     */
     function _add(Set storage set, bytes32 value) private returns (bool) {
         if (!_contains(set, value)) {
             set._values.push(value);
@@ -212,14 +208,6 @@ library EnumerableSet {
         return set._values[index];
     }
 
-    /**
-     * @dev Return the entire set in an array
-     *
-     * WARNING: This operation will copy the entire storage to memory, which can be quite expensive. This is designed
-     * to mostly be used by view accessors that are queried without any gas fees. Developers should keep in mind that
-     * this function has an unbounded cost, and using it as part of a state-changing function may render the function
-     * uncallable if the set grows to a point where copying to memory consumes too much gas to fit in a block.
-     */
     function _values(Set storage set) private view returns (bytes32[] memory) {
         return set._values;
     }
@@ -361,16 +349,6 @@ library EnumerableSet {
         return _length(set._inner);
     }
 
-    /**
-     * @dev Returns the value stored at position `index` in the set. O(1).
-     *
-     * Note that there are no guarantees on the ordering of values inside the
-     * array, and it may change when more values are added or removed.
-     *
-     * Requirements:
-     *
-     * - `index` must be strictly less than {length}.
-     */
     function at(
         AddressSet storage set,
         uint256 index
@@ -378,14 +356,6 @@ library EnumerableSet {
         return address(uint160(uint256(_at(set._inner, index))));
     }
 
-    /**
-     * @dev Return the entire set in an array
-     *
-     * WARNING: This operation will copy the entire storage to memory, which can be quite expensive. This is designed
-     * to mostly be used by view accessors that are queried without any gas fees. Developers should keep in mind that
-     * this function has an unbounded cost, and using it as part of a state-changing function may render the function
-     * uncallable if the set grows to a point where copying to memory consumes too much gas to fit in a block.
-     */
     function values(
         AddressSet storage set
     ) internal view returns (address[] memory) {
@@ -446,16 +416,6 @@ library EnumerableSet {
         return _length(set._inner);
     }
 
-    /**
-     * @dev Returns the value stored at position `index` in the set. O(1).
-     *
-     * Note that there are no guarantees on the ordering of values inside the
-     * array, and it may change when more values are added or removed.
-     *
-     * Requirements:
-     *
-     * - `index` must be strictly less than {length}.
-     */
     function at(
         UintSet storage set,
         uint256 index
@@ -463,14 +423,6 @@ library EnumerableSet {
         return uint256(_at(set._inner, index));
     }
 
-    /**
-     * @dev Return the entire set in an array
-     *
-     * WARNING: This operation will copy the entire storage to memory, which can be quite expensive. This is designed
-     * to mostly be used by view accessors that are queried without any gas fees. Developers should keep in mind that
-     * this function has an unbounded cost, and using it as part of a state-changing function may render the function
-     * uncallable if the set grows to a point where copying to memory consumes too much gas to fit in a block.
-     */
     function values(
         UintSet storage set
     ) internal view returns (uint256[] memory) {
@@ -486,243 +438,6 @@ library EnumerableSet {
     }
 }
 
-interface IERC20 {
-    event Transfer(address indexed from, address indexed to, uint256 amount);
-
-    event Approval(
-        address indexed owner,
-        address indexed spender,
-        uint256 amount
-    );
-
-    function allowance(address, address) external view returns (uint256);
-
-    function approve(address spender, uint256 amount) external returns (bool);
-
-    function balanceOf(address) external view returns (uint256);
-
-    function decimals() external view returns (uint8);
-
-    function name() external view returns (string memory);
-
-    function symbol() external view returns (string memory);
-
-    function totalSupply() external view returns (uint256);
-
-    function transfer(address to, uint256 amount) external returns (bool);
-
-    function transferFrom(
-        address from,
-        address to,
-        uint256 amount
-    ) external returns (bool);
-}
-
-/// @dev See DapiProxy.sol for comments about usage
-interface IAPI3 {
-    function read() external view returns (int224 value, uint32 timestamp);
-
-    function api3ServerV1() external view returns (address);
-}
-
-// lib/kopio-lib/src/vendor/Pyth.sol
-
-/// @dev https://github.com/pyth-network/pyth-sdk-solidity/blob/main/PythStructs.sol
-/// @dev Extra ticker is included in the struct
-struct PriceFeed {
-    // The price ID.
-    bytes32 id;
-    // Latest available price
-    Price price;
-    // Latest available exponentially-weighted moving average price
-    Price emaPrice;
-}
-
-/// @dev  https://github.com/pyth-network/pyth-sdk-solidity/blob/main/PythStructs.sol
-struct Price {
-    // Price
-    int64 price;
-    // Confidence interval around the price
-    uint64 conf;
-    // Price exponent
-    int32 expo;
-    // Unix timestamp describing when the price was published
-    uint256 publishTime;
-}
-
-struct PythEPs {
-    mapping(uint256 chainId => IPyth pythEp) get;
-    IPyth avax;
-    IPyth bsc;
-    IPyth blast;
-    IPyth mainnet;
-    IPyth arbitrum;
-    IPyth optimism;
-    IPyth polygon;
-    IPyth polygonzkevm;
-    bytes[] update;
-    uint256 cost;
-    PythView viewData;
-    string tickers;
-}
-
-struct PythView {
-    bytes32[] ids;
-    Price[] prices;
-}
-
-interface IPyth {
-    function getPriceNoOlderThan(
-        bytes32 _id,
-        uint256 _maxAge
-    ) external view returns (Price memory);
-
-    function getPriceUnsafe(bytes32 _id) external view returns (Price memory);
-
-    function getUpdateFee(
-        bytes[] memory _updateData
-    ) external view returns (uint256);
-
-    function updatePriceFeeds(bytes[] memory _updateData) external payable;
-
-    function updatePriceFeedsIfNecessary(
-        bytes[] memory _updateData,
-        bytes32[] memory _ids,
-        uint64[] memory _publishTimes
-    ) external payable;
-
-    // Function arguments are invalid (e.g., the arguments lengths mismatch)
-    // Signature: 0xa9cb9e0d
-    error InvalidArgument();
-    // Update data is coming from an invalid data source.
-    // Signature: 0xe60dce71
-    error InvalidUpdateDataSource();
-    // Update data is invalid (e.g., deserialization error)
-    // Signature: 0xe69ffece
-    error InvalidUpdateData();
-    // Insufficient fee is paid to the method.
-    // Signature: 0x025dbdd4
-    error InsufficientFee();
-    // There is no fresh update, whereas expected fresh updates.
-    // Signature: 0xde2c57fa
-    error NoFreshUpdate();
-    // There is no price feed found within the given range or it does not exists.
-    // Signature: 0x45805f5d
-    error PriceFeedNotFoundWithinRange();
-    // Price feed not found or it is not pushed on-chain yet.
-    // Signature: 0x14aebe68
-    error PriceFeedNotFound();
-    // Requested price is stale.
-    // Signature: 0x19abf40e
-    error StalePrice();
-    // Given message is not a valid Wormhole VAA.
-    // Signature: 0x2acbe915
-    error InvalidWormholeVaa();
-    // Governance message is invalid (e.g., deserialization error).
-    // Signature: 0x97363b35
-    error InvalidGovernanceMessage();
-    // Governance message is not for this contract.
-    // Signature: 0x63daeb77
-    error InvalidGovernanceTarget();
-    // Governance message is coming from an invalid data source.
-    // Signature: 0x360f2d87
-    error InvalidGovernanceDataSource();
-    // Governance message is old.
-    // Signature: 0x88d1b847
-    error OldGovernanceMessage();
-    // The wormhole address to set in SetWormholeAddress governance is invalid.
-    // Signature: 0x13d3ed82
-    error InvalidWormholeAddressToSet();
-}
-interface IERC4626Upgradeable {
-    /**
-     * @notice The underlying kopio
-     */
-    function asset() external view returns (IKopio);
-
-    /**
-     * @notice Deposit assets for equivalent amount of shares
-     * @param assets Amount of assets to deposit
-     * @param receiver Address to send shares to
-     * @return shares Amount of shares minted
-     */
-    function deposit(
-        uint256 assets,
-        address receiver
-    ) external returns (uint256 shares);
-
-    /**
-     * @notice Withdraw assets for equivalent amount of shares
-     * @param assets Amount of assets to withdraw
-     * @param receiver Address to send assets to
-     * @param owner Address to burn shares from
-     * @return shares Amount of shares burned
-     * @dev shares are burned from owner, not msg.sender
-     */
-    function withdraw(
-        uint256 assets,
-        address receiver,
-        address owner
-    ) external returns (uint256 shares);
-
-    function maxDeposit(address) external view returns (uint256);
-
-    function maxMint(address) external view returns (uint256 assets);
-
-    function maxRedeem(address owner) external view returns (uint256 assets);
-
-    function maxWithdraw(address owner) external view returns (uint256 assets);
-
-    /**
-     * @notice Mint shares for equivalent amount of assets
-     * @param shares Amount of shares to mint
-     * @param receiver Address to send shares to
-     * @return assets Amount of assets redeemed
-     */
-    function mint(
-        uint256 shares,
-        address receiver
-    ) external returns (uint256 assets);
-
-    function previewDeposit(
-        uint256 assets
-    ) external view returns (uint256 shares);
-
-    function previewMint(uint256 shares) external view returns (uint256 assets);
-
-    function previewRedeem(
-        uint256 shares
-    ) external view returns (uint256 assets);
-
-    function previewWithdraw(
-        uint256 assets
-    ) external view returns (uint256 shares);
-
-    /**
-     * @notice Track the underlying amount
-     * @return Total supply for the underlying kopio
-     */
-    function totalAssets() external view returns (uint256);
-
-    /**
-     * @notice Redeem shares for assets
-     * @param shares Amount of shares to redeem
-     * @param receiver Address to send assets to
-     * @param owner Address to burn shares from
-     * @return assets Amount of assets redeemed
-     */
-    function redeem(
-        uint256 shares,
-        address receiver,
-        address owner
-    ) external returns (uint256 assets);
-}
-// src/contracts/core/asset/IKopioIssuer.sol
-
-/// @title An issuer for kopio
-/// @author the kopio project
-/// @notice contract that creates/destroys kopios.
-/// @dev protocol enforces this implementation on kopios.
 interface IKopioIssuer {
     /**
      * @notice Mints @param assets of kopio for @param to,
@@ -909,11 +624,6 @@ struct WithdrawArgs {
     address receiver;
 }
 
-// src/contracts/core/common/Constants.sol
-
-/* -------------------------------------------------------------------------- */
-/*                                    Enums                                   */
-/* -------------------------------------------------------------------------- */
 library Enums {
     enum ICDPFee {
         Open,
@@ -1003,10 +713,6 @@ library Percents {
     /// This means liquidator receives 25% bonus collateral compared to the debt repaid.
     uint16 internal constant MAX_LIQ_INCENTIVE = 1.25e4; // 125%
 }
-
-// src/contracts/core/common/Errors.sol
-
-// solhint-disable
 
 function id(address t) view returns (err.ID memory r) {
     r.addr = t;
@@ -1307,26 +1013,6 @@ interface err {
 
 interface IAuthorizationFacet {
     /**
-     * @dev OpenZeppelin
-     * Returns one of the accounts that have `role`. `index` must be a
-     * value between 0 and {getRoleMemberCount}, non-inclusive.
-     *
-     * Role bearers are not sorted in any particular way, and their ordering may
-     * change at any point.
-     *
-     * @notice WARNING:
-     * When using {getRoleMember} and {getRoleMemberCount}, make sure
-     * you perform all queries on the same block.
-     *
-     * See the following forum post for more information:
-     * - https://forum.openzeppelin.com/t/iterating-over-elements-on-enumerableset-in-openzeppelin-contracts/2296
-     *
-     * @dev the kopio project
-     *
-     * TL;DR above:
-     *
-     * - If you iterate the EnumSet outside a single block scope you might get different results.
-     * - Since when EnumSet member is deleted it is replaced with the highest index.
      * @return address with the `role`
      */
     function getRoleMember(
@@ -1394,8 +1080,6 @@ interface IAuthorizationFacet {
      */
     function revokeRole(bytes32 role, address account) external;
 }
-
-// src/contracts/core/common/interfaces/IBatchFacet.sol
 
 interface IBatchFacet {
     /**
@@ -1589,6 +1273,7 @@ interface DTypes {
     error NOT_PENDING_DIAMOND_OWNER(address who, address pendingOwner);
 }
 
+/// @notice Functions for the diamond state itself.
 interface IDiamondStateFacet {
     /// @notice Whether the diamond is initialized.
     function initialized() external view returns (bool);
@@ -1675,14 +1360,6 @@ struct ICDPParams {
 
 // src/contracts/core/libs/PercentageMath.sol
 
-/**
- * @title PercentageMath library
- * @author Aave
- * @notice Provides functions to perform percentage calculations
- * @dev PercentageMath are defined by default with 2 decimals of precision (100.00).
- * The precision is indicated by PERCENTAGE_FACTOR
- * @dev Operations are rounded. If a value is >=.5, will be rounded up, otherwise rounded down.
- **/
 library PercentageMath {
     // Maximum percentage factor (100.00%)
     uint256 internal constant PERCENTAGE_FACTOR = 1e4;
@@ -1762,6 +1439,16 @@ library PercentageMath {
     }
 }
 
+// src/contracts/core/libs/WadRay.sol
+
+/**
+ * @title WadRayMath library
+ * @author Aave
+ * @notice Provides functions to perform calculations with Wad and Ray units
+ * @dev Provides mul and div function for wads (decimal numbers with 18 digits of precision) and rays (decimal numbers
+ * with 27 digits of precision)
+ * @dev Operations are rounded. If a value is >=.5, will be rounded up, otherwise rounded down.
+ **/
 library WadRay {
     // HALF_WAD and HALF_RAY expressed with extended notation
     // as constant with operations are not supported in Yul assembly
@@ -2544,13 +2231,6 @@ interface IVaultExtender {
     function withdrawFrom(address _from, address _to, uint256 _amount) external;
 }
 
-// src/contracts/core/vault/interfaces/IVaultRateProvider.sol
-
-/**
- * @title IVaultRateProvider
- * @author the kopio project
- * @notice Minimal exchange rate interface for vaults.
- */
 interface IVaultRateProvider {
     /**
      * @notice Gets the exchange rate of one vault share to USD.
@@ -2558,22 +2238,6 @@ interface IVaultRateProvider {
      */
     function exchangeRate() external view returns (uint256);
 }
-
-// src/contracts/core/vendor/IERC165.sol
-
-interface IERC165 {
-    /// @notice Query if a contract implements an interface
-    /// @param interfaceId The interface identifier, as specified in ERC-165
-    /// @dev Interface identification is specified in ERC-165. This function
-    ///  uses less than 30,000 gas.
-    /// @return `true` if the contract implements `interfaceID` and
-    ///  `interfaceID` is not 0xffffffff, `false` otherwise
-    function supportsInterface(bytes4 interfaceId) external view returns (bool);
-}
-
-// lib/kopio-lib/lib/openzeppelin-contracts/contracts/access/extensions/IAccessControlEnumerable.sol
-
-// OpenZeppelin Contracts (last updated v5.0.0) (access/extensions/IAccessControlEnumerable.sol)
 
 /**
  * @dev External interface of AccessControlEnumerable declared to support ERC165 detection.
@@ -2601,29 +2265,6 @@ interface IAccessControlEnumerable is IAccessControl {
      * together with {getRoleMember} to enumerate all bearers of a role.
      */
     function getRoleMemberCount(bytes32 role) external view returns (uint256);
-}
-
-// lib/kopio-lib/src/token/IERC20Permit.sol
-
-/* solhint-disable func-name-mixedcase */
-
-interface IERC20Permit is IERC20 {
-    error PERMIT_DEADLINE_EXPIRED(address, address, uint256, uint256);
-    error INVALID_SIGNER(address, address);
-
-    function DOMAIN_SEPARATOR() external view returns (bytes32);
-
-    function nonces(address) external view returns (uint256);
-
-    function permit(
-        address owner,
-        address spender,
-        uint256 value,
-        uint256 deadline,
-        uint8 v,
-        bytes32 r,
-        bytes32 s
-    ) external;
 }
 
 // src/contracts/core/diamond/State.sol
@@ -2685,6 +2326,10 @@ interface IExtendedDiamondCutFacet is IDiamondCutFacet {
     function executeInitializers(Initializer[] calldata _initializers) external;
 }
 
+// src/contracts/core/diamond/interfaces/IDiamondLoupeFacet.sol
+
+// A loupe is a small magnifying glass used to look at diamonds.
+// These functions look at diamonds
 interface IDiamondLoupeFacet {
     /// @notice Gets all facet addresses and their four byte function selectors.
     /// @return facets_ Facet
@@ -2712,6 +2357,8 @@ interface IDiamondLoupeFacet {
         bytes4 _functionSelector
     ) external view returns (address facetAddress_);
 }
+
+// src/contracts/core/icdp/Event.sol
 
 interface MEvent {
     /**
@@ -3164,6 +2811,10 @@ interface IICDPStateFacet {
         returns (uint256 value, uint256 adjustedValue, uint256 price);
 }
 
+// src/contracts/core/libs/Meta.sol
+
+/* solhint-disable no-inline-assembly */
+
 library Meta {
     bytes32 internal constant EIP712_DOMAIN_TYPEHASH =
         keccak256(
@@ -3571,173 +3222,6 @@ error ETH_TRANSFER_FAILED(address, uint256);
 error TRANSFER_FAILED(address, address, address, uint256);
 error PERMIT_DUP_NONCE(address, uint256, uint256);
 
-/// @notice Safe ETH and ERC20 transfer library that gracefully handles missing return values.
-/// @author Solmate (https://github.com/transmissions11/solmate/blob/main/src/utils/SafeTransferLib.sol)
-/// @dev Use with caution! Some functions in this library knowingly create dirty bits at the destination of the free memory pointer.
-/// @dev Note that none of the functions in this library check that a token has code at all! That responsibility is delegated to the caller.
-library SafeTransfer {
-    /*//////////////////////////////////////////////////////////////
-                             ETH OPERATIONS
-    //////////////////////////////////////////////////////////////*/
-
-    function safeTransferETH(address to, uint256 amount) internal {
-        bool success;
-
-        /// @solidity memory-safe-assembly
-        assembly {
-            // Transfer the ETH and store if it succeeded or not.
-            success := call(gas(), to, amount, 0, 0, 0, 0)
-        }
-
-        if (!success) revert ETH_TRANSFER_FAILED(to, amount);
-    }
-
-    /*//////////////////////////////////////////////////////////////
-                            ERC20 OPERATIONS
-    //////////////////////////////////////////////////////////////*/
-
-    function safeTransferFrom(
-        IERC20 token,
-        address from,
-        address to,
-        uint256 amount
-    ) internal {
-        bool success;
-
-        /// @solidity memory-safe-assembly
-        assembly {
-            // Get a pointer to some free memory.
-            let freeMemoryPointer := mload(0x40)
-
-            // Write the abi-encoded calldata into memory, beginning with the function selector.
-            mstore(
-                freeMemoryPointer,
-                0x23b872dd00000000000000000000000000000000000000000000000000000000
-            )
-            mstore(
-                add(freeMemoryPointer, 4),
-                and(from, 0xffffffffffffffffffffffffffffffffffffffff)
-            ) // Append and mask the "from" argument.
-            mstore(
-                add(freeMemoryPointer, 36),
-                and(to, 0xffffffffffffffffffffffffffffffffffffffff)
-            ) // Append and mask the "to" argument.
-            mstore(add(freeMemoryPointer, 68), amount) // Append the "amount" argument. Masking not required as it's a full 32 byte type.
-
-            success := and(
-                // Set success to whether the call reverted, if not we check it either
-                // returned exactly 1 (can't just be non-zero data), or had no return data.
-                or(
-                    and(eq(mload(0), 1), gt(returndatasize(), 31)),
-                    iszero(returndatasize())
-                ),
-                // We use 100 because the length of our calldata totals up like so: 4 + 32 * 3.
-                // We use 0 and 32 to copy up to 32 bytes of return data into the scratch space.
-                // Counterintuitively, this call must be positioned second to the or() call in the
-                // surrounding and() call or else returndatasize() will be zero during the computation.
-                call(gas(), token, 0, freeMemoryPointer, 100, 0, 32)
-            )
-        }
-
-        if (!success) revert TRANSFER_FAILED(address(token), from, to, amount);
-    }
-
-    function safeTransfer(IERC20 token, address to, uint256 amount) internal {
-        bool success;
-
-        /// @solidity memory-safe-assembly
-        assembly {
-            // Get a pointer to some free memory.
-            let freeMemoryPointer := mload(0x40)
-
-            // Write the abi-encoded calldata into memory, beginning with the function selector.
-            mstore(
-                freeMemoryPointer,
-                0xa9059cbb00000000000000000000000000000000000000000000000000000000
-            )
-            mstore(
-                add(freeMemoryPointer, 4),
-                and(to, 0xffffffffffffffffffffffffffffffffffffffff)
-            ) // Append and mask the "to" argument.
-            mstore(add(freeMemoryPointer, 36), amount) // Append the "amount" argument. Masking not required as it's a full 32 byte type.
-
-            success := and(
-                // Set success to whether the call reverted, if not we check it either
-                // returned exactly 1 (can't just be non-zero data), or had no return data.
-                or(
-                    and(eq(mload(0), 1), gt(returndatasize(), 31)),
-                    iszero(returndatasize())
-                ),
-                // We use 68 because the length of our calldata totals up like so: 4 + 32 * 2.
-                // We use 0 and 32 to copy up to 32 bytes of return data into the scratch space.
-                // Counterintuitively, this call must be positioned second to the or() call in the
-                // surrounding and() call or else returndatasize() will be zero during the computation.
-                call(gas(), token, 0, freeMemoryPointer, 68, 0, 32)
-            )
-        }
-
-        if (!success)
-            revert TRANSFER_FAILED(address(token), msg.sender, to, amount);
-    }
-
-    function safeApprove(IERC20 token, address to, uint256 amount) internal {
-        bool success;
-
-        /// @solidity memory-safe-assembly
-        assembly {
-            // Get a pointer to some free memory.
-            let freeMemoryPointer := mload(0x40)
-
-            // Write the abi-encoded calldata into memory, beginning with the function selector.
-            mstore(
-                freeMemoryPointer,
-                0x095ea7b300000000000000000000000000000000000000000000000000000000
-            )
-            mstore(
-                add(freeMemoryPointer, 4),
-                and(to, 0xffffffffffffffffffffffffffffffffffffffff)
-            ) // Append and mask the "to" argument.
-            mstore(add(freeMemoryPointer, 36), amount) // Append the "amount" argument. Masking not required as it's a full 32 byte type.
-
-            success := and(
-                // Set success to whether the call reverted, if not we check it either
-                // returned exactly 1 (can't just be non-zero data), or had no return data.
-                or(
-                    and(eq(mload(0), 1), gt(returndatasize(), 31)),
-                    iszero(returndatasize())
-                ),
-                // We use 68 because the length of our calldata totals up like so: 4 + 32 * 2.
-                // We use 0 and 32 to copy up to 32 bytes of return data into the scratch space.
-                // Counterintuitively, this call must be positioned second to the or() call in the
-                // surrounding and() call or else returndatasize() will be zero during the computation.
-                call(gas(), token, 0, freeMemoryPointer, 68, 0, 32)
-            )
-        }
-
-        if (!success)
-            revert APPROVE_FAILED(address(token), msg.sender, to, amount);
-    }
-
-    function safePermit(
-        IERC20Permit token,
-        address owner,
-        address spender,
-        uint256 value,
-        uint256 deadline,
-        uint8 v,
-        bytes32 r,
-        bytes32 s
-    ) internal {
-        uint256 nonceBefore = token.nonces(owner);
-        token.permit(owner, spender, value, deadline, v, r, s);
-        uint256 nonceAfter = token.nonces(owner);
-        if (nonceAfter != nonceBefore + 1)
-            revert PERMIT_DUP_NONCE(owner, nonceBefore, nonceAfter);
-    }
-}
-
-// src/contracts/core/icdp/interfaces/IICDPAccountStateFacet.sol
-
 interface IICDPAccountStateFacet {
     // ExpectedFeeRuntimeInfo is used for stack size optimization
     struct ExpectedFeeRuntimeInfo {
@@ -4087,64 +3571,168 @@ library Arrays {
     }
 }
 
-// src/contracts/core/one/interfaces/IONE.sol
+// src/contracts/core/vault/Types.sol
 
-interface IONE is IERC20Permit, IVaultExtender, IKopioIssuer, IERC165 {
-    function vault() external view returns (address);
+/**
+ * @notice Asset struct for deposit assets in contract
+ * @param token The ERC20 token
+ * @param feed IAggregatorV3 feed for the asset
+ * @param staleTime Time in seconds for the feed to be considered stale
+ * @param maxDeposits Max deposits allowed for the asset
+ * @param depositFee Deposit fee of the asset
+ * @param withdrawFee Withdraw fee of the asset
+ * @param enabled Enabled status of the asset
+ */
+struct VaultAsset {
+    IERC20 token;
+    IAggregatorV3 feed;
+    uint24 staleTime;
+    uint8 decimals;
+    uint32 depositFee;
+    uint32 withdrawFee;
+    uint248 maxDeposits;
+    bool enabled;
+}
 
-    function protocol() external view returns (address);
+/**
+ * @notice Vault configuration struct
+ * @param sequencerUptimeFeed The feed address for the sequencer uptime
+ * @param sequencerGracePeriodTime The grace period time for the sequencer
+ * @param governance The governance address
+ * @param feeRecipient The fee recipient address
+ * @param oracleDecimals The oracle decimals
+ */
+struct VaultConfiguration {
+    address sequencerUptimeFeed;
+    uint96 sequencerGracePeriodTime;
+    address governance;
+    address pendingGovernance;
+    address feeRecipient;
+    uint8 oracleDecimals;
+}
+
+// src/contracts/core/asset/IERC4626.sol
+
+interface IERC4626 {
+    /**
+     * @notice The underlying kopio
+     */
+    function asset() external view returns (IKopio);
+
+    event Issue(
+        address indexed caller,
+        address indexed owner,
+        uint256 assets,
+        uint256 shares
+    );
+
+    event Deposit(
+        address indexed caller,
+        address indexed owner,
+        uint256 assets,
+        uint256 shares
+    );
+
+    event Destroy(
+        address indexed caller,
+        address indexed receiver,
+        address indexed owner,
+        uint256 assets,
+        uint256 shares
+    );
+
+    event Withdraw(
+        address indexed caller,
+        address indexed receiver,
+        address indexed owner,
+        uint256 assets,
+        uint256 shares
+    );
+
+    function convertToShares(
+        uint256 assets
+    ) external view returns (uint256 shares);
+
+    function convertToAssets(
+        uint256 shares
+    ) external view returns (uint256 assets);
 
     /**
-     * @notice This function adds ONE to circulation
-     * Caller must be a contract and have the OPERATOR_ROLE
-     * @param amount amount to mint
-     * @param to address to mint tokens to
-     * @return uint256 amount minted
+     * @notice Deposit assets for equivalent amount of shares
+     * @param assets Amount of assets to deposit
+     * @param receiver Address to send shares to
+     * @return shares Amount of shares minted
      */
-    function issue(
-        uint256 amount,
-        address to
-    ) external override returns (uint256);
+    function deposit(
+        uint256 assets,
+        address receiver
+    ) external returns (uint256 shares);
 
     /**
-     * @notice This function removes ONE from circulation
-     * Caller must be a contract and have the OPERATOR_ROLE
-     * @param amount amount to burn
-     * @param from address to burn tokens from
-     * @return uint256 amount burned
-     *
-     * @inheritdoc IKopioIssuer
+     * @notice Withdraw assets for equivalent amount of shares
+     * @param assets Amount of assets to withdraw
+     * @param receiver Address to send assets to
+     * @param owner Address to burn shares from
+     * @return shares Amount of shares burned
+     * @dev shares are burned from owner, not msg.sender
      */
-    function destroy(
-        uint256 amount,
-        address from
-    ) external override returns (uint256);
+    function withdraw(
+        uint256 assets,
+        address receiver,
+        address owner
+    ) external returns (uint256 shares);
+
+    function maxDeposit(address) external view returns (uint256);
+
+    function maxMint(address) external view returns (uint256 assets);
+
+    function maxRedeem(address owner) external view returns (uint256 assets);
+
+    function maxWithdraw(address owner) external view returns (uint256 assets);
 
     /**
-     * @notice Triggers stopped state.
-     *
-     * Requirements:
-     *
-     * - The contract must not be paused.
+     * @notice Mint shares for equivalent amount of assets
+     * @param shares Amount of shares to mint
+     * @param receiver Address to send shares to
+     * @return assets Amount of assets redeemed
      */
-    function pause() external;
+    function mint(
+        uint256 shares,
+        address receiver
+    ) external returns (uint256 assets);
+
+    function previewDeposit(
+        uint256 assets
+    ) external view returns (uint256 shares);
+
+    function previewMint(uint256 shares) external view returns (uint256 assets);
+
+    function previewRedeem(
+        uint256 shares
+    ) external view returns (uint256 assets);
+
+    function previewWithdraw(
+        uint256 assets
+    ) external view returns (uint256 shares);
 
     /**
-     * @notice  Returns to normal state.
-     *
-     * Requirements:
-     *
-     * - The contract must be paused.
+     * @notice Track the underlying amount
+     * @return Total supply for the underlying kopio
      */
-    function unpause() external;
+    function totalAssets() external view returns (uint256);
 
     /**
-     * @notice Exchange rate of vONE to USD.
-     * @return rate vONE/USD exchange rate.
+     * @notice Redeem shares for assets
+     * @param shares Amount of shares to redeem
+     * @param receiver Address to send assets to
+     * @param owner Address to burn shares from
+     * @return assets Amount of assets redeemed
      */
-    function exchangeRate() external view returns (uint256 rate);
-
-    function grantRole(bytes32, address) external;
+    function redeem(
+        uint256 shares,
+        address receiver,
+        address owner
+    ) external returns (uint256 assets);
 }
 
 interface IEmitted is err, DTypes, MEvent, SEvent, VEvent, Multi {
@@ -4165,6 +3753,52 @@ interface IEmitted is err, DTypes, MEvent, SEvent, VEvent, Multi {
     error DeployerAlreadySet(address, bool);
 }
 
+interface IKopioShare is
+    IKopioIssuer,
+    IERC4626,
+    IERC20Permit,
+    IAccessControlEnumerable,
+    IERC165
+{
+    function issue(
+        uint256 assets,
+        address to
+    ) external returns (uint256 shares);
+
+    function destroy(
+        uint256 assets,
+        address from
+    ) external returns (uint256 shares);
+
+    function convertToShares(
+        uint256 assets
+    ) external view override(IKopioIssuer, IERC4626) returns (uint256 shares);
+
+    function convertToAssets(
+        uint256 shares
+    ) external view override(IKopioIssuer, IERC4626) returns (uint256 assets);
+
+    function reinitializeERC20(
+        string memory _name,
+        string memory _symbol,
+        uint8 _version
+    ) external;
+
+    /**
+     * @notice Mints shares to asset contract.
+     * @param assets amount of assets.
+     */
+    function wrap(uint256 assets) external;
+
+    /**
+     * @notice Burns shares from the asset contract.
+     * @param assets amount of assets.
+     */
+    function unwrap(uint256 assets) external;
+}
+
+// src/contracts/core/common/Auth.sol
+
 interface IGnosisSafeL2 {
     function isOwner(address owner) external view returns (bool);
 
@@ -4172,19 +3806,12 @@ interface IGnosisSafeL2 {
 }
 
 struct CommonState {
-    /* -------------------------------------------------------------------------- */
-    /*                                    Core                                    */
-    /* -------------------------------------------------------------------------- */
     mapping(address asset => Asset) assets;
     mapping(bytes32 asset => mapping(Enums.OracleType provider => Oracle)) oracles;
     mapping(address asset => mapping(Enums.Action action => SafetyState)) safetyState;
-    /// @notice The recipient of protocol fees.
     address feeRecipient;
-    /// @notice Pyth endpoint
     address pythEp;
-    /// @notice L2 sequencer feed address
     address sequencerUptimeFeed;
-    /// @notice grace period of sequencer in seconds
     uint32 sequencerGracePeriodTime;
     /// @notice The max deviation percentage between primary and secondary price.
     uint16 maxPriceDeviationPct;
@@ -4207,6 +3834,7 @@ function cs() pure returns (CommonState storage state) {
     }
 }
 
+/// @notice Oracle configuration mapped to a ticker.
 struct Oracle {
     address feed;
     bytes32 pythId;
@@ -4215,6 +3843,15 @@ struct Oracle {
     bool isClosable;
 }
 
+/**
+ * @notice Feed configuration.
+ * @param oracleIds two supported oracle types.
+ * @param feeds the feeds - eg, pyth / redstone will be address(0).
+ * @param staleTimes stale times for the feeds.
+ * @param pythId pyth id.
+ * @param invertPyth invert the pyth price.
+ * @param isClosable is market for ticker closable.
+ */
 struct FeedConfiguration {
     Enums.OracleType[2] oracleIds;
     address[2] feeds;
@@ -4224,14 +3861,6 @@ struct FeedConfiguration {
     bool isClosable;
 }
 
-/**
- * @title Asset configuration
- * @author the kopio project
- * @notice all assets in the protocol share this configuration.
- * @notice ticker is shared eg. kETH and WETH use "ETH"
- * @dev Percentages use 2 decimals: 1e4 (10000) == 100.00%. See {PercentageMath.sol}.
- * @dev Noting the percentage value of uint16 caps at 655.36%.
- */
 struct Asset {
     /// @notice Underlying asset ticker (eg. "ETH")
     bytes32 ticker;
@@ -4439,8 +4068,6 @@ function sdi() pure returns (SDIState storage state) {
     }
 }
 
-// src/contracts/core/common/interfaces/IAssetConfigFacet.sol
-
 interface IAssetConfigFacet {
     /**
      * @notice Adds a new asset to the common state.
@@ -4505,31 +4132,70 @@ interface IAssetConfigFacet {
     ) external;
 }
 
-// src/contracts/core/common/interfaces/IAssetStateFacet.sol
-
 interface IAssetStateFacet {
+    /**
+     * @notice Get the state of a specific asset
+     * @param _assetAddr Address of the asset.
+     * @return Asset State of asset
+     * @custom:signature getAsset(address)
+     * @custom:selector 0x30b8b2c6
+     */
+
     function getAsset(address _assetAddr) external view returns (Asset memory);
 
+    /**
+     * @notice Get price for an asset from address.
+     * @param _assetAddr Asset address.
+     * @return uint256 Current price for the asset.
+     * @custom:signature getPrice(address)
+     * @custom:selector 0x41976e09
+     */
     function getPrice(address _assetAddr) external view returns (uint256);
 
+    /**
+     * @notice Get push price for an asset from address.
+     * @param _assetAddr Asset address.
+     * @return RawPrice Current raw price for the asset.
+     * @custom:signature getPushPrice(address)
+     * @custom:selector 0xc72f3dd7
+     */
     function getPushPrice(
         address _assetAddr
     ) external view returns (RawPrice memory);
 
+    /**
+     * @notice Get value for an asset amount using the current price.
+     * @param _assetAddr Asset address.
+     * @param _amount The amount (uint256).
+     * @return uint256 Current value for `_amount` of `_assetAddr`.
+     * @custom:signature getValue(address,uint256)
+     * @custom:selector 0xc7bf8cf5
+     */
     function getValue(
         address _assetAddr,
         uint256 _amount
     ) external view returns (uint256);
 
+    /**
+     * @notice Gets corresponding feed address for the oracle type and asset address.
+     * @param _assetAddr The asset address.
+     * @param _oracleType The oracle type.
+     * @return feedAddr Feed address that the asset uses with the oracle type.
+     */
     function getFeedForAddress(
         address _assetAddr,
         Enums.OracleType _oracleType
     ) external view returns (address feedAddr);
 
+    /**
+     * @notice Get the market status for an asset.
+     * @param _assetAddr Asset address.
+     * @return bool True if the market is open, false otherwise.
+     * @custom:signature getMarketStatus(address)
+     * @custom:selector 0x3b3b3b3b
+     */
     function getMarketStatus(address _assetAddr) external view returns (bool);
 }
-
-// src/contracts/core/common/interfaces/ICommonConfigFacet.sol
 
 interface ICommonConfigFacet {
     struct PythConfig {
@@ -4647,8 +4313,6 @@ interface ICommonConfigFacet {
     function setMarketStatusProvider(address newProvider) external;
 }
 
-// src/contracts/core/common/interfaces/ICommonStateFacet.sol
-
 interface ICommonStateFacet {
     /// @notice The recipient of protocol fees.
     function getFeeRecipient() external view returns (address);
@@ -4692,8 +4356,6 @@ interface ICommonStateFacet {
 
     function getPythPrice(bytes32 _ticker) external view returns (uint256);
 }
-
-// src/contracts/core/common/interfaces/ISafetyCouncilFacet.sol
 
 interface ISafetyCouncilFacet {
     /**
@@ -4758,9 +4420,6 @@ interface ISafetyCouncilFacet {
         address _assetAddr
     ) external view returns (bool);
 }
-
-// src/contracts/core/periphery/ViewTypes.sol
-// solhint-disable state-visibility, max-states-count, var-name-mixedcase, no-global-import, const-name-snakecase, no-empty-blocks, no-console, code-complexity
 
 library View {
     struct AssetData {
@@ -4929,8 +4588,6 @@ library View {
     }
 }
 
-// src/contracts/core/icdp/interfaces/IICDPLiquidationFacet.sol
-
 interface IICDPLiquidationFacet {
     /**
      * @notice Attempts to liquidate an account by repaying debt, seizing collateral in return.
@@ -4951,8 +4608,6 @@ interface IICDPLiquidationFacet {
         address collateral
     ) external view returns (MaxLiqInfo memory);
 }
-
-// src/contracts/core/periphery/interfaces/IViewDataFacet.sol
 
 interface IViewDataFacet {
     function viewProtocolData(
@@ -4993,8 +4648,6 @@ interface IViewDataFacet {
         address[] memory assets
     ) external view returns (View.AssetData[] memory);
 }
-
-// src/contracts/core/scdp/interfaces/ISCDPFacet.sol
 
 interface ISCDPFacet {
     /**
@@ -5071,9 +4724,6 @@ interface ISCDPFacet {
     function getLiquidatableSCDP() external view returns (bool);
 }
 
-// src/contracts/core/periphery/IKopioProtocol.sol
-
-// solhint-disable-next-line no-empty-blocks
 interface IKopioProtocol is
     IEmitted,
     IDiamondCutFacet,
@@ -5100,35 +4750,3 @@ interface IKopioProtocol is
     IViewDataFacet,
     IBatchFacet
 {}
-
-interface IKopioShare is
-    IKopioIssuer,
-    IERC4626Upgradeable,
-    IERC20Permit,
-    IAccessControlEnumerable,
-    IERC165
-{
-    function totalAssets()
-        external
-        view
-        override(IERC4626Upgradeable)
-        returns (uint256);
-
-    function reinitializeERC20(
-        string memory _name,
-        string memory _symbol,
-        uint8 _version
-    ) external;
-
-    /**
-     * @notice Mints shares to asset contract.
-     * @param assets amount of assets.
-     */
-    function wrap(uint256 assets) external;
-
-    /**
-     * @notice Burns shares from the asset contract.
-     * @param assets amount of assets.
-     */
-    function unwrap(uint256 assets) external;
-}

@@ -1,7 +1,6 @@
-// SPDX-License-Identifier: MIT
+// SPDX-License-Identifier: BUSL-1.1
 pragma solidity ^0.8.0;
-
-import {IAccessControlEnumerable, IERC165, IERC20Permit} from "./IKopioProtocol.sol";
+import {IERC20Permit, IAccessControlEnumerable, IERC165} from "./IKopioProtocol.sol";
 
 interface IKopio is IERC20Permit, IAccessControlEnumerable, IERC165 {
     event Wrap(
