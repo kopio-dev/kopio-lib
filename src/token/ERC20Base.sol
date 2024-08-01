@@ -67,7 +67,7 @@ abstract contract ERC20Base is IERC20Permit {
         address to,
         uint256 amount
     ) public virtual returns (bool) {
-        uint256 allowed = _allowances[from][msg.sender]; // Saves gas for limited approvals.
+        uint256 allowed = allowance(from, msg.sender); // Saves gas for limited approvals.
 
         if (allowed != type(uint256).max)
             _allowances[from][msg.sender] = allowed - amount;
