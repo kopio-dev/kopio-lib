@@ -177,10 +177,10 @@ abstract contract ERC20Base is IERC20Permit {
     function _mint(address to, uint256 amount) internal virtual {
         _beforeTokenTransfer(address(0), to, amount);
 
+        _totalSupply += amount;
         // Cannot overflow because the sum of all user
         // balances can't exceed the max uint256 value.
         unchecked {
-            _totalSupply += amount;
             _balances[to] += amount;
         }
 
