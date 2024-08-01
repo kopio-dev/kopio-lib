@@ -3,8 +3,35 @@
 pragma solidity ^0.8.26;
 
 import {Solady} from "./Solady.sol";
-import {Deployment} from "../core/IDeploymentFactory.sol";
 import {ITransparentUpgradeableProxy, TransparentUpgradeableProxy} from "../vendor/TransparentUpgradeableProxy.sol";
+
+enum CreationKind {
+    NONE,
+    CREATE,
+    CREATE2,
+    CREATE3
+}
+
+/**
+ * @notice Deployment information
+ * @param implementation Current implementation address
+ * @param updatedAt Timestamp of latest upgrade
+ * @param kind Creation mechanism used for the deployment
+ * @param proxy Address of the proxy or zero if not a proxy deployment
+ * @param index Array index of the deployment in the internal tracking list
+ * @param createdAt Creation timestamp of the deployment
+ * @param version Current version of the deployment (can be over 1 for proxies)
+ */
+struct Deployment {
+    address implementation;
+    uint88 updatedAt;
+    CreationKind kind;
+    ITransparentUpgradeableProxy proxy;
+    uint48 index;
+    uint48 createdAt;
+    uint256 version;
+    bytes32 salt;
+}
 
 library Deploys {
     function create(
@@ -134,41 +161,9 @@ library Proxies {
         return proxyInitCodeHash(implementation, address(this), _calldata);
     }
 
-    function iface(
+    function asInterface(
         address proxy
     ) internal pure returns (ITransparentUpgradeableProxy) {
         return ITransparentUpgradeableProxy(proxy);
-    }
-}
-
-library Conversions {
-    function toDeployment(
-        bytes memory b
-    ) internal pure returns (Deployment memory) {
-        return abi.decode(b, (Deployment));
-    }
-
-    function map(
-        bytes[] memory rawData,
-        function(bytes memory) pure returns (address) dataHandler
-    ) internal pure returns (address[] memory result) {
-        result = new address[](rawData.length);
-        unchecked {
-            for (uint256 i; i < rawData.length; i++) {
-                result[i] = dataHandler(rawData[i]);
-            }
-        }
-    }
-
-    function map(
-        bytes[] memory rawData,
-        function(bytes memory) pure returns (Deployment memory) dataHandler
-    ) internal pure returns (Deployment[] memory result) {
-        result = new Deployment[](rawData.length);
-        unchecked {
-            for (uint256 i; i < rawData.length; i++) {
-                result[i] = dataHandler(rawData[i]);
-            }
-        }
     }
 }
