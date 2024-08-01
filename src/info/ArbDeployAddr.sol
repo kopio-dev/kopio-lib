@@ -13,7 +13,7 @@ abstract contract ArbAddr {
     address constant wethAddr = 0x82aF49447D8a07e3bd95BD0d56f35241523fBab1;
     address constant daiAddr = 0xDA10009cBd5D07dd0CeCc66161FC93D7c9000da1;
     address constant usdtAddr = 0xFd086bC7CD5C481DCC9C85ebE478A1C0b69FCbb9;
-    address constant kissAddr = 0x6A1D6D2f4aF6915e6bBa8F2db46F442d18dB5C9b;
+    address constant oneAddr = 0x6A1D6D2f4aF6915e6bBa8F2db46F442d18dB5C9b;
 
     address constant binanceAddr = 0xB38e8c17e38363aF6EbdCb3dAE12e0243582891D;
     address constant pythAddr = 0xff1a0f4744e8582DF1aE09D5611b887B6a12925C;

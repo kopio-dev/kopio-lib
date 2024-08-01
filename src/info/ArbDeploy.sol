@@ -12,7 +12,7 @@ import {IVault} from "../IVault.sol";
 
 abstract contract ArbDeploy is ArbDeployAddr {
     IVault constant vault = IVault(vaultAddr);
-    IONE constant one = IONE(kissAddr);
+    IONE constant one = IONE(oneAddr);
     IDeploymentFactory constant factory = IDeploymentFactory(factoryAddr);
 
     IKopio constant kETH = IKopio(kETHAddr);
