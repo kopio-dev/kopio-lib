@@ -3,37 +3,10 @@
 pragma solidity ^0.8.26;
 
 import {Solady} from "./Solady.sol";
-import {ITransparentUpgradeableProxy, TransparentUpgradeableProxy} from "../vendor/TransparentUpgradeableProxy.sol";
+import {ITransparentUpgradeableProxy, Deployment} from "../IProxyFactory.sol";
+import {TransparentUpgradeableProxy} from "../vendor/TransparentUpgradeableProxy.sol";
 
-enum CreationKind {
-    NONE,
-    CREATE,
-    CREATE2,
-    CREATE3
-}
-
-/**
- * @notice Deployment information
- * @param implementation Current implementation address
- * @param updatedAt Timestamp of latest upgrade
- * @param kind Creation mechanism used for the deployment
- * @param proxy Address of the proxy or zero if not a proxy deployment
- * @param index Array index of the deployment in the internal tracking list
- * @param createdAt Creation timestamp of the deployment
- * @param version Current version of the deployment (can be over 1 for proxies)
- */
-struct Deployment {
-    address implementation;
-    uint88 updatedAt;
-    CreationKind kind;
-    ITransparentUpgradeableProxy proxy;
-    uint48 index;
-    uint48 createdAt;
-    uint256 version;
-    bytes32 salt;
-}
-
-library Deploys {
+library Create {
     function create(
         bytes memory creationCode,
         uint256 value
@@ -165,5 +138,64 @@ library Proxies {
         address proxy
     ) internal pure returns (ITransparentUpgradeableProxy) {
         return ITransparentUpgradeableProxy(proxy);
+    }
+}
+
+library Convert {
+    function toAddress(bytes32 b) internal pure returns (address) {
+        return address(uint160(uint256(b)));
+    }
+
+    function toBytes32(address a) internal pure returns (bytes32) {
+        return bytes32(bytes20(uint160(a)));
+    }
+
+    function toAddr(bytes memory b) internal pure returns (address) {
+        return abi.decode(b, (address));
+    }
+
+    function toDeployment(
+        bytes memory b
+    ) internal pure returns (Deployment memory) {
+        return abi.decode(b, (Deployment));
+    }
+
+    function toArray(
+        bytes memory value
+    ) internal pure returns (bytes[] memory result) {
+        result = new bytes[](1);
+        result[0] = value;
+    }
+
+    function add(bytes32 a, uint256 b) internal pure returns (bytes32) {
+        return bytes32(uint256(a) + b);
+    }
+
+    function sub(bytes32 a, uint256 b) internal pure returns (bytes32) {
+        return bytes32(uint256(a) - b);
+    }
+
+    function map(
+        bytes[] memory rawData,
+        function(bytes memory) pure returns (address) dataHandler
+    ) internal pure returns (address[] memory result) {
+        result = new address[](rawData.length);
+        unchecked {
+            for (uint256 i; i < rawData.length; i++) {
+                result[i] = dataHandler(rawData[i]);
+            }
+        }
+    }
+
+    function map(
+        bytes[] memory rawData,
+        function(bytes memory) pure returns (Deployment memory) dataHandler
+    ) internal pure returns (Deployment[] memory result) {
+        result = new Deployment[](rawData.length);
+        unchecked {
+            for (uint256 i; i < rawData.length; i++) {
+                result[i] = dataHandler(rawData[i]);
+            }
+        }
     }
 }
