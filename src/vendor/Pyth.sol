@@ -51,19 +51,27 @@ interface IPyth {
         uint256 _maxAge
     ) external view returns (Price memory);
 
-    function getPriceUnsafe(bytes32 _id) external view returns (Price memory);
+    function getPrice(bytes32) external view returns (Price memory);
+    function getPriceUnsafe(bytes32) external view returns (Price memory);
 
-    function getUpdateFee(
-        bytes[] memory _updateData
-    ) external view returns (uint256);
+    function getUpdateFee(bytes[] memory) external view returns (uint256);
 
-    function updatePriceFeeds(bytes[] memory _updateData) external payable;
+    function updatePriceFeeds(bytes[] memory) external payable;
 
     function updatePriceFeedsIfNecessary(
-        bytes[] memory _updateData,
-        bytes32[] memory _ids,
-        uint64[] memory _publishTimes
+        bytes[] calldata data,
+        bytes32[] calldata ids,
+        uint64[] calldata publishTimes
     ) external payable;
+
+    function queryPriceFeed(bytes32) external view returns (PriceFeed memory);
+    function priceFeedExists(bytes32) external view returns (bool);
+    function parsePriceFeedUpdates(
+        bytes[] calldata data,
+        bytes32[] calldata ids,
+        uint64 minTime,
+        uint64 maxTime
+    ) external payable returns (PriceFeed[] memory);
 
     // Function arguments are invalid (e.g., the arguments lengths mismatch)
     // Signature: 0xa9cb9e0d
