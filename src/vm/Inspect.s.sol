@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
-import {IData} from "../core/IData.sol";
+import {IData} from "../support/IData.sol";
 import {Log} from "./VmLibs.s.sol";
-import {IKopioProtocol, Asset, Oracle, RawPrice} from "../IKopioProtocol.sol";
+import {KopioCore, Asset, Oracle, RawPrice} from "../KopioCore.sol";
 import {IERC20} from "../token/IERC20.sol";
 import {PythView} from "../vendor/Pyth.sol";
 import {ArbDeploy} from "../info/ArbDeploy.sol";
@@ -15,7 +15,7 @@ abstract contract Inspector is ArbDeploy {
     using Utils for *;
 
     IData internal constant data = IData(dataAddr);
-    IKopioProtocol internal constant protocol = IKopioProtocol(protocolAddr);
+    KopioCore internal constant protocol = KopioCore(protocolAddr);
     address[] extTokens = [usdtAddr];
     function peekAccount(
         address account,
@@ -64,10 +64,7 @@ abstract contract Inspector is ArbDeploy {
         IData.A memory acc = data.getAccount(pythView, account, extTokens);
         for (uint256 i; i < acc.icdp.deposits.length; i++) {
             acc.icdp.deposits[i].symbol.clg("Deposits");
-            acc.icdp.deposits[i].amount.dlg(
-                "Amount",
-                acc.icdp.deposits[i].config.decimals
-            );
+            acc.icdp.deposits[i].amount.dlg("Amount");
             acc.icdp.deposits[i].val.dlg("Value", 8);
         }
 
@@ -83,10 +80,7 @@ abstract contract Inspector is ArbDeploy {
     ) internal pure returns (uint256 totalVal) {
         for (uint256 i; i < acc.scdp.deposits.length; i++) {
             acc.scdp.deposits[i].symbol.clg("SCDP Deposits");
-            acc.scdp.deposits[i].amount.dlg(
-                "Amount",
-                acc.scdp.deposits[i].config.decimals
-            );
+            acc.scdp.deposits[i].amount.dlg("Amount");
             acc.scdp.deposits[i].val.dlg("Value", 8);
             totalVal += acc.scdp.deposits[i].val;
             Log.hr();

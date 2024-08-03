@@ -2,15 +2,15 @@
 // solhint-disable
 
 pragma solidity ^0.8.0;
-import {Deployment, IDeploymentFactory} from "../core/IDeploymentFactory.sol";
+import {Deployment, IProxyFactory} from "../IProxyFactory.sol";
 import {mvm} from "./MinVm.s.sol";
 
 library Factory {
-    IDeploymentFactory internal constant FACTORY =
-        IDeploymentFactory(0x000000000070AB95211e32fdA3B706589D3482D5);
+    IProxyFactory internal constant FACTORY =
+        IProxyFactory(0x000000000070AB95211e32fdA3B706589D3482D5);
 
     struct FactoryState {
-        IDeploymentFactory factory;
+        IProxyFactory factory;
         string id;
         string outputLocation;
         string currentKey;

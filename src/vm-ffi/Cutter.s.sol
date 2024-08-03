@@ -3,7 +3,7 @@
 pragma solidity ^0.8.0;
 
 import {PLog} from "../vm/PLog.s.sol";
-import {FacetCut, FacetCutAction, IDiamond, Initializer} from "../core/IDiamond.sol";
+import {FacetCut, FacetCutAction, IDiamond, Initializer} from "../support/IDiamond.sol";
 import {defaultFacetLoc, FacetData, getFacet, getFacets} from "./ffi-facets.s.sol";
 import {Scripted} from "../vm/Scripted.s.sol";
 import {ArbDeploy} from "../info/ArbDeploy.sol";

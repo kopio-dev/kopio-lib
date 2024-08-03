@@ -2,7 +2,7 @@
 // solhint-disable
 pragma solidity ^0.8.0;
 
-import {IPyth, PythView, Price} from "../vendor/Pyth.sol";
+import {IPyth, PythView, Price, PriceFeed} from "../vendor/Pyth.sol";
 import {Utils} from "../utils/Libs.sol";
 
 contract MockPyth is IPyth {
@@ -14,16 +14,16 @@ contract MockPyth is IPyth {
     }
 
     function getPriceNoOlderThan(
-        bytes32 _id,
-        uint256 _maxAge
+        bytes32 id,
+        uint256 maxAge
     ) external view override returns (Price memory) {
-        if (prices[_id].publishTime >= block.timestamp - _maxAge) {
-            return prices[_id];
+        if (prices[id].publishTime >= block.timestamp - maxAge) {
+            return prices[id];
         }
         revert(
             string.concat(
                 "Price too old: ",
-                uint256(prices[_id].publishTime).str(),
+                uint256(prices[id].publishTime).str(),
                 "current: ",
                 uint256(block.timestamp).str()
             )
@@ -31,42 +31,67 @@ contract MockPyth is IPyth {
     }
 
     function getPriceUnsafe(
-        bytes32 _id
+        bytes32 id
     ) external view override returns (Price memory) {
-        return prices[_id];
+        return prices[id];
     }
 
     function getUpdateFee(
-        bytes[] memory _updateData
+        bytes[] memory update
     ) external pure override returns (uint256) {
-        if (_updateData.length == 0) return 0;
-        return abi.decode(_updateData[0], (PythView)).ids.length;
+        if (update.length == 0) return 0;
+        return abi.decode(update[0], (PythView)).ids.length;
     }
 
-    function updatePriceFeeds(bytes[] memory _updateData) public payable {
-        if (_updateData.length == 0) return;
-        PythView memory _viewData = abi.decode(_updateData[0], (PythView));
-        for (uint256 i; i < _viewData.ids.length; i++) {
-            _set(_viewData.ids[i], _viewData.prices[i]);
+    function updatePriceFeeds(bytes[] memory update) public payable {
+        if (update.length == 0) return;
+        PythView memory data = abi.decode(update[0], (PythView));
+        for (uint256 i; i < data.ids.length; i++) {
+            _set(data.ids[i], data.prices[i]);
         }
     }
 
     function updatePriceFeedsIfNecessary(
-        bytes[] memory _updateData,
-        bytes32[] memory _ids,
-        uint64[] memory _publishTimes
+        bytes[] memory update,
+        bytes32[] memory ids,
+        uint64[] memory publishTimes
     ) external payable override {
-        if (_updateData.length == 0) return;
-        PythView memory _viewData = abi.decode(_updateData[0], (PythView));
-        for (uint256 i; i < _ids.length; i++) {
-            if (prices[_ids[i]].publishTime < _publishTimes[i]) {
-                _set(_viewData.ids[i], _viewData.prices[i]);
+        if (update.length == 0) return;
+        PythView memory data = abi.decode(update[0], (PythView));
+        for (uint256 i; i < ids.length; i++) {
+            if (prices[ids[i]].publishTime < publishTimes[i]) {
+                _set(data.ids[i], data.prices[i]);
             }
         }
     }
 
-    function _set(bytes32 _id, Price memory _price) internal {
-        prices[_id] = _price;
+    function queryPriceFeed(
+        bytes32 id
+    ) external view override returns (PriceFeed memory) {
+        return PriceFeed(id, prices[id], prices[id]);
+    }
+
+    function getPrice(
+        bytes32 id
+    ) external view override returns (Price memory) {
+        return prices[id];
+    }
+
+    function priceFeedExists(bytes32 id) external view override returns (bool) {
+        return prices[id].publishTime != 0;
+    }
+
+    function parsePriceFeedUpdates(
+        bytes[] calldata,
+        bytes32[] calldata,
+        uint64,
+        uint64
+    ) external payable override returns (PriceFeed[] memory) {
+        revert("Not implemented");
+    }
+
+    function _set(bytes32 id, Price memory _price) internal {
+        prices[id] = _price;
     }
 }
 

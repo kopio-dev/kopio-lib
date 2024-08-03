@@ -2,7 +2,7 @@
 pragma solidity ^0.8.0;
 
 import {VaultAsset} from "../IVault.sol";
-import {View} from "../IKopioProtocol.sol";
+import {TData} from "../KopioCore.sol";
 import {PythView} from "../vendor/Pyth.sol";
 
 interface IData {
@@ -51,10 +51,10 @@ interface IData {
     }
 
     struct G {
-        View.SCDP scdp;
-        View.ICDP icdp;
+        TData.SCDP scdp;
+        TData.ICDP icdp;
         V vault;
-        View.AssetView[] assets;
+        TData.TAsset[] assets;
         Tkn[] tokens;
         W[] wraps;
         C[] collections;
@@ -90,8 +90,8 @@ interface IData {
     struct A {
         address addr;
         uint256 chainId;
-        View.MAccount icdp;
-        View.SAccount scdp;
+        TData.IAccount icdp;
+        TData.SAccount scdp;
         C[] collections;
         Tkn[] tokens;
     }
