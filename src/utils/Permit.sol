@@ -14,7 +14,7 @@ library Permit {
         address spender,
         uint256 amount,
         uint256 deadline
-    ) public view returns (bytes32) {
+    ) internal view returns (bytes32) {
         return
             getPermitHash(
                 owner,
