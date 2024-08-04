@@ -2536,7 +2536,7 @@ interface ISCDPFacet {
 
 interface IKopioCore is
     IEmitted,
-    IDiamondCutFacet,
+    IExtendedDiamondCutFacet,
     IDiamondLoupeFacet,
     IDiamondStateFacet,
     IAuthorizationFacet,
