@@ -3,6 +3,6 @@ pragma solidity ^0.8.0;
 
 // solhint-disable
 
-import {IExtendedDiamondCutFacet, IDiamondLoupeFacet, FacetCut, FacetCutAction, Initializer} from "../KopioCore.sol";
+import {IExtendedDiamondCutFacet, IDiamondLoupeFacet, FacetCut, FacetCutAction, Initializer} from "../IKopioCore.sol";
 
 interface IDiamond is IExtendedDiamondCutFacet, IDiamondLoupeFacet {}

@@ -2,7 +2,7 @@
 pragma solidity ^0.8.0;
 
 import {VaultAsset} from "../IVault.sol";
-import {TData} from "../KopioCore.sol";
+import {TData} from "../IKopioCore.sol";
 import {PythView} from "../vendor/Pyth.sol";
 
 interface IData {

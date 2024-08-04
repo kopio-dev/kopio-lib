@@ -3,7 +3,7 @@ pragma solidity ^0.8.0;
 
 import {IERC20Permit} from "./token/IERC20Permit.sol";
 import {IAccessControlEnumerable} from "./support/IAccessControl.sol";
-import {IKopioIssuer, IERC4626} from "./KopioCore.sol";
+import {IKopioIssuer, IERC4626} from "./IKopioCore.sol";
 import {IERC165} from "./vendor/IERC165.sol";
 
 interface IKopioShare is

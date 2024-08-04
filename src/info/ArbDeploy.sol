@@ -7,7 +7,7 @@ import {ILZ1155} from "../token/ILZ1155.sol";
 import {IProxyFactory} from "../IProxyFactory.sol";
 import {ISwapRouter} from "../vendor/ISwapRouter.sol";
 import {IQuoterV2} from "../vendor/IQuoterV2.sol";
-import {IMarketStatus} from "../KopioCore.sol";
+import {IMarketStatus} from "../IKopioCore.sol";
 import {IKopio} from "../IKopio.sol";
 import {IKopioShare} from "../IKopioShare.sol";
 import {IPyth} from "../vendor/Pyth.sol";

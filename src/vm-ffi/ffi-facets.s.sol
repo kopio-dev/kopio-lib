@@ -4,7 +4,7 @@
 pragma solidity ^0.8.0;
 
 import {execFFI, getFFIPath, vmFFI} from "../vm/Base.s.sol";
-import {FacetCut, Initializer} from "../KopioCore.sol";
+import {FacetCut, Initializer} from "../IKopioCore.sol";
 
 struct DiamondCtor {
     FacetCut[] cuts;

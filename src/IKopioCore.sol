@@ -2534,7 +2534,7 @@ interface ISCDPFacet {
     function getLiquidatableSCDP() external view returns (bool);
 }
 
-interface KopioCore is
+interface IKopioCore is
     IEmitted,
     IDiamondCutFacet,
     IDiamondLoupeFacet,

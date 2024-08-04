@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity ^0.8.0;
 
-import {IKopioIssuer, IVaultExtender} from "./KopioCore.sol";
+import {IKopioIssuer, IVaultExtender} from "./IKopioCore.sol";
 import {IVault} from "./IVault.sol";
 import {IERC20Permit} from "./token/IERC20Permit.sol";
 import {IERC165} from "./vendor/IERC165.sol";

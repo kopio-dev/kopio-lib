@@ -2,7 +2,7 @@
 pragma solidity ^0.8.0;
 import {IData} from "../support/IData.sol";
 import {Log} from "./VmLibs.s.sol";
-import {KopioCore, Asset, Oracle, RawPrice} from "../KopioCore.sol";
+import {IKopioCore, Asset, Oracle, RawPrice} from "../IKopioCore.sol";
 import {IERC20} from "../token/IERC20.sol";
 import {PythView} from "../vendor/Pyth.sol";
 import {ArbDeploy} from "../info/ArbDeploy.sol";
@@ -15,7 +15,7 @@ abstract contract Inspector is ArbDeploy {
     using Utils for *;
 
     IData internal constant data = IData(dataAddr);
-    KopioCore internal constant protocol = KopioCore(protocolAddr);
+    IKopioCore internal constant protocol = IKopioCore(protocolAddr);
     address[] extTokens = [usdtAddr];
     function peekAccount(
         address account,
