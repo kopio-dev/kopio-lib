@@ -6,7 +6,7 @@ import {ERC20} from "../token/ERC20.sol";
 
 // solhint-disable no-empty-blocks
 
-contract MockERC20Restricted is ERC20 {
+contract ERC20MockRestricted is ERC20 {
     mapping(address => bool) public minters;
     address public owner;
 
@@ -47,7 +47,7 @@ contract MockERC20Restricted is ERC20 {
     }
 }
 
-contract MockERC20 is ERC20 {
+contract ERC20Mock is ERC20 {
     constructor(
         string memory name_,
         string memory symbol_,
@@ -66,8 +66,8 @@ contract MockERC20 is ERC20 {
     }
 }
 
-contract WETH is MockERC20 {
-    constructor() MockERC20("WETH", "WETH", 18, 0) {}
+contract WETH is ERC20Mock {
+    constructor() ERC20Mock("WETH", "WETH", 18, 0) {}
 
     function deposit() external payable {
         _mint(msg.sender, msg.value);
@@ -79,8 +79,8 @@ contract WETH is MockERC20 {
     }
 }
 
-contract USDC is MockERC20 {
-    constructor() MockERC20("USDC", "USDC", 18, 0) {}
+contract USDC is ERC20Mock {
+    constructor() ERC20Mock("USDC", "USDC", 18, 0) {}
 
     function deposit() external payable {
         _mint(msg.sender, msg.value);
@@ -92,8 +92,8 @@ contract USDC is MockERC20 {
     }
 }
 
-contract DAI is MockERC20 {
-    constructor() MockERC20("DAI", "DAI", 18, 0) {}
+contract DAI is ERC20Mock {
+    constructor() ERC20Mock("DAI", "DAI", 18, 0) {}
 
     function deposit() external payable {
         _mint(msg.sender, msg.value);
@@ -105,8 +105,8 @@ contract DAI is MockERC20 {
     }
 }
 
-contract USDT is MockERC20 {
-    constructor() MockERC20("USDT", "USDT", 6, 0) {}
+contract USDT is ERC20Mock {
+    constructor() ERC20Mock("USDT", "USDT", 6, 0) {}
 
     function deposit() external payable {
         _mint(msg.sender, msg.value);

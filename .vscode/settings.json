@@ -28,5 +28,11 @@
   "solidity.test": {
     "executeOnSave": false,
     "verbosity": 5
+  },
+  "solidity.validation": {
+    "onChange": true,
+    "onSave": true,
+    "onOpen": true,
+    "delay": 150
   }
 }
