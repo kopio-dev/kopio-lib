@@ -368,30 +368,30 @@ library Log {
         id(_id);
         hr();
         clg(
-            "chain/blocknr/blocktime ->",
+            "chain/blocknr/blocktime",
             block.chainid.str().cc("/", block.number.str(), "/").cc(
                 block.timestamp.str()
             )
         );
-        clg("address(this) ->", VmHelp.txt(address(this)));
-        dlg(address(this).balance, "eth ->");
+        clg("address(this)", VmHelp.txt(address(this)));
+        dlg(address(this).balance, "eth");
         clg(
-            "msg.sender/tx.sender ->",
+            "msg.sender/tx.sender",
             VmHelp.txt(msg.sender).cc("/", VmHelp.txt(tx.origin))
         );
         clg(
-            "eth ->",
+            "eth",
             msg.sender.balance.dstr(18).cc("/", tx.origin.balance.dstr(18))
         );
         hr();
-        clg(hasVM(), "HEVM ->");
-        clg("tx-mode ->", _c.mode);
+        clg(hasVM(), "HEVM");
+        clg("tx-mode", _c.mode);
         clg(
-            "msg.sender/tx.origin ->",
+            "msg.sender/tx.origin",
             VmHelp.txt(_c.msgSender).cc("/", VmHelp.txt(_c.txOrigin))
         );
         clg(
-            "eth ->",
+            "eth",
             _c.msgSender.balance.dstr(18).cc("/", _c.txOrigin.balance.dstr(18))
         );
 

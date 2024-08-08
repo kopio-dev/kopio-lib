@@ -26,13 +26,25 @@
     "titleBar.inactiveForeground": "#e7e7e799"
   },
   "solidity.test": {
-    "executeOnSave": false,
-    "verbosity": 5
+    "executeOnSave": true,
+    "verbosity": 3
   },
+  "solidity.compiler": {
+    "outDir": "out/vsc",
+    "type": "Remote",
+    "npm": "solc",
+    "remote": "v0.8.26+commit.8a97fa7a"
+  },
+  "solidity.lsp.enabled": true,
   "solidity.validation": {
     "onChange": true,
-    "onSave": true,
-    "onOpen": true,
-    "delay": 150
+    "onSave": false,
+    "onOpen": false,
+    "delay": 150,
+    "autoOpenProblems": true,
+    "ignoreErrorCodes": [
+      2394,
+      3805
+    ]
   }
 }

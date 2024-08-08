@@ -983,7 +983,7 @@ library ShortAssert {
     }
 
     function _log(string memory key, string memory val) internal pure {
-        PLog.clg(val, key);
+        PLog.clg(key, val);
     }
 
     function eq(

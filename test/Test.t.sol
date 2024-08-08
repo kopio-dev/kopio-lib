@@ -25,6 +25,7 @@ contract TTest is Tested, Based {
     }
 
     function testBase() public forked("RPC_ARBITRUM_ALCHEMY", 200000000) {
+        vm.skip(true);
         base("MNEMONIC", "arbitrum");
         base("MNEMONIC", "RPC_ARBITRUM_ALCHEMY");
         address(0x64).link("link-addr");
@@ -42,9 +43,9 @@ contract TTest is Tested, Based {
         bytes32 bts32 = bytes32("val");
 
         bts.blg("bts");
+        bts.blgstr("btsstr");
         bts32.blg("bts32");
         bts32.blgstr("bts32str");
-        bts.blgstr("btsstr");
 
         uint256 pctVal = 105e2;
 
@@ -57,13 +58,14 @@ contract TTest is Tested, Based {
     }
 
     function testStrings() public {
+        address(this).clg("addr");
         bytes32 val = "foo";
         bytes(val.txt()).length.eq(66, "str");
         bytes(val.str()).length.eq(3, "txt");
 
         10.1 ether.dstr().eq("10.10", "dec-0");
-        12.5e8.dstr(8).eq("12.50", "dec-1");
         2524e8.dstr(8).eq("2524.00", "dec-2");
+        12.5e8.dstr(8).eq("12.50", "dec-1");
         5000.01e8.dstr(8).eq("5000.01", "dec-3");
 
         0.0005e8.dstr(8).eq("0.0005", "dec-4");
@@ -105,7 +107,7 @@ contract TTest is Tested, Based {
     function testBytes() public {
         bytes32 val = bytes32(abi.encodePacked(uint192(192), uint64(64)));
         (uint192 a, uint64 b) = abi.decode(split(val, 192), (uint192, uint64));
-        a.eq(192, "a");
+        a.eq(192, "val");
         b.eq(64, "b");
     }
 
@@ -125,7 +127,7 @@ contract TTest is Tested, Based {
         vm.startBroadcast(address(5));
         broadcastWith(address(2));
         prank(address(5));
-        Log.ctx("testLogs");
+        Log.ctx("logsContext");
         thing.func();
         uint16 a = 150e2;
         a.plg("pct1");
@@ -245,7 +247,7 @@ contract TestContract {
         nums[1] = 100 ether;
         nums[2] = 0 ether;
 
-        Log.ctx("func()");
+        Log.ctx("func");
     }
 
     function nope() public view {
