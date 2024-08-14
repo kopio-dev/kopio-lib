@@ -106,18 +106,71 @@ interface Multi {
     error ZERO_NATIVE_IN(Action action);
     error VALUE_NOT_ZERO(Action action, uint256 value);
     error INVALID_NATIVE_TOKEN_IN(Action action, address token, string symbol);
-    error ZERO_OR_INVALID_AMOUNT_IN(Action action, address token, string symbol, uint256 balance, uint256 amountOut);
+    error ZERO_OR_INVALID_AMOUNT_IN(
+        Action action,
+        address token,
+        string symbol,
+        uint256 balance,
+        uint256 amountOut
+    );
     error INVALID_ACTION(Action action);
-    error NATIVE_SYNTH_WRAP_NOT_ALLOWED(Action action, address token, string symbol);
 
-    error TOKENS_IN_MODE_WAS_NONE_BUT_ADDRESS_NOT_ZERO(Action action, address token);
-    error TOKENS_OUT_MODE_WAS_NONE_BUT_ADDRESS_NOT_ZERO(Action action, address token);
+    error NATIVE_SYNTH_WRAP_NOT_ALLOWED(
+        Action action,
+        address token,
+        string symbol
+    );
+
+    error TOKENS_IN_MODE_WAS_NONE_BUT_ADDRESS_NOT_ZERO(
+        Action action,
+        address token
+    );
+    error TOKENS_OUT_MODE_WAS_NONE_BUT_ADDRESS_NOT_ZERO(
+        Action action,
+        address token
+    );
 
     error INSUFFICIENT_UPDATE_FEE(uint256 updateFee, uint256 amountIn);
+
+    error LENGTH_MISMATCH(uint256 a, uint256 b);
+
+    enum CallMode {
+        None,
+        Call,
+        Delegate,
+        Static
+    }
+
+    struct Target {
+        uint248 sender;
+        CallMode mode;
+    }
+
+    struct Call {
+        CallMode mode;
+        uint256 value;
+        address target;
+        bytes data;
+    }
+
+    error INVALID_RAW_CALL(Call);
 }
 
 interface IKopioMulticall is Multi {
-    function rescue(address token, uint256 amount, address receiver) external;
-
-    function execute(Op[] calldata ops, bytes[] calldata prices) external payable returns (Result[] memory);
+    event MulticallExecuted(address _sender, Op[] ops, Result[] results);
+    function execute(
+        Op[] calldata ops,
+        bytes[] calldata prices
+    ) external payable returns (Result[] memory);
+    function executeRaw(
+        bytes[] calldata
+    ) external payable returns (bytes[] memory);
+    function setTargets(
+        address[] calldata,
+        bytes4[] calldata,
+        Target[] calldata
+    ) external;
+    function getRawCall(
+        bytes calldata data
+    ) external view returns (Call memory);
 }

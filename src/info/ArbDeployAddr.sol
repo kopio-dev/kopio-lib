@@ -13,7 +13,8 @@ abstract contract ArbAddr {
     address constant wethAddr = 0x82aF49447D8a07e3bd95BD0d56f35241523fBab1;
     address constant daiAddr = 0xDA10009cBd5D07dd0CeCc66161FC93D7c9000da1;
     address constant usdtAddr = 0xFd086bC7CD5C481DCC9C85ebE478A1C0b69FCbb9;
-    address constant oneAddr = 0x6A1D6D2f4aF6915e6bBa8F2db46F442d18dB5C9b;
+
+    address constant oneAddr = 0x10000000001b2cc3aeEfDF01815B5D5FcBaf05Fc;
 
     address constant binanceAddr = 0xB38e8c17e38363aF6EbdCb3dAE12e0243582891D;
     address constant pythAddr = 0xff1a0f4744e8582DF1aE09D5611b887B6a12925C;
@@ -30,36 +31,35 @@ abstract contract ArbAddr {
 }
 
 abstract contract ArbDeployAddr is ArbAddr {
-    address constant protocolAddr = 0x0000000000177abD99485DCaea3eFaa91db3fe72;
-    address constant multicallAddr = 0xC35A7648B434f0A161c12BD144866bdf93c4a4FC;
-    address constant factoryAddr = 0x000000000070AB95211e32fdA3B706589D3482D5;
-    address constant vaultAddr = 0x2dF01c1e472eaF880e3520C456b9078A5658b04c;
-    address constant dataAddr = 0xef5196c4bDd74356943dcC20A7d27eAdD0F9b9D7;
+    address constant protocolAddr = 0x000000000000dcC1394A66cD4f84Fb38932a0fAB;
+    address constant multicallAddr = 0x000000000031188af86eb08b1C25a893B75a9a3B;
+    address constant factoryAddr = 0x00000000000029398fcE86f09FF8453c8D0Cd60D;
+    address constant vaultAddr = 0x000000000016777A0173d5d1717897d04485cC50;
+    address constant dataAddr = 0xddDdDddDDd14aC7aB83F957b804e6b714b75179E;
     address constant marketStatusAddr =
-        0xf6188e085ebEB716a730F8ecd342513e72C8AD04;
+        0x77777777775c600736D65AD78623c0D563635e02;
 
-    address constant kETHAddr = 0x24dDC92AA342e92f26b4A676568D04d2E3Ea0abc;
-    address constant kBTCAddr = 0x11EF4EcF3ff1c8dB291bc3259f3A4aAC6e4d2325;
-    address constant kSOLAddr = 0x96084d2E3389B85f2Dc89E321Aaa3692Aed05eD2;
-    address constant kEURAddr = 0x83BB68a7437b02ebBe1ab2A0E8B464CC5510Aafe;
-    address constant kJPYAddr = 0xc4fEE1b0483eF73352447b1357adD351Bfddae77;
-    address constant kGBPAddr = 0xdb274afDfA7f395ef73ab98C18cDf3D9C03b538C;
-    address constant kXAUAddr = 0xe0A49C9215206f9cfb79981901bDF1f2716d3215;
-    address constant kXAGAddr = 0x1d6A65BBfbbc995a19Fc19cB17FA135f9EdB6A24;
-    address constant kDOGEAddr = 0x4a719F02aF3f0FFf15447B6824464857ADB5210D;
+    address constant kETHAddr = 0x6788C6aEd8CB32E166484796C533bF21abfe0354;
+    address constant kBTCAddr = 0x3074Bf9512F2d945f2C54A3A5893A1Fda895321A;
+    address constant kSOLAddr = 0xe0492d73E8E950616Da6C766E952204aB39455e9;
+    address constant kEURAddr = 0x771C83402cE9Cd7E36e4AC7F2B0eED1Ad595814d;
+    address constant kJPYAddr = 0x690F31dca265Ba9Ae926228989AeeC6a822d5904;
+    address constant kGBPAddr = 0x41e18889f1e59227fcb4fbbc2A1dAe20eFA1e45F;
+    address constant kXAUAddr = 0xa47A706F0f07715760f96C4c2E322D25cDCb0A06;
+    address constant kXAGAddr = 0xA40c5780044fa125160770Cd29Bdbb631eA8ed0f;
+    address constant kDOGEAddr = 0x9DA7799E7896c542C13aD01Db5A9DC3A95Df193A;
 
-    address constant fkETHAddr = 0x3103570A28ca026e818c79608F1FF804F4Bde284;
-    address constant fkBTCAddr = 0xc67a33599f73928D24D32fC0015e187157233410;
-    address constant fkSOLAddr = 0x362cB60d235Cf8258042DAfB2a3Cdb14302D9D0f;
-    address constant fkEURAddr = 0xBb6053898C5f6e536405fA324839141aA102b6D9;
-    address constant fkJPYAddr = 0x3438Eb57e5b0f1CbEca257Aea9644B26b1B61EaC;
-    address constant fkGBPAddr = 0x37BddA32281c15716D35f901b8141f7F382220C1;
-    address constant fkXAUAddr = 0x3A1ffd3426916B16878AAa072B74DdaEC3e31007;
-    address constant fkXAGAddr = 0x4d516E2049542B350368A44cBE71F3bbc00000D6;
-    address constant fkDOGEAddr = 0x44217deFe47C3F5D03471d59723CF437efBfb871;
+    address constant fkETHAddr = 0x2aE27010F340062ceaAB3591B62351737f9E77B4;
+    address constant fkBTCAddr = 0x8616281a8F9cA1860fbedf096581Db08B02A0297;
+    address constant fkSOLAddr = 0x34b322DcA665754D5B1B07871aF8Ad2AD021d44D;
+    address constant fkEURAddr = 0x2F9727e769f9fB79D427Ca84dB35C366fA49600c;
+    address constant fkJPYAddr = 0x03eeA39526534210e2471C54398E5Be8473C2c28;
+    address constant fkGBPAddr = 0x6bA32Fd18d550f8E56ad93887A7f208A7eFB03C3;
+    address constant fkXAUAddr = 0xd53FD8d8b0bF7116aeA20d8465c9A013002C5b6F;
+    address constant fkXAGAddr = 0x77606e3670273A489234B11571EfAC4163aC93cD;
+    address constant fkDOGEAddr = 0x100210d2d6058B9Aee92306aAe144944A756ff26;
 
-    address constant safe = 0x266489Bde85ff0dfe1ebF9f0a7e6Fed3a973cEc3;
-    address constant nftMultisig = 0x389297F0d8C489954D65e04ff0690FC54E57Dad6;
+    address constant safe = 0xd884451eC95721BcF05948C37a9F939059c87E6a;
 
     function getKopioAddr(
         string memory _symbol
