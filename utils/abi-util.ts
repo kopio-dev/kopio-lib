@@ -88,7 +88,7 @@ const uniqueErrorsEvents = allErrorsEvents.filter(
 	(item, index, self) => self.findIndex(i => i.name === item.name && i.type === item.type) === index,
 )
 await write(
-	'events.abi.ts',
+	'errors.abi.ts',
 	`export const errorsAbi = ${JSON.stringify(
 		uniqueErrorsEvents.filter(i => i.type === 'error'),
 		null,
@@ -96,7 +96,7 @@ await write(
 	)} as const`,
 )
 await write(
-	'errors.abi.ts',
+	'events.abi.ts',
 	`export const eventsAbi = ${JSON.stringify(
 		uniqueErrorsEvents.filter(i => i.type === 'event'),
 		null,
