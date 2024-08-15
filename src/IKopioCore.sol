@@ -4,6 +4,7 @@ import {IERC20} from "./token/IERC20Permit.sol";
 import {IAggregatorV3} from "./vendor/IAggregatorV3.sol";
 import {IKopio} from "./IKopio.sol";
 import {PythView} from "./vendor/Pyth.sol";
+import {Multi} from "./IKopioMulticall.sol";
 
 // solhint-disable
 
@@ -1072,106 +1073,6 @@ interface IKopioIssuer {
     function convertManyToShares(
         uint256[] calldata assets
     ) external view returns (uint256[] memory shares);
-}
-
-interface Multi {
-    enum Action {
-        ICDPDeposit,
-        ICDPWithdraw,
-        ICDPRepay,
-        ICDPBorrow,
-        SCDPDeposit,
-        SCDPTrade,
-        SCDPWithdraw,
-        SCDPClaim,
-        Unwrap,
-        Wrap,
-        VaultDeposit,
-        VaultRedeem,
-        AMMExactInput,
-        WrapNative,
-        UnwrapNative
-    }
-
-    struct Op {
-        Action action;
-        Data data;
-    }
-
-    struct Data {
-        address tokenIn;
-        uint96 amountIn;
-        ModeIn modeIn;
-        address tokenOut;
-        uint96 amountOut;
-        ModeOut modeOut;
-        uint128 minOut;
-        bytes path;
-    }
-
-    enum ModeIn {
-        None,
-        Native,
-        Pull,
-        Balance,
-        UseOpIn,
-        BalanceUnwrapNative,
-        BalanceWrapNative,
-        BalanceNative
-    }
-
-    enum ModeOut {
-        None,
-        ReturnNative,
-        Return,
-        Leave
-    }
-
-    struct Result {
-        address tokenIn;
-        uint256 amountIn;
-        address tokenOut;
-        uint256 amountOut;
-    }
-
-    error NO_MULTI_ALLOWANCE(Action action, address token, string symbol);
-    error ZERO_AMOUNT_IN(Action action, address token, string symbol);
-    error ZERO_NATIVE_IN(Action action);
-    error VALUE_NOT_ZERO(Action action, uint256 value);
-    error INVALID_NATIVE_TOKEN_IN(Action action, address token, string symbol);
-    error ZERO_OR_INVALID_AMOUNT_IN(
-        Action action,
-        address token,
-        string symbol,
-        uint256 balance,
-        uint256 amountOut
-    );
-    error INVALID_ACTION(Action action);
-    error NATIVE_SYNTH_WRAP_NOT_ALLOWED(
-        Action action,
-        address token,
-        string symbol
-    );
-
-    error TOKENS_IN_MODE_WAS_NONE_BUT_ADDRESS_NOT_ZERO(
-        Action action,
-        address token
-    );
-    error TOKENS_OUT_MODE_WAS_NONE_BUT_ADDRESS_NOT_ZERO(
-        Action action,
-        address token
-    );
-
-    error INSUFFICIENT_UPDATE_FEE(uint256 updateFee, uint256 amountIn);
-}
-
-interface IKopioMulticall is Multi {
-    function rescue(address token, uint256 amount, address receiver) external;
-
-    function execute(
-        Op[] calldata ops,
-        bytes[] calldata prices
-    ) external payable returns (Result[] memory);
 }
 
 interface IMarketStatus {
