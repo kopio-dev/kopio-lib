@@ -8,6 +8,13 @@ abstract contract Files {
         _;
         Factory.writeJSON();
     }
+    modifier withJSONS(string memory _id) {
+        Factory.initJSON(_id);
+        jsonKey(_id);
+        _;
+        jsonKey();
+        Factory.writeJSON();
+    }
 
     function jsonStart(string memory _id) internal {
         Factory.initJSON(_id);
@@ -47,19 +54,25 @@ abstract contract Files {
 
     function jsons(string memory _id, address _val) internal {
         Factory.initJSON(_id);
+        jsonKey(_id);
         Factory.set(_val, _id);
         Factory.writeJSON();
+        jsonKey();
     }
 
     function jsons(string memory _id, bytes memory _val) internal {
         Factory.initJSON(_id);
+        jsonKey(_id);
         Factory.set(_val, _id);
+        jsonKey();
         Factory.writeJSON();
     }
 
     function jsons(string memory _id, uint256 _val) internal {
         Factory.initJSON(_id);
+        jsonKey(_id);
         Factory.set(_val, _id);
+        jsonKey();
         Factory.writeJSON();
     }
 }
