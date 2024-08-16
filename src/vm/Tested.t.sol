@@ -69,6 +69,7 @@ abstract contract Tested is Scripted, Test {
 
         prankNew(_label);
         _;
+
         VmCaller.clear();
         _m.restore(_s, _o);
     }
