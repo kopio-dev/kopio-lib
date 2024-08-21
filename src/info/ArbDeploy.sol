@@ -12,6 +12,7 @@ import {IKopio} from "../IKopio.sol";
 import {IKopioShare} from "../IKopioShare.sol";
 import {IPyth} from "../vendor/Pyth.sol";
 import {IONE, IVault} from "../IONE.sol";
+import {IKopioMulticall} from "../IKopioMulticall.sol";
 
 IPyth constant pythUpdater = IPyth(0xfeEFeEfeED0bd9Df8d23dC0242FEF943c574468f);
 
@@ -19,6 +20,7 @@ abstract contract ArbDeploy is ArbDeployAddr {
     IVault constant vault = IVault(vaultAddr);
     IONE constant one = IONE(oneAddr);
     IProxyFactory constant factory = IProxyFactory(factoryAddr);
+    IKopioMulticall constant multicall = IKopioMulticall(multicallAddr);
 
     IKopio constant kETH = IKopio(kETHAddr);
     IKopio constant kBTC = IKopio(kBTCAddr);
