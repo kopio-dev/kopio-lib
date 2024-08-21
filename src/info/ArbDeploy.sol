@@ -20,7 +20,7 @@ abstract contract ArbDeploy is ArbDeployAddr {
     IVault constant vault = IVault(vaultAddr);
     IONE constant one = IONE(oneAddr);
     IProxyFactory constant factory = IProxyFactory(factoryAddr);
-    IKopioMulticall constant multicall = IKopioMulticall(multicallAddr);
+    IKopioMulticall constant kMulticall = IKopioMulticall(multicallAddr);
 
     IKopio constant kETH = IKopio(kETHAddr);
     IKopio constant kBTC = IKopio(kBTCAddr);
