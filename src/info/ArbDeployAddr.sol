@@ -38,7 +38,9 @@ abstract contract ArbDeployAddr is ArbAddr {
     address constant dataAddr = 0xddDdDddDDd14aC7aB83F957b804e6b714b75179E;
     address constant marketStatusAddr =
         0x77777777775c600736D65AD78623c0D563635e02;
-
+    address constant pythUpdaterAddr =
+        0xfeEFeEfeED0bd9Df8d23dC0242FEF943c574468f;
+    address constant migrationAddr = 0xaaaaaAaAaAa186774266Ea9b3FC0B588B3232795;
     address constant kETHAddr = 0x6788C6aEd8CB32E166484796C533bF21abfe0354;
     address constant kBTCAddr = 0x3074Bf9512F2d945f2C54A3A5893A1Fda895321A;
     address constant kSOLAddr = 0xe0492d73E8E950616Da6C766E952204aB39455e9;
@@ -60,10 +62,9 @@ abstract contract ArbDeployAddr is ArbAddr {
     address constant fkDOGEAddr = 0x100210d2d6058B9Aee92306aAe144944A756ff26;
 
     address constant safe = 0xd884451eC95721BcF05948C37a9F939059c87E6a;
-
-    function getKopioAddr(
-        string memory _symbol
-    ) public view returns (Meta.SaltResult memory) {
-        return Meta.kopioAddr(factoryAddr, _symbol);
-    }
+}
+function getKopioAddr(
+    string memory _symbol
+) view returns (Meta.SaltResult memory) {
+    return Meta.kopioAddr(0x00000000000029398fcE86f09FF8453c8D0Cd60D, _symbol);
 }

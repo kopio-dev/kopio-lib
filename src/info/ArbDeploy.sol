@@ -13,6 +13,8 @@ import {IKopioShare} from "../IKopioShare.sol";
 import {IPyth} from "../vendor/Pyth.sol";
 import {IONE, IVault} from "../IONE.sol";
 
+IPyth constant pythUpdater = IPyth(0xfeEFeEfeED0bd9Df8d23dC0242FEF943c574468f);
+
 abstract contract ArbDeploy is ArbDeployAddr {
     IVault constant vault = IVault(vaultAddr);
     IONE constant one = IONE(oneAddr);
@@ -42,14 +44,6 @@ abstract contract ArbDeploy is ArbDeployAddr {
     IMarketStatus constant marketStatus = IMarketStatus(marketStatusAddr);
     ISwapRouter constant routerV3 = ISwapRouter(routerv3Addr);
     IQuoterV2 constant quoterV2 = IQuoterV2(quoterV2Addr);
-
-    CreateMode internal createMode;
-
-    enum CreateMode {
-        Create1,
-        Create2,
-        Create3
-    }
 
     function _create1(bytes memory _code) internal returns (address loc_) {
         assembly {

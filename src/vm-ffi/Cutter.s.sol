@@ -11,6 +11,13 @@ import {Factory, Files} from "../vm/Files.s.sol";
 
 contract Cutter is ArbDeploy, Files, Scripted {
     using PLog for *;
+    CreateMode internal createMode;
+
+    enum CreateMode {
+        Create1,
+        Create2,
+        Create3
+    }
 
     IDiamond internal _diamond;
     FacetCut[] internal _cuts;
