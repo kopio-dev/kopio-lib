@@ -20,7 +20,13 @@ abstract contract UpgradeBase is Cutter {
     {
         jsonKey("info");
 
+        address prevImpl = factory.getImplementation(vaultAddr);
+        json(prevImpl, "prev-implementation");
+        json(bytes.concat(prevImpl.codehash), "prev-implementation-codehash");
+
         (bytes memory ctor, bytes memory impl) = _implementation();
+        json(bytes.concat(keccak256(impl)), "new-implementation-codehash");
+
         json(ctor, "ctor");
 
         bytes memory functionCall = _functionCall();
@@ -31,6 +37,7 @@ abstract contract UpgradeBase is Cutter {
             impl,
             functionCall
         );
+
         address(upgraded.proxy).clg("upgraded-proxy");
         upgraded.implementation.clg("new-implementation");
         json(upgraded.implementation, "new-implementation");
