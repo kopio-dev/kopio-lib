@@ -2,6 +2,7 @@
 // solhint-disable
 pragma solidity ^0.8.0;
 import {IKreditsDiamond} from "../support/IKreditsDiamond.sol";
+import {EnumerableSet, RoleData, SCDPAccountIndexes, SCDPAssetData, SCDPAssetIndexes, SCDPSeizeData} from "../IKopioCore.sol";
 
 IKreditsDiamond constant kredits = IKreditsDiamond(Kresko.kreditsAddr);
 
@@ -40,4 +41,141 @@ library Kresko {
     address constant nftMultisig = 0x389297F0d8C489954D65e04ff0690FC54E57Dad6;
     address constant kreskianAddr = 0xAbDb949a18d27367118573A217E5353EDe5A0f1E;
     address constant questAddr = 0x1C04925779805f2dF7BbD0433ABE92Ea74829bF6;
+
+    bytes32 constant MINTER_STORAGE_POSITION =
+        keccak256("kresko.minter.storage");
+
+    function ms() internal pure returns (MinterState storage state) {
+        bytes32 position = MINTER_STORAGE_POSITION;
+        assembly {
+            state.slot := position
+        }
+    }
+
+    function cs() internal pure returns (CommonState storage state) {
+        bytes32 position = bytes32(COMMON_STORAGE_POSITION);
+        assembly {
+            state.slot := position
+        }
+    }
+
+    struct SCDPState {
+        address[] collaterals;
+        address[] krAssets;
+        mapping(address => mapping(address => bool)) isRoute;
+        mapping(address => bool) isEnabled;
+        mapping(address => SCDPAssetData) assetData;
+        mapping(address => mapping(address => uint256)) deposits;
+        mapping(address => mapping(address => uint256)) depositsPrincipal;
+        mapping(address => SCDPAssetIndexes) assetIndexes;
+        mapping(address => mapping(address => SCDPAccountIndexes)) accountIndexes;
+        mapping(address => mapping(uint256 => SCDPSeizeData)) seizeEvents;
+        address feeAsset;
+        uint32 minCollateralRatio;
+        uint32 liquidationThreshold;
+        uint32 maxLiquidationRatio;
+    }
+
+    struct SDIState {
+        uint256 totalDebt;
+        uint256 totalCover;
+        address coverRecipient;
+        uint48 coverThreshold;
+        uint48 coverIncentive;
+        address[] coverAssets;
+    }
+
+    bytes32 constant SCDP_STORAGE_POSITION = keccak256("kresko.scdp.storage");
+    bytes32 constant SDI_STORAGE_POSITION =
+        keccak256("kresko.scdp.sdi.storage");
+
+    function scdp() internal pure returns (SCDPState storage state) {
+        bytes32 position = SCDP_STORAGE_POSITION;
+        assembly {
+            state.slot := position
+        }
+    }
+
+    function sdi() internal pure returns (SDIState storage state) {
+        bytes32 position = SDI_STORAGE_POSITION;
+        assembly {
+            state.slot := position
+        }
+    }
+
+    struct Asset {
+        bytes32 ticker;
+        address anchor;
+        uint8[2] oracles;
+        uint16 factor;
+        uint16 kFactor;
+        uint16 openFee;
+        uint16 closeFee;
+        uint16 liqIncentive;
+        uint256 maxDebtMinter;
+        uint256 maxDebtSCDP;
+        uint256 depositLimitSCDP;
+        uint16 swapInFeeSCDP;
+        uint16 swapOutFeeSCDP;
+        uint16 protocolFeeShareSCDP;
+        uint16 liqIncentiveSCDP;
+        uint8 decimals;
+        bool isMinterCollateral;
+        bool isMinterMintable;
+        bool isSharedCollateral;
+        bool isSwapMintable;
+        bool isSharedOrSwappedCollateral;
+        bool isCoverAsset;
+    }
+
+    struct Oracle {
+        address feed;
+        bytes32 pythId;
+        uint256 staleTime;
+        bool invertPyth;
+        bool isClosing;
+    }
+
+    struct Pause {
+        bool enabled;
+        uint256 timestamp0;
+        uint256 timestamp1;
+    }
+
+    struct SafetyState {
+        Pause pause;
+    }
+
+    struct CommonState {
+        mapping(address => Asset) assets;
+        mapping(bytes32 => mapping(uint8 => Oracle)) oracles;
+        mapping(address => mapping(uint8 => SafetyState)) safetyState;
+        address feeRecipient;
+        address pythEp;
+        address sequencerUptimeFeed;
+        uint32 sequencerGracePeriodTime;
+        uint16 maxPriceDeviationPct;
+        uint8 oracleDecimals;
+        bool safetyStateSet;
+        uint256 entered;
+        mapping(bytes32 role => RoleData data) _roles;
+        mapping(bytes32 role => EnumerableSet.AddressSet member) _roleMembers;
+    }
+
+    bytes32 constant COMMON_STORAGE_POSITION =
+        keccak256("kresko.common.storage");
+
+    struct MinterState {
+        mapping(address => address[]) depositedCollateralAssets;
+        mapping(address => mapping(address => uint256)) collateralDeposits;
+        mapping(address => mapping(address => uint256)) kreskoAssetDebt;
+        mapping(address => address[]) mintedKreskoAssets;
+        address[] krAssets;
+        address[] collaterals;
+        address feeRecipient;
+        uint32 maxLiquidationRatio;
+        uint32 minCollateralRatio;
+        uint32 liquidationThreshold;
+        uint256 minDebtValue;
+    }
 }
