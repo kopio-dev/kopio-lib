@@ -2,51 +2,55 @@
 pragma solidity ^0.8.0;
 import {IData} from "../support/IData.sol";
 import {Log} from "./VmLibs.s.sol";
-import {IKopioCore, Asset, Oracle, RawPrice} from "../IKopioCore.sol";
+import {Asset, Oracle, RawPrice, TData} from "../IKopioCore.sol";
 import {IERC20} from "../token/IERC20.sol";
 import {PythView} from "../vendor/Pyth.sol";
-import {ArbDeploy} from "../info/ArbDeploy.sol";
+import {addr, iData, iCore} from "../info/ArbDeploy.sol";
 import {Utils} from "../utils/Libs.sol";
 
 // solhint-disable
 
-abstract contract Inspector is ArbDeploy {
+library Logger {
     using Log for *;
     using Utils for *;
 
-    IData internal constant data = IData(dataAddr);
-    IKopioCore internal constant protocol = IKopioCore(protocolAddr);
-    address[] extTokens = [usdtAddr];
     function peekAccount(
         address account,
         PythView memory pythView
     ) public view {
-        IData.A memory acc = data.getAccount(pythView, account, extTokens);
         Log.sr();
         account.clg("Account");
         Log.hr();
-        acc.icdp.totals.cr.plg("ICDP CR");
-        acc.icdp.totals.valColl.dlg("ICDP Collateral", 8);
-        acc.icdp.totals.valDebt.dlg("ICDP Debt", 8);
 
-        Log.hr();
-        _logAccICDP(account, pythView);
-        uint256 totalVal = _logAccSCDPDeposits(acc) + acc.icdp.totals.valColl;
-        Log.sr();
-        _logAccBals(account, pythView);
-        Log.sr();
-        _logCollections(account, pythView);
+        IData.A memory acc = iData.getAccount(pythView, account, _extAssets());
+        string
+            .concat(
+                "ICDP Collateral: ",
+                acc.icdp.totals.valColl.dstr(8),
+                " ICDP Debt: ",
+                acc.icdp.totals.valDebt.dstr(8),
+                " ICDP CR: ",
+                acc.icdp.totals.cr.dstr(2),
+                "%"
+            )
+            .clg();
+
+        logICDP(account, pythView);
+        uint256 totalVal = logSCDPDeposits(acc) + acc.icdp.totals.valColl;
+
+        logBalances(account, pythView);
+        logCollections(account, pythView);
         Log.hr();
         totalVal.dlg("Total Protocol Value", 8);
-
         Log.sr();
     }
 
-    function _logCollections(
+    function logCollections(
         address account,
         PythView memory pythView
     ) internal view {
-        IData.A memory acc = data.getAccount(pythView, account, extTokens);
+        Log.h1("Collections");
+        IData.A memory acc = iData.getAccount(pythView, account, _extAssets());
         for (uint256 i; i < acc.collections.length; i++) {
             acc.collections[i].name.clg("Collection");
             for (uint256 j; j < acc.collections[i].items.length; j++) {
@@ -57,56 +61,91 @@ abstract contract Inspector is ArbDeploy {
         }
     }
 
-    function _logAccICDP(
-        address account,
-        PythView memory pythView
-    ) internal view {
-        IData.A memory acc = data.getAccount(pythView, account, extTokens);
+    function logICDP(address account, PythView memory pythView) internal view {
+        Log.h1("ICDP");
+        IData.A memory acc = iData.getAccount(pythView, account, _extAssets());
         for (uint256 i; i < acc.icdp.deposits.length; i++) {
-            acc.icdp.deposits[i].symbol.clg("Deposits");
-            acc.icdp.deposits[i].amount.dlg("Amount");
-            acc.icdp.deposits[i].val.dlg("Value", 8);
+            TData.TPos memory pos = acc.icdp.deposits[i];
+            str("ICDP Deposit:", pos.symbol, pos.amount, dec(pos.addr), pos.val)
+                .clg();
+            Log.hr();
         }
 
         for (uint256 i; i < acc.icdp.debts.length; i++) {
-            acc.icdp.debts[i].symbol.clg("Debt");
-            acc.icdp.debts[i].amount.dlg("Amount");
-            acc.icdp.debts[i].val.dlg("Value", 8);
-        }
-    }
-
-    function _logAccSCDPDeposits(
-        IData.A memory acc
-    ) internal pure returns (uint256 totalVal) {
-        for (uint256 i; i < acc.scdp.deposits.length; i++) {
-            acc.scdp.deposits[i].symbol.clg("SCDP Deposits");
-            acc.scdp.deposits[i].amount.dlg("Amount");
-            acc.scdp.deposits[i].val.dlg("Value", 8);
-            totalVal += acc.scdp.deposits[i].val;
+            TData.TPos memory debt = acc.icdp.debts[i];
+            str("ICDP Debt:", debt.symbol, debt.amount, 18, debt.val).clg();
             Log.hr();
         }
     }
 
-    function _logAccBals(
+    function logSCDPDeposits(
+        IData.A memory acc
+    ) internal view returns (uint256 totalVal) {
+        Log.h1("SCDP Deposits");
+        for (uint256 i; i < acc.scdp.deposits.length; i++) {
+            TData.SDepositUser memory d = acc.scdp.deposits[i];
+            totalVal += d.val;
+
+            Log.clg(
+                str("SCDP Deposit:", d.symbol, d.amount, dec(d.addr), d.val)
+            );
+            Log.hr();
+        }
+    }
+    function str(
+        string memory pre,
+        address _asset,
+        uint256 amount,
+        uint256 val
+    ) internal view returns (string memory) {
+        return str(pre, symbol(_asset), amount, dec(_asset), val);
+    }
+    function str(
+        string memory pre,
+        string memory _symbol,
+        uint256 amount,
+        uint256 _dec,
+        uint256 val
+    ) private pure returns (string memory) {
+        return
+            string.concat(
+                pre,
+                " ",
+                _symbol,
+                " ",
+                amount.dstr(_dec),
+                " / ",
+                "$",
+                val.dstr(8)
+            );
+    }
+
+    function logBalances(
         address account,
         PythView memory pythView
     ) internal view {
-        IData.A memory acc = data.getAccount(pythView, account, extTokens);
+        Log.h1("Balances");
         uint256 totalVal;
+
+        IData.A memory acc = iData.getAccount(pythView, account, _extAssets());
         for (uint256 i; i < acc.tokens.length; i++) {
-            acc.tokens[i].symbol.clg("Wallet Balance");
-            acc.tokens[i].amount.dlg("Amount", acc.tokens[i].decimals);
-            acc.tokens[i].val.dlg("Value", acc.tokens[i].oracleDec);
-            totalVal += acc.tokens[i].val;
+            IData.Tkn memory tkn = acc.tokens[i];
+            totalVal += tkn.val;
+            str("Token:", tkn.addr, tkn.amount, tkn.val).clg();
             Log.hr();
         }
 
-        totalVal.dlg("Total Wallet Value", 8);
-        account.balance.dlg("ETH Balance");
+        string memory summary = string.concat(
+            "Total Wallet Value: $",
+            totalVal.dstr(8),
+            "  ETH Balance: ",
+            account.balance.dstr()
+        );
+        summary.clg();
     }
 
     function peekAsset(address asset) internal view {
-        Asset memory config = protocol.getAsset(asset);
+        Asset memory config = iCore.getAsset(asset);
         IERC20 token = IERC20(asset);
         ("Protocol Asset").h1();
         token.symbol().clg("Symbol");
@@ -115,7 +154,7 @@ abstract contract Inspector is ArbDeploy {
         {
             uint256 tSupply = token.totalSupply();
             tSupply.dlg("Total Supply", config.decimals);
-            protocol.getValue(asset, tSupply).dlg("Market Cap", 8);
+            iCore.getValue(asset, tSupply).dlg("Market Cap", 8);
         }
         if (config.share != address(0)) {
             address(config.share).clg("Share");
@@ -130,21 +169,21 @@ abstract contract Inspector is ArbDeploy {
         uint8(config.oracles[1]).clg("Secondary Oracle: ");
         Log.hr();
         {
-            Oracle memory primaryOracle = protocol.getOracleOfTicker(
+            Oracle memory primaryOracle = iCore.getOracleOfTicker(
                 config.ticker,
                 config.oracles[0]
             );
-            uint256 price1 = protocol.getPrice(asset);
+            uint256 price1 = iCore.getPrice(asset);
             price1.dlg("Primary Price", 8);
             primaryOracle.staleTime.clg("Staletime (s)");
             primaryOracle.invertPyth.clg("Inverted Price: ");
             primaryOracle.pythId.blg();
             Log.hr();
-            Oracle memory secondaryOracle = protocol.getOracleOfTicker(
+            Oracle memory secondaryOracle = iCore.getOracleOfTicker(
                 config.ticker,
                 config.oracles[1]
             );
-            RawPrice memory secondaryPrice = protocol.getPushPrice(asset);
+            RawPrice memory secondaryPrice = iCore.getPushPrice(asset);
             uint256 price2 = uint256(secondaryPrice.answer);
             price2.dlg("Secondary Price", 8);
             secondaryPrice.staleTime.clg("Staletime (s): ");
@@ -153,7 +192,7 @@ abstract contract Inspector is ArbDeploy {
                 "Seconds since update: "
             );
             Log.hr();
-            uint256 deviation = protocol.getOracleDeviationPct();
+            uint256 deviation = iCore.getOracleDeviationPct();
             (price2.pmul(1e4 - deviation)).dlg("Min Dev", 8);
             (price2.pmul(1e4 + deviation)).dlg("Max Dev", 8);
             ((price1 * 1e8) / price2).dlg("Ratio", 8);
@@ -169,11 +208,11 @@ abstract contract Inspector is ArbDeploy {
         config.factor.plg("cFactor");
         Log.hr();
         config.depositLimitSCDP.dlg("SCDP Deposit Limit", config.decimals);
-        protocol.getValue(asset, config.depositLimitSCDP).dlg("Value", 8);
+        iCore.getValue(asset, config.depositLimitSCDP).dlg("Value", 8);
         config.mintLimit.dlg("ICDP Mint Limit", config.decimals);
-        protocol.getValue(asset, config.mintLimit).dlg("Value", 8);
+        iCore.getValue(asset, config.mintLimit).dlg("Value", 8);
         config.mintLimitSCDP.dlg("SCDP Mint Limit", config.decimals);
-        protocol.getValue(asset, config.mintLimitSCDP).dlg("Value", 8);
+        iCore.getValue(asset, config.mintLimitSCDP).dlg("Value", 8);
         ("Config").h2();
         config.liqIncentiveSCDP.plg("SCDP Liquidation Incentive");
         config.liqIncentive.plg("ICDP Liquidation Incentive");
@@ -185,24 +224,39 @@ abstract contract Inspector is ArbDeploy {
     }
 
     function peekSCDPAsset(address asset) internal view {
-        Asset memory config = protocol.getAsset(asset);
+        Asset memory config = iCore.getAsset(asset);
         Log.hr();
-        uint256 totalColl = protocol.getTotalCollateralValueSCDP(false);
-        uint256 totalDebt = protocol.getEffectiveSDIDebtUSD();
+        uint256 totalColl = iCore.getTotalCollateralValueSCDP(false);
+        uint256 totalDebt = iCore.getEffectiveSDIDebtUSD();
 
-        uint256 debt = protocol.getDebtSCDP(asset);
-        uint256 debtVal = protocol.getValue(asset, debt);
+        uint256 debt = iCore.getDebtSCDP(asset);
+        uint256 debtVal = iCore.getValue(asset, debt);
 
-        debt.dlg("SCDP Debt", config.decimals);
-        debtVal.dlg("Value", 8);
+        str("SCDP Debt:", symbol(asset), debt, config.decimals, debtVal).clg();
         debtVal.pdiv(totalDebt).plg("% of total debt");
 
-        uint256 deposits = protocol.getDepositsSCDP(asset);
-        uint256 depositVal = protocol.getValue(asset, deposits);
+        uint256 deposits = iCore.getDepositsSCDP(asset);
+        uint256 depositVal = iCore.getValue(asset, deposits);
 
-        deposits.dlg("SCDP Deposits", config.decimals);
-        depositVal.dlg("Value", 8);
+        str(
+            "SCDP Deposits:",
+            symbol(asset),
+            deposits,
+            config.decimals,
+            depositVal
+        ).clg();
         depositVal.pdiv(totalColl).plg("% of total collateral");
         Log.hr();
+    }
+
+    function symbol(address token) internal view returns (string memory) {
+        return IERC20(token).symbol();
+    }
+    function dec(address token) internal view returns (uint8) {
+        return IERC20(token).decimals();
+    }
+    function _extAssets() private pure returns (address[] memory extTokens) {
+        extTokens = new address[](1);
+        extTokens[0] = addr.usdt;
     }
 }

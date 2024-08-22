@@ -340,6 +340,28 @@ library Utils {
         }
     }
 
+    error Overflow(uint256, uint256);
+
+    function slice(
+        bytes memory _b,
+        uint256 _s
+    ) internal pure returns (bytes memory res) {
+        return slice(_b, _s, 32);
+    }
+
+    function slice(
+        bytes memory _b,
+        uint256 _s,
+        uint256 _l
+    ) internal pure returns (bytes memory res) {
+        if (_b.length < _s + _l) revert Overflow(_b.length, _s + _l);
+        if (_l > 32) revert Overflow(32, _l);
+        assembly {
+            mstore(res, _l)
+            mstore(add(res, 0x20), mload(add(_b, add(0x20, _s))))
+        }
+    }
+
     function cc(
         string memory _a,
         string memory _b

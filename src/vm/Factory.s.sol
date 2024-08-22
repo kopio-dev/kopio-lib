@@ -4,11 +4,9 @@
 pragma solidity ^0.8.0;
 import {Deployment, IProxyFactory} from "../IProxyFactory.sol";
 import {mvm} from "./MinVm.s.sol";
+import {iFactory} from "../info/ArbDeploy.sol";
 
 library Factory {
-    IProxyFactory internal constant FACTORY =
-        IProxyFactory(0x000000000070AB95211e32fdA3B706589D3482D5);
-
     struct FactoryState {
         IProxyFactory factory;
         string id;
@@ -19,18 +17,19 @@ library Factory {
         bool disableLog;
     }
 
-    bytes32 internal constant FACTORY_STATE_SLOT = keccak256("FactoryState");
+    bytes32 internal constant FACTORY_STATE_SLOT =
+        keccak256("vm.factory.state.slot");
 
-    function initJSON(string memory _configId) internal {
+    function initJSON(string memory cfgId) internal {
         string memory outDir = string.concat(
             "./temp/",
             mvm.toString(block.chainid),
             "/"
         );
         if (!mvm.exists(outDir)) mvm.createDir(outDir, true);
-        data().id = _configId;
+        data().id = cfgId;
         data().outputLocation = outDir;
-        data().outputJson = _configId;
+        data().outputJson = cfgId;
     }
 
     function writeJSON() internal {
@@ -105,11 +104,11 @@ library Factory {
     }
 
     function pd3(bytes32 _salt) internal view returns (address) {
-        return FACTORY.getCreate3Address(_salt);
+        return iFactory.getCreate3Address(_salt);
     }
 
     function pp3(bytes32 _salt) internal view returns (address, address) {
-        return FACTORY.previewCreate3ProxyAndLogic(_salt);
+        return iFactory.previewCreate3ProxyAndLogic(_salt);
     }
 
     function ctor(
@@ -125,7 +124,7 @@ library Factory {
         bytes memory _initCall,
         bytes32 _salt
     ) internal returns (Deployment memory result_) {
-        result_ = FACTORY.deployCreate2(_ccode, _initCall, _salt);
+        result_ = iFactory.deployCreate2(_ccode, _initCall, _salt);
         set(result_.implementation, "address");
     }
 
@@ -134,7 +133,7 @@ library Factory {
         bytes memory _initCall,
         bytes32 _salt
     ) internal returns (Deployment memory result_) {
-        result_ = FACTORY.deployCreate3(ccode, _initCall, _salt);
+        result_ = iFactory.deployCreate3(ccode, _initCall, _salt);
         set(result_.implementation, "address");
     }
 
@@ -143,10 +142,10 @@ library Factory {
         bytes memory _initCall,
         bytes32 _salt
     ) internal returns (Deployment memory result_) {
-        result_ = FACTORY.create3ProxyAndLogic(ccode, _initCall, _salt);
+        result_ = iFactory.create3ProxyAndLogic(ccode, _initCall, _salt);
         set(address(result_.proxy), "address");
         set(
-            abi.encode(result_.implementation, address(FACTORY), _initCall),
+            abi.encode(result_.implementation, address(iFactory), _initCall),
             "initializer"
         );
         set(result_.implementation, "implementation");

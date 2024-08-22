@@ -102,13 +102,24 @@ contract TTest is Tested, Based {
 
         1.29e18.toDec(18, 1).eq(12, "a-b");
     }
-    function testLink() public {}
 
     function testBytes() public {
         bytes32 val = bytes32(abi.encodePacked(uint192(192), uint64(64)));
         (uint192 a, uint64 b) = abi.decode(split(val, 192), (uint192, uint64));
         a.eq(192, "val");
         b.eq(64, "b");
+
+        bytes memory callData = abi.encodeWithSignature(
+            "func(string,uint256)",
+            string("hello"),
+            1 ether
+        );
+
+        callData.slice(0, 4).eq(hex"555fe6d1");
+        bytes memory testB = callData.slice(4);
+        abi.decode(callData.slice(36, 32), (uint256)).eq(1 ether, "slice");
+        string(callData.slice(100, uint256(bytes32(callData.slice(68, 32)))))
+            .eq("hello", "slice");
     }
 
     function testRevert() public {
