@@ -357,8 +357,34 @@ library Utils {
         if (_b.length < _s + _l) revert Overflow(_b.length, _s + _l);
         if (_l > 32) revert Overflow(32, _l);
         assembly {
-            mstore(res, _l)
-            mstore(add(res, 0x20), mload(add(_b, add(0x20, _s))))
+            switch iszero(_l)
+            case 0 {
+                res := mload(0x40)
+                let lengthmod := and(_l, 31)
+                let mc := add(add(res, lengthmod), mul(0x20, iszero(lengthmod)))
+                let end := add(mc, _l)
+                for {
+                    let _c := add(
+                        add(add(_b, lengthmod), mul(0x20, iszero(lengthmod))),
+                        _s
+                    )
+                } lt(mc, end) {
+                    mc := add(mc, 0x20)
+                    _c := add(_c, 0x20)
+                } {
+                    mstore(mc, mload(_c))
+                }
+
+                mstore(res, _l)
+
+                mstore(0x40, and(add(mc, 31), not(31)))
+            }
+            default {
+                res := mload(0x40)
+                mstore(res, 0)
+
+                mstore(0x40, add(res, 0x20))
+            }
         }
     }
 

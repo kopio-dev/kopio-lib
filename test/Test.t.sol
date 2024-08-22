@@ -116,10 +116,11 @@ contract TTest is Tested, Based {
         );
 
         callData.slice(0, 4).eq(hex"555fe6d1");
-        bytes memory testB = callData.slice(4);
-        abi.decode(callData.slice(36, 32), (uint256)).eq(1 ether, "slice");
-        string(callData.slice(100, uint256(bytes32(callData.slice(68, 32)))))
-            .eq("hello", "slice");
+        abi.decode(callData.slice(36), (uint256)).eq(1 ether, "slice");
+        string(callData.slice(100, uint256(bytes32(callData.slice(68))))).eq(
+            "hello",
+            "slice"
+        );
     }
 
     function testRevert() public {
