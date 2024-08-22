@@ -26,7 +26,7 @@
     "titleBar.inactiveForeground": "#e7e7e799"
   },
   "solidity.test": {
-    "executeOnSave": true,
+    "executeOnSave": false,
     "verbosity": 3
   },
   "solidity.compiler": {

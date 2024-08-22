@@ -346,7 +346,7 @@ library Utils {
         bytes memory _b,
         uint256 _s
     ) internal pure returns (bytes memory res) {
-        return slice(_b, _s, 32);
+        return slice(_b, _s, _b.length - _s);
     }
 
     function slice(
@@ -355,7 +355,6 @@ library Utils {
         uint256 _l
     ) internal pure returns (bytes memory res) {
         if (_b.length < _s + _l) revert Overflow(_b.length, _s + _l);
-        if (_l > 32) revert Overflow(32, _l);
         assembly {
             switch iszero(_l)
             case 0 {

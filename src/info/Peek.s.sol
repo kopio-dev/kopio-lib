@@ -1,23 +1,44 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 import {IData} from "../support/IData.sol";
-import {Log} from "./VmLibs.s.sol";
-import {Asset, Oracle, RawPrice, TData} from "../IKopioCore.sol";
+import {Log, VmHelp} from "../vm/VmLibs.s.sol";
+import {Asset, ICDPAccount, Oracle, RawPrice, TData} from "../IKopioCore.sol";
 import {IERC20} from "../token/IERC20.sol";
 import {PythView} from "../vendor/Pyth.sol";
-import {addr, iData, iCore} from "../info/ArbDeploy.sol";
+import {addr, iData, iCore} from "./ArbDeploy.sol";
 import {Utils} from "../utils/Libs.sol";
 
 // solhint-disable
 
-library Logger {
+library Peek {
     using Log for *;
     using Utils for *;
+    using VmHelp for *;
 
-    function peekAccount(
+    function maxMint(
+        address account,
+        address kopio
+    ) internal view returns (uint256) {
+        Log.sr();
+        account.clg("ICDP Account: ");
+        Log.hr();
+
+        ICDPAccount memory state = iCore.getAccountState(account);
+        uint256 collValue = state.totalCollateralValue.pdiv(iCore.getMCR());
+
+        if (state.totalDebtValue >= collValue) return 0;
+
+        Asset memory asset = iCore.getAsset(kopio);
+        return
+            iCore.getPrice(kopio).pmul(asset.dFactor).wdiv(
+                collValue - state.totalDebtValue
+            );
+    }
+
+    function accountState(
         address account,
         PythView memory pythView
-    ) public view {
+    ) internal view {
         Log.sr();
         account.clg("Account");
         Log.hr();
@@ -35,17 +56,17 @@ library Logger {
             )
             .clg();
 
-        logICDP(account, pythView);
-        uint256 totalVal = logSCDPDeposits(acc) + acc.icdp.totals.valColl;
+        accountICDP(account, pythView);
+        uint256 totalVal = accountSCDP(acc) + acc.icdp.totals.valColl;
 
-        logBalances(account, pythView);
-        logCollections(account, pythView);
+        accountBalances(account, pythView);
+        collections(account, pythView);
         Log.hr();
         totalVal.dlg("Total Protocol Value", 8);
         Log.sr();
     }
 
-    function logCollections(
+    function collections(
         address account,
         PythView memory pythView
     ) internal view {
@@ -61,9 +82,13 @@ library Logger {
         }
     }
 
-    function logICDP(address account, PythView memory pythView) internal view {
-        Log.h1("ICDP");
+    function accountICDP(
+        address account,
+        PythView memory pythView
+    ) internal view {
         IData.A memory acc = iData.getAccount(pythView, account, _extAssets());
+        Log.h1(string.concat("ICDP Account: ", acc.addr.txt()));
+
         for (uint256 i; i < acc.icdp.deposits.length; i++) {
             TData.TPos memory pos = acc.icdp.deposits[i];
             str("ICDP Deposit:", pos.symbol, pos.amount, dec(pos.addr), pos.val)
@@ -78,10 +103,27 @@ library Logger {
         }
     }
 
-    function logSCDPDeposits(
+    function accountICDP(address account) internal view {
+        Log.h1(string.concat("ICDP Account: ", account.txt()));
+
+        ICDPAccount memory acc = iCore.getAccountState(account);
+        string
+            .concat(
+                " Collateral: ",
+                acc.totalCollateralValue.dstr(8),
+                " Debt: ",
+                acc.totalDebtValue.dstr(8),
+                " CR: ",
+                acc.collateralRatio.dstr(2),
+                "%"
+            )
+            .clg();
+    }
+
+    function accountSCDP(
         IData.A memory acc
     ) internal view returns (uint256 totalVal) {
-        Log.h1("SCDP Deposits");
+        Log.h1(string.concat("SCDP Deposits: ", acc.addr.txt()));
         for (uint256 i; i < acc.scdp.deposits.length; i++) {
             TData.SDepositUser memory d = acc.scdp.deposits[i];
             totalVal += d.val;
@@ -120,11 +162,11 @@ library Logger {
             );
     }
 
-    function logBalances(
+    function accountBalances(
         address account,
         PythView memory pythView
     ) internal view {
-        Log.h1("Balances");
+        Log.h1(string.concat("Balances: ", account.txt()));
         uint256 totalVal;
 
         IData.A memory acc = iData.getAccount(pythView, account, _extAssets());
@@ -144,7 +186,7 @@ library Logger {
         summary.clg();
     }
 
-    function peekAsset(address asset) internal view {
+    function protocolAsset(address asset) internal view {
         Asset memory config = iCore.getAsset(asset);
         IERC20 token = IERC20(asset);
         ("Protocol Asset").h1();
@@ -203,7 +245,7 @@ library Logger {
         config.isSwapMintable.clg("SCDP Swappable");
         config.isGlobalDepositable.clg("SCDP Depositable");
         config.isCoverAsset.clg("SCDP Cover");
-        peekSCDPAsset(asset);
+        scdpAsset(asset);
         config.dFactor.plg("dFactor");
         config.factor.plg("cFactor");
         Log.hr();
@@ -223,7 +265,7 @@ library Logger {
         config.protocolFeeShareSCDP.plg("SCDP Protocol Fee");
     }
 
-    function peekSCDPAsset(address asset) internal view {
+    function scdpAsset(address asset) internal view {
         Asset memory config = iCore.getAsset(asset);
         Log.hr();
         uint256 totalColl = iCore.getTotalCollateralValueSCDP(false);

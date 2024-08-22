@@ -102,7 +102,10 @@ contract TTest is Tested, Based {
 
         1.29e18.toDec(18, 1).eq(12, "a-b");
     }
-
+    struct Foo {
+        string foo;
+        uint256 bar;
+    }
     function testBytes() public {
         bytes32 val = bytes32(abi.encodePacked(uint192(192), uint64(64)));
         (uint192 a, uint64 b) = abi.decode(split(val, 192), (uint192, uint64));
@@ -116,11 +119,16 @@ contract TTest is Tested, Based {
         );
 
         callData.slice(0, 4).eq(hex"555fe6d1");
-        abi.decode(callData.slice(36), (uint256)).eq(1 ether, "slice");
-        string(callData.slice(100, uint256(bytes32(callData.slice(68))))).eq(
-            "hello",
-            "slice"
+
+        (string memory foo, uint256 bar) = abi.decode(
+            callData.slice(4),
+            (string, uint256)
         );
+        foo.eq("hello", "decode-foo");
+        bar.eq(1 ether, "decode-bar");
+        abi.decode(callData.slice(36, 32), (uint256)).eq(1 ether, "decode-bar");
+        string(callData.slice(100, uint256(bytes32(callData.slice(68, 32)))))
+            .eq("hello", "str-parts");
     }
 
     function testRevert() public {
