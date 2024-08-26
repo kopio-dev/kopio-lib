@@ -4,10 +4,23 @@ pragma solidity ^0.8.0;
 import {Scripted} from "./Scripted.s.sol";
 import {PLog} from "./PLog.s.sol";
 import {PythScript} from "../vm-ffi/PythScript.s.sol";
+import {File} from "./Files.s.sol";
 
 abstract contract Based is PythScript, Scripted {
     string internal defaultRPC = "RPC_ARBITRUM_ALCHEMY";
     address internal sender;
+    File internal _file;
+
+    modifier useFile(string memory _loc) {
+        _file = file(_loc);
+        _;
+    }
+
+    modifier usePythSync() {
+        syncTime();
+        updatePyth();
+        _;
+    }
 
     modifier based(string memory _mnemonic, string memory _network) {
         base(_mnemonic, _network);
