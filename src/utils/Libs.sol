@@ -422,10 +422,16 @@ library Utils {
     }
 
     function toArray(
-        bytes memory value
-    ) internal pure returns (bytes[] memory result) {
-        result = new bytes[](1);
-        result[0] = value;
+        address val,
+        uint256 len
+    ) internal pure returns (address[] memory r) {
+        (r = new address[](len))[0] = val;
+    }
+
+    function toArray(
+        bytes memory val
+    ) internal pure returns (bytes[] memory r) {
+        (r = new bytes[](1))[0] = val;
     }
 
     function add(bytes32 a, uint256 b) internal pure returns (bytes32) {

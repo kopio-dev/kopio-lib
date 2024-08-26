@@ -7,9 +7,9 @@ import {FacetCut, FacetCutAction, IDiamond, Initializer} from "../support/IDiamo
 import {defaultFacetLoc, FacetData, getFacet, getFacets} from "./ffi-facets.s.sol";
 import {Scripted} from "../vm/Scripted.s.sol";
 import {ArbDeploy} from "../info/ArbDeploy.sol";
-import {Factory, Files} from "../vm/Files.s.sol";
+import {Factory, Json} from "../vm/Json.s.sol";
 
-contract Cutter is ArbDeploy, Files, Scripted {
+contract Cutter is ArbDeploy, Json, Scripted {
     using PLog for *;
     CreateMode internal createMode;
 

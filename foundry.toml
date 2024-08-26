@@ -4,6 +4,7 @@ out = "out"
 libs = ["lib"]
 ffi = true
 via_ir = true
+fs_permissions = [{ access = "read-write", path = "./" }]
 evm_version = "cancun"
 remappings = [
     '@oz-upgradeable/=lib/openzeppelin-contracts-upgradeable/contracts/',

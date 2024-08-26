@@ -5,6 +5,7 @@ import {hasVM, mAddr, store, IMinVm, mvm} from "./MinVm.s.sol";
 import {PLog} from "./PLog.s.sol";
 import {Purify} from "../utils/Purify.sol";
 import {Utils} from "../utils/Libs.sol";
+import {File} from "./Files.s.sol";
 
 library VmCaller {
     struct Values {
@@ -29,6 +30,28 @@ library VmCaller {
         ) {
             mvm.stopPrank();
         }
+    }
+
+    function prank1(
+        address _s
+    ) internal returns (IMinVm.CallerMode m_, address s_, address o_) {
+        (m_, s_, o_) = clear();
+        mvm.prank(_s);
+    }
+
+    function prank(
+        address _s
+    ) internal returns (IMinVm.CallerMode m_, address s_, address o_) {
+        (m_, s_, o_) = clear();
+        mvm.startPrank(_s);
+    }
+
+    function prank(
+        address _s,
+        address _o
+    ) internal returns (IMinVm.CallerMode m_, address s_, address o_) {
+        (m_, s_, o_) = clear();
+        mvm.startPrank(_s, _o);
     }
 
     function restore(IMinVm.CallerMode _m, address _ss, address _so) internal {
@@ -100,6 +123,10 @@ library VmHelp {
         return mAddr(_mEnv, _idx);
     }
 
+    function toFile(string memory loc) internal pure returns (File memory) {
+        return File(loc);
+    }
+
     function getTime() internal returns (uint256) {
         return uint256(mvm.unixTime() / 1000);
     }
@@ -165,6 +192,7 @@ library Log {
     function __ispre() private view returns (bool) {
         return !store().logPrefix.zero();
     }
+
     function ispre() private pure returns (bool) {
         return Purify.BoolOut(__ispre)();
     }

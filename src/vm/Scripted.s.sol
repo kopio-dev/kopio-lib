@@ -3,7 +3,8 @@
 pragma solidity ^0.8.0;
 
 import {Wallet} from "./Wallet.s.sol";
-import {VmCaller, IMinVm} from "./VmLibs.s.sol";
+import {getId} from "./MinVm.s.sol";
+import {File, VmCaller, IMinVm} from "./VmLibs.s.sol";
 import {Script} from "forge-std/Script.sol";
 import {__revert} from "../utils/Funcs.sol";
 
@@ -147,5 +148,24 @@ abstract contract Scripted is Script, Wallet {
 
     function getTime() internal returns (uint256) {
         return vm.unixTime() / 1000;
+    }
+
+    function getRandomId() internal returns (bytes4) {
+        return getId();
+    }
+
+    function file(string memory _loc) internal pure returns (File memory) {
+        return File(_loc);
+    }
+
+    function write(
+        string memory _loc,
+        bytes memory data
+    ) internal returns (File memory) {
+        return File(_loc).write(data);
+    }
+
+    function write(bytes memory data) internal returns (File memory) {
+        return File(vm.toString(getId())).write(data);
     }
 }

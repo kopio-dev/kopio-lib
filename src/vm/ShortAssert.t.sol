@@ -5,6 +5,7 @@ pragma solidity ^0.8.0;
 import {stdMath} from "forge-std/StdMath.sol";
 import {hasVM, vmAddr, store} from "./MinVm.s.sol";
 import {PLog} from "./PLog.s.sol";
+import {IERC20} from "../token/IERC20.sol";
 
 library ShortAssert {
     bool constant IS_TEST = true;
@@ -1104,4 +1105,5 @@ library ShortAssert {
         }
         return next();
     }
+    using ShortAssert for *;
 }

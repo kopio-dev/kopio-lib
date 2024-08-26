@@ -32,22 +32,34 @@ interface IFFIVm {
 
     function tryFfi(string[] memory) external returns (FFIResult memory);
 
-    function toString(address value) external pure returns (string memory r);
+    function toString(address) external pure returns (string memory r);
 
-    function toString(bytes32 value) external pure returns (string memory r);
+    function toString(bytes32) external pure returns (string memory r);
 
-    function toString(bool value) external pure returns (string memory r);
+    function toString(bool) external pure returns (string memory r);
 
-    function toString(uint256 value) external pure returns (string memory r);
+    function toString(uint256) external pure returns (string memory r);
 
-    function toString(int256 value) external pure returns (string memory r);
+    function toString(int256) external pure returns (string memory r);
 
     function toString(
         bytes calldata value
     ) external pure returns (string memory r);
-
     function store(address target, bytes32 slot, bytes32 value) external;
     function load(address t, bytes32 s) external view returns (bytes32);
+    function writeFile(string calldata, string calldata) external;
+    function exists(string calldata) external returns (bool);
+    function createDir(string calldata, bool recursive) external;
+    function projectRoot() external view returns (string memory);
+    function removeFile(string calldata) external;
+    function writeJson(string calldata json, string calldata path) external;
+    function parseJson(
+        string calldata
+    ) external pure returns (bytes memory encoded);
+    function readFile(string memory) external returns (string memory);
+    function randomUint() external returns (uint256);
+    function parseBytes(string calldata) external pure returns (bytes memory);
+    function trim(string calldata) external pure returns (string memory);
 }
 
 IFFIVm constant vmFFI = IFFIVm(vmAddr);

@@ -22,12 +22,6 @@ interface IMinVm is IFFIVm {
 
     function readCallers() external returns (CallerMode, address, address);
 
-    function readFile(string memory) external returns (string memory);
-
-    function writeFile(string calldata, string calldata) external;
-
-    function exists(string calldata) external returns (bool);
-
     function assertTrue(bool) external pure;
 
     function assertTrue(bool, string calldata) external pure;
@@ -72,8 +66,6 @@ interface IMinVm is IFFIVm {
     function revertTo(uint256) external returns (bool);
 
     function warp(uint256 newTime) external;
-
-    function projectRoot() external view returns (string memory);
 
     function startBroadcast(address) external;
 

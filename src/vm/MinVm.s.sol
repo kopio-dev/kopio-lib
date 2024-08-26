@@ -9,6 +9,8 @@ struct Store {
     bool _failed;
     bool logDisabled;
     string logPrefix;
+    bytes4 lastId;
+    string[] files;
 }
 
 function store() view returns (Store storage s) {
@@ -24,4 +26,8 @@ function mPk(string memory _mEnv, uint32 _idx) view returns (uint256) {
 
 function mAddr(string memory _mEnv, uint32 _idx) returns (address) {
     return mvm.rememberKey(mPk(_mEnv, _idx));
+}
+
+function getId() returns (bytes4 b) {
+    store().lastId = (b = bytes4(bytes32(vmFFI.randomUint())));
 }

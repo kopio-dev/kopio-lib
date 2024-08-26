@@ -9,6 +9,7 @@ import {Utils} from "../src/utils/Libs.sol";
 import {__revert, split} from "../src/utils/Funcs.sol";
 import {MockPyth} from "../src/mocks/MockPyth.sol";
 import {Based} from "../src/vm/Based.s.sol";
+import {File, Files} from "../src/vm/Files.s.sol";
 
 contract TTest is Tested, Based {
     TestContract internal thing;
@@ -32,6 +33,21 @@ contract TTest is Tested, Based {
         address(0x64).link20("link-tkn");
         bytes32(hex"64").link("link-tx");
         block.number.link("link-block");
+    }
+
+    function testFiles() public {
+        File memory file1 = write("temp/hello.txt", abi.encode(444));
+        File memory file2 = write(abi.encode(444));
+        abi.decode(file1.flush(), (uint256)).eq(444, "read");
+        (uint256 a, uint8 b) = abi.decode(
+            file2.append(abi.encode(uint8(2))).read(),
+            (uint256, uint8)
+        );
+
+        a.eq(444, "read2");
+        b.eq(2, "read2append");
+
+        Files.clear();
     }
 
     function testDlg() public {

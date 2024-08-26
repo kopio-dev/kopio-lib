@@ -20,6 +20,7 @@
     "var-name-mixedcase": "off",
     "avoid-tx-origin": "error",
     "custom-errors": "off",
+    "gas-custom-errors": "off",
     "const-name-snakecase": "off",
     "compiler-version": [
       "error",
