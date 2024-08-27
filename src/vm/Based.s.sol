@@ -7,8 +7,6 @@ import {PythScript} from "../vm-ffi/PythScript.s.sol";
 import {File} from "./Files.s.sol";
 
 abstract contract Based is PythScript, Scripted {
-    string internal defaultRPC = "RPC_ARBITRUM_ALCHEMY";
-    address internal sender;
     File internal _file;
 
     modifier useFile(string memory _loc) {
@@ -22,28 +20,33 @@ abstract contract Based is PythScript, Scripted {
         _;
     }
 
-    modifier based(string memory _mnemonic, string memory _network) {
+    modifier based(string memory _mnemonic, string memory _network) virtual {
         base(_mnemonic, _network);
         _;
     }
+
     modifier forked(string memory _network, uint256 _blockNr) {
         base(_network, _blockNr);
         _;
+    }
+
+    modifier highlight() {
+        PLog.clg(
+            "***************************************************************"
+        );
+        _;
+        PLog.clg(
+            "***************************************************************\n"
+        );
     }
 
     function base(
         string memory _mnemonic,
         string memory _network,
         uint256 _blockNr
-    ) internal returns (uint256 forkId) {
-        PLog.clg(
-            "***************************************************************"
-        );
+    ) internal highlight returns (uint256 forkId) {
         base(_mnemonic);
         forkId = createSelectFork(_network, _blockNr);
-        PLog.clg(
-            "***************************************************************\n"
-        );
     }
 
     function base(
@@ -53,9 +56,24 @@ abstract contract Based is PythScript, Scripted {
         forkId = base(_mnemonic, _network, 0);
     }
 
+    function base(
+        string[2] memory mnemonic_pk,
+        string memory _network,
+        uint256 _blockNr
+    ) internal returns (uint256 forkId) {
+        base(mnemonic_pk);
+        forkId = createSelectFork(_network, _blockNr);
+    }
+
     function base(string memory _mnemonic) internal {
         useMnemonic(_mnemonic);
-        sender = getAddr(0);
+        if (sender == address(0)) sender = getAddr(0);
+        PLog.clg(sender, "sender:");
+    }
+
+    function base(string[2] memory mnemonic_pk) internal {
+        useMnemonic(mnemonic_pk[0]);
+        sender = getAddr(mnemonic_pk[1]);
         PLog.clg(sender, "sender:");
     }
 

@@ -6,6 +6,7 @@ import {Test} from "forge-std/Test.sol";
 import {IMinVm} from "./MinVm.s.sol";
 import {Scripted, VmCaller} from "./Scripted.s.sol";
 import {IERC20} from "../token/IERC20.sol";
+import {Tokens} from "../utils/Tokens.sol";
 
 abstract contract Tested is Scripted, Test {
     using VmCaller for IMinVm.CallerMode;
@@ -104,110 +105,57 @@ abstract contract Tested is Scripted, Test {
 
     function dealMake(
         string memory user,
-        address tokenAddr,
-        uint256 amount
+        address tAddr,
+        uint256 amt
     ) internal returns (address addr) {
-        deal(tokenAddr, (addr = makeAddr(user)), amount);
+        deal(tAddr, (addr = makeAddr(user)), amt);
     }
 
     function dealMake(
         string memory user,
-        address tokenAddr,
-        uint256 amount,
+        address tAddr,
+        uint256 amt,
         address spender
     ) internal returns (address addr) {
-        approve20(
-            tokenAddr,
-            (addr = dealMake(user, tokenAddr, amount)),
-            spender
-        );
+        allowMax(tAddr, (addr = dealMake(user, tAddr, amt)), spender);
     }
 
     function deal(
         address to,
-        address tokenAddr,
-        uint256 amount,
+        address tAddr,
+        uint256 amt,
         address spender
     ) internal returns (IERC20) {
-        deal(tokenAddr, to, amount);
-        return approve20(tokenAddr, to, spender);
+        deal(tAddr, to, amt);
+        allowMax(tAddr, to, spender);
+        return Tokens.I20(tAddr);
     }
 
-    function bal20(
-        address account,
-        address tokenAddr
+    function i20(address tAddr) internal pure returns (IERC20) {
+        return Tokens.I20(tAddr);
+    }
+
+    function getBal(
+        address user,
+        address tAddr
     ) internal view returns (uint256) {
-        return TUtils.bal20(account, tokenAddr);
+        return Tokens.bal(user, tAddr);
     }
 
-    function to20(address tokenAddr) internal pure returns (IERC20) {
-        return TUtils.to20(tokenAddr);
-    }
-
-    function approve20(
-        address tokenAddr,
+    function allowMax(
         address owner,
+        address tAddr,
         address spender
-    ) internal returns (IERC20) {
-        return TUtils.approve20(tokenAddr, owner, spender);
+    ) internal repranked(owner) returns (address) {
+        Tokens.allowMax(tAddr, spender);
+        return owner;
     }
 
-    function send20(
-        address _tokenAddr,
-        address _from,
-        address _to
-    ) internal returns (uint256 toBal) {
-        return TUtils.send20(_from, _tokenAddr, _to);
-    }
-}
-
-library TUtils {
-    using TUtils for *;
-
-    modifier repranked(address _addr) {
-        (IMinVm.CallerMode _m, address _s, address _o) = VmCaller.prank(
-            _addr,
-            _addr
-        );
-        _;
-        VmCaller.clear();
-        VmCaller.restore(_m, _s, _o);
-    }
-
-    function approve20(
-        address tokenAddr,
-        address owner,
-        address spender
-    ) internal repranked(owner) returns (IERC20 token) {
-        (token = tokenAddr.to20()).approve(spender, type(uint256).max);
-    }
-
-    function to20(address addr) internal pure returns (IERC20) {
-        return IERC20(addr);
-    }
-
-    function bal20(
-        address account,
-        address tokenAddr
-    ) internal view returns (uint256) {
-        return IERC20(tokenAddr).balanceOf(account);
-    }
-
-    function send20(
+    function sendBalance(
         address from,
-        address tokenAddr,
+        address tAddr,
         address to
-    ) internal returns (uint256 toBal) {
-        return from.send20(tokenAddr, bal20(from, tokenAddr), to);
-    }
-
-    function send20(
-        address from,
-        address token,
-        uint256 amount,
-        address to
-    ) internal repranked(from) returns (uint256 toBal) {
-        token.to20().transfer(to, amount);
-        return to.bal20(token);
+    ) internal repranked(from) returns (uint256 amt) {
+        return Tokens.sendBalance(from, tAddr, to);
     }
 }
