@@ -71,11 +71,6 @@ contract TTest is Tested, Connected {
 
         getConnection().reset();
         connection().blockNow.eq(200000000, "c-18");
-
-        address(0x64).link("link-addr");
-        address(0x64).link20("link-tkn");
-        bytes32(hex"64").link("link-tx");
-        block.number.link("link-block");
     }
 
     function testFiles() public {
@@ -114,6 +109,18 @@ contract TTest is Tested, Connected {
         Log.ctx("testDlg");
 
         "Hash: ".cc("kek").clg();
+    }
+
+    function testMisc() public {
+        address(0x64).link("link-addr");
+        address(0x64).link20("link-tkn");
+        bytes32(hex"64").link("link-tx");
+        block.number.link("link-block");
+
+        getNextAddr(address(this)).eq(
+            address(new TestContract2()),
+            "next-addr"
+        );
     }
 
     function testStrings() public {

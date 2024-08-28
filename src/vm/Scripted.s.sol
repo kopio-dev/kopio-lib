@@ -213,4 +213,8 @@ abstract contract Scripted is Script, Wallet {
     ) internal view returns (uint8 v, bytes32 r, bytes32 s) {
         return Tokens.getPermit(token, owner, spender, amount, deadline);
     }
+
+    function getNextAddr(address deployer) internal view returns (address) {
+        return vm.computeCreateAddress(deployer, vm.getNonce(deployer));
+    }
 }
