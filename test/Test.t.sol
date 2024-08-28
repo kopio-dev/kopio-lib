@@ -49,8 +49,6 @@ contract TTest is Tested, Connected {
         connection().network.eq("artbtirmun", "c-7");
         connection().chainId.eq(42161, "c-8");
 
-        getConnection().clg();
-
         Connection c = getConnection().prev();
         c.use();
         connection().network.eq("RPC_ARBITRUM_ALCHEMY", "c-9");

@@ -11,7 +11,7 @@ contract Wallet {
     string private __pkEnv = "PRIVATE_KEY";
     string internal defaultRPC = "RPC_ARBITRUM_ALCHEMY";
 
-    address internal sender;
+    address payable internal sender;
 
     modifier mnemonic(string memory _env) virtual {
         useMnemonic(_env);
@@ -41,54 +41,62 @@ contract Wallet {
     /// @param _env name of the env variable, default is MNEMONIC_DEVNET
     function useMnemonic(
         string memory _env
-    ) internal virtual returns (address) {
+    ) internal virtual returns (address payable) {
         return useMnemonic(_env, 0);
     }
 
     function useMnemonic(
         string memory _env,
         uint32 _idx
-    ) internal virtual returns (address) {
+    ) internal virtual returns (address payable) {
         __mEnv = _env;
-        return sender = mAddr(__mEnv, _idx);
+        return sender = payable(mAddr(__mEnv, _idx));
     }
 
-    function useMnemonic() internal virtual returns (address) {
+    function useMnemonic() internal virtual returns (address payable) {
         return useMnemonic(__mEnv);
     }
 
-    function useMnemonicAt(uint32 _mIdx) internal virtual returns (address) {
+    function useMnemonicAt(
+        uint32 _mIdx
+    ) internal virtual returns (address payable) {
         return useMnemonic(__mEnv, _mIdx);
     }
 
     /// @param _env name of the env variable, default is PRIVATE_KEY
-    function usePk(string memory _env) internal virtual returns (address) {
+    function usePk(
+        string memory _env
+    ) internal virtual returns (address payable) {
         __pkEnv = _env;
-        return sender = getAddr(__pkEnv);
+        return sender = payable(getAddr(__pkEnv));
     }
 
-    function usePk() internal virtual returns (address) {
+    function usePk() internal virtual returns (address payable) {
         return usePk(__pkEnv);
     }
 
     /// @param _envs use mnemonic + private key, eg. ["MNEMONIC_DEVNET", "PRIVATE_KEY"]
     function useWallets(
         string[2] memory _envs
-    ) internal virtual returns (address maddr, address pkaddr) {
+    ) internal virtual returns (address payable maddr, address payable pkaddr) {
         maddr = useMnemonic(_envs[0]);
         pkaddr = usePk(_envs[1]);
     }
 
-    function senderOr(address _sender) internal virtual returns (address) {
+    function senderOr(
+        address _sender
+    ) internal virtual returns (address payable) {
         if (sender != address(0)) return sender;
-        return (sender = _sender);
+        return (sender = payable(_sender));
     }
 
-    function senderOr(uint32 _mIdx) internal virtual returns (address) {
+    function senderOr(uint32 _mIdx) internal virtual returns (address payable) {
         return senderOr(getAddr(_mIdx));
     }
 
-    function senderOr(string memory _pkEnv) internal virtual returns (address) {
+    function senderOr(
+        string memory _pkEnv
+    ) internal virtual returns (address payable) {
         return senderOr(getAddr(_pkEnv));
     }
 
@@ -98,13 +106,15 @@ contract Wallet {
     }
 
     /// @param _mIdx mnemonic index
-    function getAddr(uint32 _mIdx) internal virtual returns (address) {
-        return mAddr(__mEnv, _mIdx);
+    function getAddr(uint32 _mIdx) internal virtual returns (address payable) {
+        return payable(mAddr(__mEnv, _mIdx));
     }
 
     /// @param _pkEnv name of the env variable
-    function getAddr(string memory _pkEnv) internal virtual returns (address) {
-        return pkAddr(_pkEnv);
+    function getAddr(
+        string memory _pkEnv
+    ) internal virtual returns (address payable) {
+        return payable(pkAddr(_pkEnv));
     }
 
     function getEnv(
@@ -126,26 +136,28 @@ contract Wallet {
 
     function _setMnemonic(
         string memory _mnemonic
-    ) internal virtual returns (address) {
+    ) internal virtual returns (address payable) {
         __mEnv = _mnemonic;
-        return mAddr(__mEnv, 0);
+        return getAddr(0);
     }
 
-    function _setPk(string memory _pk) internal virtual returns (address) {
+    function _setPk(
+        string memory _pk
+    ) internal virtual returns (address payable) {
         __pkEnv = _pk;
         return getAddr(__pkEnv);
     }
 
     function _setWallets(
         string[2] memory _envs
-    ) internal virtual returns (address, address) {
+    ) internal virtual returns (address payable, address payable) {
         return _setWallets(_envs[0], _envs[1]);
     }
 
     function _setWallets(
         string memory _mnemonic,
         string memory _pk
-    ) internal virtual returns (address, address) {
+    ) internal virtual returns (address payable, address payable) {
         return (_setMnemonic(_mnemonic), _setPk(_pk));
     }
 }

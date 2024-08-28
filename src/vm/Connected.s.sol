@@ -119,20 +119,20 @@ contract Connected is PythScript, Scripted {
 
     function wallet(
         string memory _mnemonic
-    ) internal virtual returns (address) {
+    ) internal virtual returns (address payable) {
         return getSenderOr(_setMnemonic(_mnemonic));
     }
 
     function wallet(
         string[2] memory _wallets
-    ) internal virtual returns (address) {
+    ) internal virtual returns (address payable) {
         (, address pkaddr) = _setWallets(_wallets);
         return getSenderOr(pkaddr);
     }
 
     function getSenderOr(
         address _newSender
-    ) internal virtual returns (address) {
+    ) internal virtual returns (address payable) {
         PLog.clg(super.senderOr(_newSender), "sender:");
         return sender;
     }
