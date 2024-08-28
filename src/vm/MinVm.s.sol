@@ -28,6 +28,17 @@ function mAddr(string memory _mEnv, uint32 _idx) returns (address) {
     return mvm.rememberKey(mPk(_mEnv, _idx));
 }
 
+function pkAddr(string memory _pkEnv) returns (address) {
+    return mvm.rememberKey(mvm.envOr(_pkEnv, 0));
+}
+
+function envOr(
+    string memory _envKey,
+    string memory _fbKey
+) view returns (string memory) {
+    return mvm.envOr(_envKey, mvm.envString(_fbKey));
+}
+
 function getId() returns (bytes4 b) {
     store().lastId = (b = bytes4(bytes32(vmFFI.randomUint())));
 }

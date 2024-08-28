@@ -22,6 +22,8 @@ interface IMinVm is IFFIVm {
 
     function readCallers() external returns (CallerMode, address, address);
 
+    function rpcUrl(string memory) external view returns (string memory);
+
     function assertTrue(bool) external pure;
 
     function assertTrue(bool, string calldata) external pure;
@@ -165,6 +167,7 @@ interface IMinVm is IFFIVm {
     function rollFork(uint256 blockNumber) external;
 
     function rollFork(uint256 forkId, uint256 blockNumber) external;
+    function transact(uint256 forkId, bytes32 txHash) external;
 
     /// See `serializeJson`.
     function serializeAddress(

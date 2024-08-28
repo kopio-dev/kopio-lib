@@ -2,14 +2,14 @@
 pragma solidity ^0.8.0;
 import {Auth} from "../src/utils/Auth.sol";
 import {Tested} from "../src/vm/Tested.t.sol";
-import {Based} from "../src/vm/Based.s.sol";
+import {Connected} from "../src/vm/Connected.s.sol";
 import {ShortAssert} from "../src/vm/ShortAssert.t.sol";
 import {Log} from "../src/vm/VmLibs.s.sol";
 import {TDummy, TFullAuth, Role, Init} from "./AuthImpl.sol";
 
 // solhint-disable
 
-contract AuthTest is Tested, Based {
+contract AuthTest is Tested, Connected {
     using ShortAssert for *;
     using Log for *;
 
@@ -17,7 +17,6 @@ contract AuthTest is Tested, Based {
     TDummy internal tDummy;
 
     address deployer = makeAddr("deployer");
-
     address operator = makeAddr("operator");
     address keeper = makeAddr("keeper");
     address owner = makeAddr("owner");

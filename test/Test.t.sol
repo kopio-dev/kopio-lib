@@ -8,16 +8,18 @@ import {PLog, logp} from "../src/vm/PLog.s.sol";
 import {Utils} from "../src/utils/Libs.sol";
 import {__revert, split} from "../src/utils/Funcs.sol";
 import {MockPyth} from "../src/mocks/MockPyth.sol";
-import {Based} from "../src/vm/Based.s.sol";
+import {Connected} from "../src/vm/Connected.s.sol";
 import {File, Files} from "../src/vm/Files.s.sol";
+import {Connections, Connection} from "../src/vm/Connections.s.sol";
 
-contract TTest is Tested, Based {
+contract TTest is Tested, Connected {
     TestContract internal thing;
     using VmCaller for *;
     using VmHelp for *;
     using Log for *;
     using Utils for *;
     using ShortAssert for *;
+    using Connections for *;
 
     function setUp() public {
         useMnemonic("MNEMONIC");
@@ -25,10 +27,53 @@ contract TTest is Tested, Based {
         thing = new TestContract();
     }
 
-    function testBase() public forked("RPC_ARBITRUM_ALCHEMY", 200000000) {
-        vm.skip(true);
-        base("MNEMONIC", "arbitrum");
-        base("MNEMONIC", "RPC_ARBITRUM_ALCHEMY");
+    function testConnected()
+        public
+        ConnectAt("RPC_ARBITRUM_ALCHEMY", 200000000)
+    {
+        Connections.count().eq(1, "c-1");
+
+        connect("MNEMONIC", "arbitrum");
+        Connections.count().eq(2, "c-2");
+
+        connect("MNEMONIC", "RPC_ARBITRUM_ALCHEMY");
+        Connections.count().eq(3, "c-3");
+
+        connect("MNEMONIC", "artbtirmun");
+        Connections.count().eq(4, "c-4");
+
+        ("arbitrum").connections().eq(1, "c-5");
+        ("artbtirmun").connections().eq(1, "c-5");
+        ("RPC_ARBITRUM_ALCHEMY").connections().eq(2, "c-6");
+
+        connection().network.eq("artbtirmun", "c-7");
+        connection().chainId.eq(42161, "c-8");
+
+        getConnection().clg();
+
+        Connection c = getConnection().prev();
+        c.use();
+        connection().network.eq("RPC_ARBITRUM_ALCHEMY", "c-9");
+        connection().chainId.eq(42161, "c-10");
+
+        c.next().use();
+        connection().network.eq("artbtirmun", "c-11");
+        connection().chainId.eq(42161, "c-12");
+
+        connect(c);
+        connection().network.eq("RPC_ARBITRUM_ALCHEMY", "c-13");
+        connection().chainId.eq(42161, "c-14");
+        connection().blockNow.eq(0, "c-15");
+
+        ("RPC_ARBITRUM_ALCHEMY").getConnection(1).use();
+        connection().blockNow.eq(200000000, "c-16");
+
+        getConnection().roll(200000100);
+        connection().blockNow.eq(200000100, "c-17");
+
+        getConnection().reset();
+        connection().blockNow.eq(200000000, "c-18");
+
         address(0x64).link("link-addr");
         address(0x64).link20("link-tkn");
         bytes32(hex"64").link("link-tx");
@@ -218,7 +263,7 @@ contract TTest is Tested, Based {
 
     function _unbroadcastedRestored()
         internal
-        reclearCallers
+        restoreCallers
         returns (address)
     {
         thing.save();
@@ -249,7 +294,7 @@ contract TTest is Tested, Based {
         return vmSender();
     }
 
-    function _unprankRestored() internal reclearCallers returns (address) {
+    function _unprankRestored() internal restoreCallers returns (address) {
         thing.save();
         return vmSender();
     }

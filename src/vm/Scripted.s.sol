@@ -10,10 +10,12 @@ import {__revert} from "../utils/Funcs.sol";
 
 abstract contract Scripted is Script, Wallet {
     using VmCaller for IMinVm.CallerMode;
+
     modifier fork(string memory _uoa) virtual {
         vm.createSelectFork(_uoa);
         _;
     }
+
     modifier forkId(uint256 _id) {
         vm.selectFork(_id);
         _;
@@ -78,7 +80,7 @@ abstract contract Scripted is Script, Wallet {
     }
 
     /// @dev func body with no call modes and restore callers after
-    modifier reclearCallers() {
+    modifier restoreCallers() {
         (IMinVm.CallerMode _m, address _s, address _o) = VmCaller.clear();
         _;
         _m.restore(_s, _o);
@@ -94,17 +96,17 @@ abstract contract Scripted is Script, Wallet {
     }
 
     /// @dev clear callers and change to broadcasting
-    function broadcastWith(uint32 _mIdx) internal {
+    function broadcastWith(uint32 _mIdx) internal virtual {
         VmCaller.clear();
         vm.startBroadcast(getAddr(_mIdx));
     }
 
-    function broadcastWith(address _addr) internal {
+    function broadcastWith(address _addr) internal virtual {
         VmCaller.clear();
         vm.startBroadcast(_addr);
     }
 
-    function broadcastWith(string memory _pkEnv) internal {
+    function broadcastWith(string memory _pkEnv) internal virtual {
         VmCaller.clear();
         vm.startBroadcast(vm.envUint(_pkEnv));
     }
@@ -142,30 +144,34 @@ abstract contract Scripted is Script, Wallet {
         return VmCaller.values();
     }
 
-    function _revert(bytes memory _d) internal pure {
+    function _revert(bytes memory _d) internal pure virtual {
         __revert(_d);
     }
 
-    function getTime() internal returns (uint256) {
+    function getTime() internal virtual returns (uint256) {
         return vm.unixTime() / 1000;
     }
 
-    function getRandomId() internal returns (bytes4) {
+    function syncTime() internal {
+        vm.warp(getTime());
+    }
+
+    function getRandomId() internal virtual returns (bytes4) {
         return getId();
     }
 
-    function file(string memory _loc) internal pure returns (File memory) {
+    function fileAt(string memory _loc) internal pure returns (File memory) {
         return File(_loc);
     }
 
     function write(
         string memory _loc,
         bytes memory data
-    ) internal returns (File memory) {
+    ) internal virtual returns (File memory) {
         return File(_loc).write(data);
     }
 
-    function write(bytes memory data) internal returns (File memory) {
+    function write(bytes memory data) internal virtual returns (File memory) {
         return File(vm.toString(getId())).write(data);
     }
 }
