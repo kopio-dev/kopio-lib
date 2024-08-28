@@ -85,6 +85,7 @@ abstract contract Scripted is Script, Wallet {
     modifier restoreCallers() {
         (IMinVm.CallerMode _m, address _s, address _o) = VmCaller.clear();
         _;
+        VmCaller.clear();
         _m.restore(_s, _o);
     }
 

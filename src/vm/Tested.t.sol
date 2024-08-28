@@ -39,11 +39,23 @@ abstract contract Tested is Scripted, Test {
         VmCaller.clear();
     }
 
-    modifier prankedMake(string memory _label) {
-        address who = prankMake(_label).addr;
+    modifier hoaxMake(string memory _label) {
+        address who = makeHoax(_label).addr;
         vm.startPrank(who, who);
         _;
         VmCaller.clear();
+    }
+
+    modifier rehoaxed(
+        address who,
+        address token,
+        uint256 amount
+    ) {
+        (IMinVm.CallerMode _m, address _s, address _o) = VmCaller.clear();
+        hoaxed(who, token, amount);
+        _;
+        VmCaller.clear();
+        _m.restore(_s, _o);
     }
 
     modifier reprankedById(uint32 _mIdx) {
@@ -66,20 +78,14 @@ abstract contract Tested is Scripted, Test {
         _m.restore(_s, _o);
     }
 
-    modifier reprankedByNew(string memory _label) {
+    modifier remakeHoax(string memory _label) {
         (IMinVm.CallerMode _m, address _s, address _o) = VmCaller.clear();
 
-        prankMake(_label);
+        makeHoax(_label);
         _;
 
         VmCaller.clear();
         _m.restore(_s, _o);
-    }
-
-    function prank(string memory _pkEnv, string memory _label) internal {
-        address who = getAddr(_pkEnv);
-        vm.label(who, _label);
-        prank(who, who);
     }
 
     function prank(address _sno, string memory _label) internal {
@@ -87,42 +93,97 @@ abstract contract Tested is Scripted, Test {
         prank(_sno, _sno);
     }
 
+    function prank(string memory _pkEnv, string memory _label) internal {
+        prank(getAddr(_pkEnv), _label);
+    }
+
     function prank(uint32 _mIdx, string memory _label) internal {
-        address who = getAddr(_mIdx);
-        vm.label(who, _label);
+        prank(getAddr(_mIdx), _label);
+    }
+
+    function hoaxed(address who) internal returns (address payable) {
+        deal(who, 420.69 ether);
         prank(who, who);
+        return payable(who);
+    }
+
+    function hoaxed(string memory _pkEnv) internal returns (address payable) {
+        return hoaxed(getAddr(_pkEnv));
+    }
+
+    function hoaxed(uint32 idx) internal returns (address payable) {
+        return hoaxed(getAddr(idx));
+    }
+
+    function hoaxed(
+        address who,
+        address token,
+        uint256 amount,
+        address spender
+    ) internal virtual returns (address payable addr_) {
+        deal(token, addr_ = hoaxed(who), amount);
+        if (spender != address(0)) allowMax(token, who, spender);
+    }
+
+    function hoaxed(
+        address who,
+        address token,
+        uint256 amount
+    ) internal virtual returns (address payable) {
+        return hoaxed(who, token, amount, address(0));
+    }
+
+    function hoaxed(
+        uint32 idx,
+        address token,
+        uint256 amount
+    ) internal virtual returns (address payable) {
+        return hoaxed(getAddr(idx), token, amount);
+    }
+
+    function hoaxed(
+        string memory _pkEnv,
+        address token,
+        uint256 amount
+    ) internal virtual returns (address payable) {
+        return hoaxed(getAddr(_pkEnv), token, amount);
     }
 
     /// @notice Pranks with a new account derived from label with ether (and the label).
-    function prankMake(
+    function makeHoax(
         string memory _label
     ) internal returns (Account memory who) {
-        who = makeAccount(_label);
-        vm.deal(who.addr, 420.69 ether);
-        vm.label(who.addr, _label);
-        prank(who.addr, who.addr);
+        hoaxed((who = makeAccount(_label)).addr);
     }
 
-    function dealMake(
-        string memory user,
+    function makeHoax(
+        string memory _label,
         address tAddr,
         uint256 amt
-    ) internal returns (address addr) {
-        deal(tAddr, (addr = makeAddr(user)), amt);
+    ) internal returns (address payable) {
+        return hoaxed(makePayable(_label), tAddr, amt);
     }
 
-    function dealMake(
-        string memory user,
+    function make(
+        string memory _label,
+        address tAddr,
+        uint256 amt
+    ) internal returns (address payable addr) {
+        deal(tAddr, (addr = makePayable(_label)), amt);
+    }
+
+    function make(
+        string memory _label,
         address tAddr,
         uint256 amt,
         address spender
-    ) internal returns (address addr) {
-        allowMax(tAddr, (addr = dealMake(user, tAddr, amt)), spender);
+    ) internal returns (address payable addr) {
+        deal(tAddr, (addr = makePayable(_label)), amt, spender);
     }
 
     function deal(
-        address to,
         address tAddr,
+        address to,
         uint256 amt,
         address spender
     ) internal virtual returns (IERC20) {
