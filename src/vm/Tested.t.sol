@@ -40,7 +40,7 @@ abstract contract Tested is Scripted, Test {
     }
 
     modifier hoaxMake(string memory _label) {
-        address who = makeHoax(_label).addr;
+        address who = makeHoax(_label);
         vm.startPrank(who, who);
         _;
         VmCaller.clear();
@@ -150,10 +150,13 @@ abstract contract Tested is Scripted, Test {
     }
 
     /// @notice Pranks with a new account derived from label with ether (and the label).
-    function makeHoax(
+    function makeKeyedHoax(
         string memory _label
     ) internal returns (Account memory who) {
         hoaxed((who = makeAccount(_label)).addr);
+    }
+    function makeHoax(string memory _label) internal returns (address payable) {
+        return hoaxed(makePayable(_label));
     }
 
     function makeHoax(
