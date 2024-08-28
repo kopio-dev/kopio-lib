@@ -115,6 +115,10 @@ interface IMinVm is IFFIVm {
         uint256 pk,
         bytes32 d
     ) external pure returns (uint8 v, bytes32 r, bytes32 s);
+    function sign(
+        address a,
+        bytes32 d
+    ) external pure returns (uint8 v, bytes32 r, bytes32 s);
 
     function record() external;
 

@@ -1,10 +1,13 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
-import {IERC20} from "../token/IERC20.sol";
 import {Utils} from "./Libs.sol";
+import {Permit} from "./Permit.sol";
+import {IERC20Permit, IERC20} from "../token/IERC20Permit.sol";
+import {mvm} from "../vm/MinVm.s.sol";
 
 library Tokens {
     using Tokens for *;
+    using Permit for IERC20Permit;
     using Utils for *;
 
     function dec(address tAddr) internal view returns (uint8) {
@@ -117,6 +120,9 @@ library Tokens {
     function I20(address token) internal pure returns (IERC20) {
         return IERC20(token);
     }
+    function P20(address token) internal pure returns (IERC20Permit) {
+        return IERC20Permit(token);
+    }
 
     function bal(
         address account,
@@ -148,5 +154,41 @@ library Tokens {
         address to
     ) internal returns (uint256 amount) {
         token.transfer(to, (amount = token.balanceOf(from)));
+    }
+
+    function getPermit(
+        IERC20 token,
+        address owner,
+        address spender,
+        uint256 amount,
+        uint256 deadline
+    ) internal view returns (uint8 v, bytes32 r, bytes32 s) {
+        return getPermit(address(token), owner, spender, amount, deadline);
+    }
+
+    function getPermit(
+        address token,
+        address owner,
+        address spender,
+        uint256 amount,
+        uint256 deadline
+    ) internal view returns (uint8 v, bytes32 r, bytes32 s) {
+        return
+            mvm.sign(
+                owner,
+                token.P20().getPermitHash(owner, spender, amount, deadline)
+            );
+    }
+    function getPermit(
+        address token,
+        address owner,
+        address spender,
+        uint256 amount
+    ) internal view returns (uint8 v, bytes32 r, bytes32 s) {
+        return
+            mvm.sign(
+                owner,
+                token.P20().getPermitHash(owner, spender, amount, 100000000000)
+            );
     }
 }

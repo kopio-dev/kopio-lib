@@ -203,4 +203,14 @@ abstract contract Scripted is Script, Wallet {
     ) internal virtual rebroadcasted(from) returns (uint256 amt) {
         return Tokens.sendBalance(from, tAddr, to);
     }
+
+    function getPermit(
+        address token,
+        address owner,
+        address spender,
+        uint256 amount,
+        uint256 deadline
+    ) internal view returns (uint8 v, bytes32 r, bytes32 s) {
+        return Tokens.getPermit(token, owner, spender, amount, deadline);
+    }
 }
