@@ -138,8 +138,8 @@ abstract contract Scripted is Script, Wallet {
         VmCaller.clear();
     }
 
-    function vmSender() internal returns (address) {
-        return VmCaller.msgSender();
+    function vmSender() internal returns (address payable) {
+        return payable(VmCaller.msgSender());
     }
 
     function vmCallers() internal returns (VmCaller.Values memory) {
@@ -192,8 +192,8 @@ abstract contract Scripted is Script, Wallet {
         address owner,
         address tAddr,
         address spender
-    ) internal virtual rebroadcasted(owner) returns (address) {
-        return Tokens.allowMax(owner, tAddr, spender);
+    ) internal virtual rebroadcasted(owner) returns (address payable) {
+        return payable(Tokens.allowMax(owner, tAddr, spender));
     }
 
     function sendBal(
@@ -212,6 +212,19 @@ abstract contract Scripted is Script, Wallet {
         uint256 deadline
     ) internal view returns (uint8 v, bytes32 r, bytes32 s) {
         return Tokens.getPermit(token, owner, spender, amount, deadline);
+    }
+
+    function makePayable(
+        string memory user
+    ) internal returns (address payable) {
+        return payable(makeAddr(user));
+    }
+
+    function makeKeyed(
+        string memory user
+    ) internal returns (address payable, uint256) {
+        (address a, uint256 k) = makeAddrAndKey(user);
+        return (payable(a), k);
     }
 
     function getNextAddr(address deployer) internal view returns (address) {

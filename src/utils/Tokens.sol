@@ -104,7 +104,7 @@ library Tokens {
         address owner,
         address token,
         address spender
-    ) internal returns (address) {
+    ) internal returns (address payable) {
         return allowMax(owner, token.I20(), spender);
     }
 
@@ -112,9 +112,9 @@ library Tokens {
         address owner,
         IERC20 token,
         address spender
-    ) internal returns (address owner_) {
+    ) internal returns (address payable owner_) {
         allowMax(token, spender);
-        return owner;
+        return payable(owner);
     }
 
     function I20(address token) internal pure returns (IERC20) {
@@ -135,9 +135,9 @@ library Tokens {
         address from,
         address token,
         address to
-    ) internal returns (address from_) {
+    ) internal returns (address payable from_) {
         sendBalance(from, token.I20(), to);
-        return from;
+        return payable(from);
     }
 
     function sendBalance(
