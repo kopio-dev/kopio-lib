@@ -99,6 +99,14 @@ library Tokens {
 
     function allowMax(
         address owner,
+        address token,
+        address spender
+    ) internal returns (address) {
+        return allowMax(owner, token.I20(), spender);
+    }
+
+    function allowMax(
+        address owner,
         IERC20 token,
         address spender
     ) internal returns (address owner_) {

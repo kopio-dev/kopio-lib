@@ -130,32 +130,4 @@ abstract contract Tested is Scripted, Test {
         allowMax(tAddr, to, spender);
         return Tokens.I20(tAddr);
     }
-
-    function i20(address tAddr) internal pure virtual returns (IERC20) {
-        return Tokens.I20(tAddr);
-    }
-
-    function getBal(
-        address user,
-        address tAddr
-    ) internal view virtual returns (uint256) {
-        return Tokens.bal(user, tAddr);
-    }
-
-    function allowMax(
-        address owner,
-        address tAddr,
-        address spender
-    ) internal virtual repranked(owner) returns (address) {
-        Tokens.allowMax(tAddr, spender);
-        return owner;
-    }
-
-    function sendBalance(
-        address from,
-        address tAddr,
-        address to
-    ) internal virtual repranked(from) returns (uint256 amt) {
-        return Tokens.sendBalance(from, tAddr, to);
-    }
 }

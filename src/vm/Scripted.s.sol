@@ -7,6 +7,8 @@ import {getId} from "./MinVm.s.sol";
 import {File, VmCaller, IMinVm} from "./VmLibs.s.sol";
 import {Script} from "forge-std/Script.sol";
 import {__revert} from "../utils/Funcs.sol";
+import {IERC20} from "../token/IERC20.sol";
+import {Tokens} from "../utils/Tokens.sol";
 
 abstract contract Scripted is Script, Wallet {
     using VmCaller for IMinVm.CallerMode;
@@ -173,5 +175,32 @@ abstract contract Scripted is Script, Wallet {
 
     function write(bytes memory data) internal virtual returns (File memory) {
         return File(vm.toString(getId())).write(data);
+    }
+
+    function i20(address tAddr) internal pure virtual returns (IERC20) {
+        return Tokens.I20(tAddr);
+    }
+
+    function getBal(
+        address user,
+        address tAddr
+    ) internal view virtual returns (uint256) {
+        return Tokens.bal(user, tAddr);
+    }
+
+    function allowMax(
+        address owner,
+        address tAddr,
+        address spender
+    ) internal virtual rebroadcasted(owner) returns (address) {
+        return Tokens.allowMax(owner, tAddr, spender);
+    }
+
+    function sendBal(
+        address from,
+        address tAddr,
+        address to
+    ) internal virtual rebroadcasted(from) returns (uint256 amt) {
+        return Tokens.sendBalance(from, tAddr, to);
     }
 }
