@@ -36,7 +36,7 @@ contract MockOracle is IAggregatorV3 {
         decimals = _decimals;
     }
 
-    function setPrice(int256 _answer) external {
+    function setIntPrice(int256 _answer) external {
         initialAnswer = int256(_answer);
     }
 
