@@ -8,6 +8,7 @@ contract MockOracle is IAggregatorV3 {
     string public override description;
     uint256 public override version = 1;
     int256 public initialAnswer;
+    uint256 internal _updatedAt;
 
     constructor(
         string memory _description,
@@ -17,6 +18,14 @@ contract MockOracle is IAggregatorV3 {
         description = _description;
         initialAnswer = int256(_initialAnswer);
         decimals = _decimals;
+    }
+
+    function latestTimestamp() public view returns (uint256) {
+        return _updatedAt == 0 ? block.timestamp : _updatedAt;
+    }
+
+    function setUpdatedAt(uint256 val) external {
+        _updatedAt = val;
     }
 
     function setPrice(uint256 _answer) external {
@@ -53,7 +62,7 @@ contract MockOracle is IAggregatorV3 {
             uint80 answeredInRound
         )
     {
-        return (1, initialAnswer, block.timestamp, block.timestamp, roundId);
+        return (1, initialAnswer, block.timestamp, latestTimestamp(), roundId);
     }
 
     function latestRoundData()
@@ -68,6 +77,6 @@ contract MockOracle is IAggregatorV3 {
             uint80 answeredInRound
         )
     {
-        return (1, initialAnswer, block.timestamp, block.timestamp, roundId);
+        return (1, initialAnswer, block.timestamp, latestTimestamp(), roundId);
     }
 }
