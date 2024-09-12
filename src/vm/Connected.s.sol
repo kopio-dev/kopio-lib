@@ -21,12 +21,12 @@ contract Connected is PythScript, Scripted {
         _;
     }
 
-    modifier ConnectM(string memory _mnemonic, string memory _network) virtual {
+    modifier connect1(string memory _mnemonic, string memory _network) virtual {
         connect(_mnemonic, _network, 0);
         _;
     }
 
-    modifier ConnectMAt(
+    modifier connect1At(
         string memory _mnemonic,
         string memory _network,
         uint256 _blockNr
@@ -35,13 +35,13 @@ contract Connected is PythScript, Scripted {
         _;
     }
 
-    modifier ConnectWith(string[2] memory _wallets, string memory _network)
+    modifier connect2(string[2] memory _wallets, string memory _network)
         virtual {
         connect(_wallets, _network, 0);
         _;
     }
 
-    modifier ConnectWithAt(
+    modifier connect2At(
         string[2] memory _wallets,
         string memory _network,
         uint256 _blockNr
@@ -50,27 +50,27 @@ contract Connected is PythScript, Scripted {
         _;
     }
 
-    modifier Reconnect(string memory _network) virtual {
+    modifier reconnected(string memory _network) virtual {
         Connections.reconnect(_network);
         _;
     }
 
-    modifier Connect(string memory _network) virtual {
+    modifier connected(string memory _network) virtual {
         connect(_network);
         _;
     }
 
-    modifier Fork(string memory _network) virtual {
+    modifier forked(string memory _network) virtual {
         connect(_network);
         _;
     }
 
-    modifier ConnectAt(string memory _network, uint256 _blockNr) virtual {
+    modifier connectAt(string memory _network, uint256 _blockNr) virtual {
         connect(_network, _blockNr);
         _;
     }
 
-    modifier ForkAt(string memory _network, uint256 _blockNr) virtual {
+    modifier forkAt(string memory _network, uint256 _blockNr) virtual {
         connect(_network, _blockNr);
         _;
     }
