@@ -49,7 +49,7 @@ library addr {
 abstract contract ArbAddr {
     address constant arbAddr = addr.arb;
     address constant usdcAddr = addr.usdc;
-    address constant usdceAddr = addr.usdc;
+    address constant usdceAddr = addr.usdce;
     address constant wbtcAddr = addr.wbtc;
     address constant wethAddr = addr.weth;
     address constant daiAddr = addr.dai;
