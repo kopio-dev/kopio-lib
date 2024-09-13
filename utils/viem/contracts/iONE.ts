@@ -1,6 +1,6 @@
 import { addr } from '.'
 
-export const iKopioABI = [
+export const iONEABI = [
 	{
 		type: 'function',
 		name: 'DOMAIN_SEPARATOR',
@@ -83,21 +83,79 @@ export const iKopioABI = [
 	},
 	{
 		type: 'function',
-		name: 'burn',
+		name: 'convertManyToAssets',
 		inputs: [
 			{
-				name: 'from',
-				type: 'address',
-				internalType: 'address',
+				name: 'shares',
+				type: 'uint256[]',
+				internalType: 'uint256[]',
 			},
+		],
+		outputs: [
 			{
-				name: 'amount',
+				name: 'assets',
+				type: 'uint256[]',
+				internalType: 'uint256[]',
+			},
+		],
+		stateMutability: 'view',
+	},
+	{
+		type: 'function',
+		name: 'convertManyToShares',
+		inputs: [
+			{
+				name: 'assets',
+				type: 'uint256[]',
+				internalType: 'uint256[]',
+			},
+		],
+		outputs: [
+			{
+				name: 'shares',
+				type: 'uint256[]',
+				internalType: 'uint256[]',
+			},
+		],
+		stateMutability: 'view',
+	},
+	{
+		type: 'function',
+		name: 'convertToAssets',
+		inputs: [
+			{
+				name: 'shares',
 				type: 'uint256',
 				internalType: 'uint256',
 			},
 		],
-		outputs: [],
-		stateMutability: 'nonpayable',
+		outputs: [
+			{
+				name: 'assets',
+				type: 'uint256',
+				internalType: 'uint256',
+			},
+		],
+		stateMutability: 'view',
+	},
+	{
+		type: 'function',
+		name: 'convertToShares',
+		inputs: [
+			{
+				name: 'assets',
+				type: 'uint256',
+				internalType: 'uint256',
+			},
+		],
+		outputs: [
+			{
+				name: 'shares',
+				type: 'uint256',
+				internalType: 'uint256',
+			},
+		],
+		stateMutability: 'view',
 	},
 	{
 		type: 'function',
@@ -114,90 +172,15 @@ export const iKopioABI = [
 	},
 	{
 		type: 'function',
-		name: 'enableNative',
+		name: 'deposit',
 		inputs: [
 			{
-				name: 'enabled',
-				type: 'bool',
-				internalType: 'bool',
-			},
-		],
-		outputs: [],
-		stateMutability: 'nonpayable',
-	},
-	{
-		type: 'function',
-		name: 'getRoleAdmin',
-		inputs: [
-			{
-				name: 'role',
-				type: 'bytes32',
-				internalType: 'bytes32',
-			},
-		],
-		outputs: [
-			{
-				name: '',
-				type: 'bytes32',
-				internalType: 'bytes32',
-			},
-		],
-		stateMutability: 'view',
-	},
-	{
-		type: 'function',
-		name: 'getRoleMember',
-		inputs: [
-			{
-				name: 'role',
-				type: 'bytes32',
-				internalType: 'bytes32',
-			},
-			{
-				name: 'index',
+				name: '_shares',
 				type: 'uint256',
 				internalType: 'uint256',
 			},
-		],
-		outputs: [
 			{
-				name: '',
-				type: 'address',
-				internalType: 'address',
-			},
-		],
-		stateMutability: 'view',
-	},
-	{
-		type: 'function',
-		name: 'getRoleMemberCount',
-		inputs: [
-			{
-				name: 'role',
-				type: 'bytes32',
-				internalType: 'bytes32',
-			},
-		],
-		outputs: [
-			{
-				name: '',
-				type: 'uint256',
-				internalType: 'uint256',
-			},
-		],
-		stateMutability: 'view',
-	},
-	{
-		type: 'function',
-		name: 'grantRole',
-		inputs: [
-			{
-				name: 'role',
-				type: 'bytes32',
-				internalType: 'bytes32',
-			},
-			{
-				name: 'account',
+				name: '_receiver',
 				type: 'address',
 				internalType: 'address',
 			},
@@ -207,58 +190,93 @@ export const iKopioABI = [
 	},
 	{
 		type: 'function',
-		name: 'hasRole',
+		name: 'destroy',
 		inputs: [
-			{
-				name: 'role',
-				type: 'bytes32',
-				internalType: 'bytes32',
-			},
-			{
-				name: 'account',
-				type: 'address',
-				internalType: 'address',
-			},
-		],
-		outputs: [
-			{
-				name: '',
-				type: 'bool',
-				internalType: 'bool',
-			},
-		],
-		stateMutability: 'view',
-	},
-	{
-		type: 'function',
-		name: 'isRebased',
-		inputs: [],
-		outputs: [
-			{
-				name: '',
-				type: 'bool',
-				internalType: 'bool',
-			},
-		],
-		stateMutability: 'view',
-	},
-	{
-		type: 'function',
-		name: 'mint',
-		inputs: [
-			{
-				name: 'to',
-				type: 'address',
-				internalType: 'address',
-			},
 			{
 				name: 'amount',
 				type: 'uint256',
 				internalType: 'uint256',
 			},
+			{
+				name: 'from',
+				type: 'address',
+				internalType: 'address',
+			},
 		],
-		outputs: [],
+		outputs: [
+			{
+				name: '',
+				type: 'uint256',
+				internalType: 'uint256',
+			},
+		],
 		stateMutability: 'nonpayable',
+	},
+	{
+		type: 'function',
+		name: 'exchangeRate',
+		inputs: [],
+		outputs: [
+			{
+				name: 'rate',
+				type: 'uint256',
+				internalType: 'uint256',
+			},
+		],
+		stateMutability: 'view',
+	},
+	{
+		type: 'function',
+		name: 'issue',
+		inputs: [
+			{
+				name: 'amount',
+				type: 'uint256',
+				internalType: 'uint256',
+			},
+			{
+				name: 'to',
+				type: 'address',
+				internalType: 'address',
+			},
+		],
+		outputs: [
+			{
+				name: '',
+				type: 'uint256',
+				internalType: 'uint256',
+			},
+		],
+		stateMutability: 'nonpayable',
+	},
+	{
+		type: 'function',
+		name: 'maxRedeem',
+		inputs: [
+			{
+				name: 'assetAddr',
+				type: 'address',
+				internalType: 'address',
+			},
+			{
+				name: 'owner',
+				type: 'address',
+				internalType: 'address',
+			},
+		],
+		outputs: [
+			{
+				name: 'max',
+				type: 'uint256',
+				internalType: 'uint256',
+			},
+			{
+				name: 'fee',
+				type: 'uint256',
+				internalType: 'uint256',
+			},
+		],
+		stateMutability: 'view',
 	},
 	{
 		type: 'function',
@@ -291,6 +309,51 @@ export const iKopioABI = [
 			},
 		],
 		stateMutability: 'view',
+	},
+	{
+		type: 'function',
+		name: 'onVaultFlash',
+		inputs: [
+			{
+				name: '',
+				type: 'tuple',
+				internalType: 'struct IVaultFlash.Flash',
+				components: [
+					{
+						name: 'asset',
+						type: 'address',
+						internalType: 'address',
+					},
+					{
+						name: 'assets',
+						type: 'uint256',
+						internalType: 'uint256',
+					},
+					{
+						name: 'shares',
+						type: 'uint256',
+						internalType: 'uint256',
+					},
+					{
+						name: 'receiver',
+						type: 'address',
+						internalType: 'address',
+					},
+					{
+						name: 'kind',
+						type: 'uint8',
+						internalType: 'enum IVaultFlash.FlashKind',
+					},
+				],
+			},
+			{
+				name: '',
+				type: 'bytes',
+				internalType: 'bytes',
+			},
+		],
+		outputs: [],
+		stateMutability: 'nonpayable',
 	},
 	{
 		type: 'function',
@@ -345,191 +408,6 @@ export const iKopioABI = [
 	{
 		type: 'function',
 		name: 'protocol',
-		inputs: [],
-		outputs: [
-			{
-				name: '',
-				type: 'address',
-				internalType: 'address',
-			},
-		],
-		stateMutability: 'view',
-	},
-	{
-		type: 'function',
-		name: 'rebase',
-		inputs: [
-			{
-				name: 'denominator',
-				type: 'uint248',
-				internalType: 'uint248',
-			},
-			{
-				name: 'positive',
-				type: 'bool',
-				internalType: 'bool',
-			},
-			{
-				name: 'afterRebase',
-				type: 'bytes',
-				internalType: 'bytes',
-			},
-		],
-		outputs: [],
-		stateMutability: 'nonpayable',
-	},
-	{
-		type: 'function',
-		name: 'rebaseInfo',
-		inputs: [],
-		outputs: [
-			{
-				name: '',
-				type: 'tuple',
-				internalType: 'struct IKopio.Rebase',
-				components: [
-					{
-						name: 'denominator',
-						type: 'uint248',
-						internalType: 'uint248',
-					},
-					{
-						name: 'positive',
-						type: 'bool',
-						internalType: 'bool',
-					},
-				],
-			},
-		],
-		stateMutability: 'view',
-	},
-	{
-		type: 'function',
-		name: 'reinitializeERC20',
-		inputs: [
-			{
-				name: '_name',
-				type: 'string',
-				internalType: 'string',
-			},
-			{
-				name: '_symbol',
-				type: 'string',
-				internalType: 'string',
-			},
-			{
-				name: '_version',
-				type: 'uint8',
-				internalType: 'uint8',
-			},
-		],
-		outputs: [],
-		stateMutability: 'nonpayable',
-	},
-	{
-		type: 'function',
-		name: 'renounceRole',
-		inputs: [
-			{
-				name: 'role',
-				type: 'bytes32',
-				internalType: 'bytes32',
-			},
-			{
-				name: 'callerConfirmation',
-				type: 'address',
-				internalType: 'address',
-			},
-		],
-		outputs: [],
-		stateMutability: 'nonpayable',
-	},
-	{
-		type: 'function',
-		name: 'revokeRole',
-		inputs: [
-			{
-				name: 'role',
-				type: 'bytes32',
-				internalType: 'bytes32',
-			},
-			{
-				name: 'account',
-				type: 'address',
-				internalType: 'address',
-			},
-		],
-		outputs: [],
-		stateMutability: 'nonpayable',
-	},
-	{
-		type: 'function',
-		name: 'setCloseFee',
-		inputs: [
-			{
-				name: 'newCloseFee',
-				type: 'uint40',
-				internalType: 'uint40',
-			},
-		],
-		outputs: [],
-		stateMutability: 'nonpayable',
-	},
-	{
-		type: 'function',
-		name: 'setFeeRecipient',
-		inputs: [
-			{
-				name: 'newRecipient',
-				type: 'address',
-				internalType: 'address',
-			},
-		],
-		outputs: [],
-		stateMutability: 'nonpayable',
-	},
-	{
-		type: 'function',
-		name: 'setOpenFee',
-		inputs: [
-			{
-				name: 'newOpenFee',
-				type: 'uint48',
-				internalType: 'uint48',
-			},
-		],
-		outputs: [],
-		stateMutability: 'nonpayable',
-	},
-	{
-		type: 'function',
-		name: 'setShare',
-		inputs: [
-			{
-				name: 'addr',
-				type: 'address',
-				internalType: 'address',
-			},
-		],
-		outputs: [],
-		stateMutability: 'nonpayable',
-	},
-	{
-		type: 'function',
-		name: 'setUnderlying',
-		inputs: [
-			{
-				name: 'underlyingAddr',
-				type: 'address',
-				internalType: 'address',
-			},
-		],
-		outputs: [],
-		stateMutability: 'nonpayable',
-	},
-	{
-		type: 'function',
-		name: 'share',
 		inputs: [],
 		outputs: [
 			{
@@ -647,89 +525,203 @@ export const iKopioABI = [
 	},
 	{
 		type: 'function',
-		name: 'unwrap',
-		inputs: [
-			{
-				name: 'to',
-				type: 'address',
-				internalType: 'address',
-			},
-			{
-				name: 'amount',
-				type: 'uint256',
-				internalType: 'uint256',
-			},
-			{
-				name: 'toNative',
-				type: 'bool',
-				internalType: 'bool',
-			},
-		],
-		outputs: [],
-		stateMutability: 'nonpayable',
-	},
-	{
-		type: 'function',
-		name: 'wrap',
-		inputs: [
-			{
-				name: 'to',
-				type: 'address',
-				internalType: 'address',
-			},
-			{
-				name: 'amount',
-				type: 'uint256',
-				internalType: 'uint256',
-			},
-		],
-		outputs: [],
-		stateMutability: 'nonpayable',
-	},
-	{
-		type: 'function',
-		name: 'wraps',
+		name: 'vault',
 		inputs: [],
 		outputs: [
 			{
 				name: '',
-				type: 'tuple',
-				internalType: 'struct IKopio.Wraps',
-				components: [
-					{
-						name: 'underlying',
-						type: 'address',
-						internalType: 'address',
-					},
-					{
-						name: 'underlyingDec',
-						type: 'uint8',
-						internalType: 'uint8',
-					},
-					{
-						name: 'openFee',
-						type: 'uint48',
-						internalType: 'uint48',
-					},
-					{
-						name: 'closeFee',
-						type: 'uint40',
-						internalType: 'uint40',
-					},
-					{
-						name: 'native',
-						type: 'bool',
-						internalType: 'bool',
-					},
-					{
-						name: 'feeRecipient',
-						type: 'address',
-						internalType: 'address payable',
-					},
-				],
+				type: 'address',
+				internalType: 'contract IVault',
 			},
 		],
 		stateMutability: 'view',
+	},
+	{
+		type: 'function',
+		name: 'vaultDeposit',
+		inputs: [
+			{
+				name: '_assetAddr',
+				type: 'address',
+				internalType: 'address',
+			},
+			{
+				name: '_assets',
+				type: 'uint256',
+				internalType: 'uint256',
+			},
+			{
+				name: '_receiver',
+				type: 'address',
+				internalType: 'address',
+			},
+		],
+		outputs: [
+			{
+				name: 'sharesOut',
+				type: 'uint256',
+				internalType: 'uint256',
+			},
+			{
+				name: 'assetFee',
+				type: 'uint256',
+				internalType: 'uint256',
+			},
+		],
+		stateMutability: 'nonpayable',
+	},
+	{
+		type: 'function',
+		name: 'vaultMint',
+		inputs: [
+			{
+				name: '_assetAddr',
+				type: 'address',
+				internalType: 'address',
+			},
+			{
+				name: '_shares',
+				type: 'uint256',
+				internalType: 'uint256',
+			},
+			{
+				name: '_receiver',
+				type: 'address',
+				internalType: 'address',
+			},
+		],
+		outputs: [
+			{
+				name: 'assetsIn',
+				type: 'uint256',
+				internalType: 'uint256',
+			},
+			{
+				name: 'assetFee',
+				type: 'uint256',
+				internalType: 'uint256',
+			},
+		],
+		stateMutability: 'nonpayable',
+	},
+	{
+		type: 'function',
+		name: 'vaultRedeem',
+		inputs: [
+			{
+				name: '_assetAddr',
+				type: 'address',
+				internalType: 'address',
+			},
+			{
+				name: '_shares',
+				type: 'uint256',
+				internalType: 'uint256',
+			},
+			{
+				name: '_receiver',
+				type: 'address',
+				internalType: 'address',
+			},
+			{
+				name: '_owner',
+				type: 'address',
+				internalType: 'address',
+			},
+		],
+		outputs: [
+			{
+				name: 'assetsOut',
+				type: 'uint256',
+				internalType: 'uint256',
+			},
+			{
+				name: 'assetFee',
+				type: 'uint256',
+				internalType: 'uint256',
+			},
+		],
+		stateMutability: 'nonpayable',
+	},
+	{
+		type: 'function',
+		name: 'vaultWithdraw',
+		inputs: [
+			{
+				name: '_assetAddr',
+				type: 'address',
+				internalType: 'address',
+			},
+			{
+				name: '_assets',
+				type: 'uint256',
+				internalType: 'uint256',
+			},
+			{
+				name: '_receiver',
+				type: 'address',
+				internalType: 'address',
+			},
+			{
+				name: '_owner',
+				type: 'address',
+				internalType: 'address',
+			},
+		],
+		outputs: [
+			{
+				name: 'sharesIn',
+				type: 'uint256',
+				internalType: 'uint256',
+			},
+			{
+				name: 'assetFee',
+				type: 'uint256',
+				internalType: 'uint256',
+			},
+		],
+		stateMutability: 'nonpayable',
+	},
+	{
+		type: 'function',
+		name: 'withdraw',
+		inputs: [
+			{
+				name: '_amount',
+				type: 'uint256',
+				internalType: 'uint256',
+			},
+			{
+				name: '_receiver',
+				type: 'address',
+				internalType: 'address',
+			},
+		],
+		outputs: [],
+		stateMutability: 'nonpayable',
+	},
+	{
+		type: 'function',
+		name: 'withdrawFrom',
+		inputs: [
+			{
+				name: '_from',
+				type: 'address',
+				internalType: 'address',
+			},
+			{
+				name: '_to',
+				type: 'address',
+				internalType: 'address',
+			},
+			{
+				name: '_amount',
+				type: 'uint256',
+				internalType: 'uint256',
+			},
+		],
+		outputs: [],
+		stateMutability: 'nonpayable',
 	},
 	{
 		type: 'event',
@@ -758,75 +750,25 @@ export const iKopioABI = [
 	},
 	{
 		type: 'event',
-		name: 'RoleAdminChanged',
+		name: 'Deposit',
 		inputs: [
 			{
-				name: 'role',
-				type: 'bytes32',
-				indexed: true,
-				internalType: 'bytes32',
-			},
-			{
-				name: 'previousAdminRole',
-				type: 'bytes32',
-				indexed: true,
-				internalType: 'bytes32',
-			},
-			{
-				name: 'newAdminRole',
-				type: 'bytes32',
-				indexed: true,
-				internalType: 'bytes32',
-			},
-		],
-		anonymous: false,
-	},
-	{
-		type: 'event',
-		name: 'RoleGranted',
-		inputs: [
-			{
-				name: 'role',
-				type: 'bytes32',
-				indexed: true,
-				internalType: 'bytes32',
-			},
-			{
-				name: 'account',
+				name: '_from',
 				type: 'address',
 				indexed: true,
 				internalType: 'address',
 			},
 			{
-				name: 'sender',
-				type: 'address',
-				indexed: true,
-				internalType: 'address',
-			},
-		],
-		anonymous: false,
-	},
-	{
-		type: 'event',
-		name: 'RoleRevoked',
-		inputs: [
-			{
-				name: 'role',
-				type: 'bytes32',
-				indexed: true,
-				internalType: 'bytes32',
-			},
-			{
-				name: 'account',
+				name: '_to',
 				type: 'address',
 				indexed: true,
 				internalType: 'address',
 			},
 			{
-				name: 'sender',
-				type: 'address',
-				indexed: true,
-				internalType: 'address',
+				name: '_amount',
+				type: 'uint256',
+				indexed: false,
+				internalType: 'uint256',
 			},
 		],
 		anonymous: false,
@@ -858,59 +800,22 @@ export const iKopioABI = [
 	},
 	{
 		type: 'event',
-		name: 'Unwrap',
+		name: 'Withdraw',
 		inputs: [
 			{
-				name: 'asset',
+				name: '_from',
 				type: 'address',
 				indexed: true,
 				internalType: 'address',
 			},
 			{
-				name: 'underlying',
-				type: 'address',
-				indexed: false,
-				internalType: 'address',
-			},
-			{
-				name: 'to',
+				name: '_to',
 				type: 'address',
 				indexed: true,
 				internalType: 'address',
 			},
 			{
-				name: 'amount',
-				type: 'uint256',
-				indexed: false,
-				internalType: 'uint256',
-			},
-		],
-		anonymous: false,
-	},
-	{
-		type: 'event',
-		name: 'Wrap',
-		inputs: [
-			{
-				name: 'asset',
-				type: 'address',
-				indexed: true,
-				internalType: 'address',
-			},
-			{
-				name: 'underlying',
-				type: 'address',
-				indexed: false,
-				internalType: 'address',
-			},
-			{
-				name: 'to',
-				type: 'address',
-				indexed: true,
-				internalType: 'address',
-			},
-			{
-				name: 'amount',
+				name: '_amount',
 				type: 'uint256',
 				indexed: false,
 				internalType: 'uint256',
@@ -920,22 +825,12 @@ export const iKopioABI = [
 	},
 	{
 		type: 'error',
-		name: 'AccessControlBadConfirmation',
-		inputs: [],
-	},
-	{
-		type: 'error',
-		name: 'AccessControlUnauthorizedAccount',
+		name: 'FLASH_KIND_NOT_SUPPORTED',
 		inputs: [
 			{
-				name: 'account',
-				type: 'address',
-				internalType: 'address',
-			},
-			{
-				name: 'neededRole',
-				type: 'bytes32',
-				internalType: 'bytes32',
+				name: '',
+				type: 'uint8',
+				internalType: 'enum IVaultFlash.FlashKind',
 			},
 		],
 	},
@@ -983,9 +878,7 @@ export const iKopioABI = [
 	},
 ] as const
 
-export const kopioConfig = (symbol: keyof typeof addr) => {
-	return {
-		abi: iKopioABI,
-		addr: addr[symbol],
-	}
+export const iONEConfig = {
+	abi: iONEABI,
+	addr: addr.ONE,
 }

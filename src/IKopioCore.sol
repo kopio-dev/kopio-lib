@@ -308,7 +308,8 @@ library Enums {
         Chainlink,
         API3,
         Vault,
-        Pyth
+        Pyth,
+        ChainlinkDerived
     }
 
     enum Action {
@@ -1621,6 +1622,7 @@ struct VaultConfiguration {
     address pendingGovernance;
     address feeRecipient;
     uint8 oracleDecimals;
+    address kopioCLV3;
 }
 
 interface IICDPAccountStateFacet {
@@ -1837,6 +1839,7 @@ struct CommonState {
     mapping(bytes32 role => RoleData data) _roles;
     mapping(bytes32 role => EnumerableSet.AddressSet member) _roleMembers;
     address marketStatusProvider;
+    address kopioCLV3;
 }
 
 // keccak256(abi.encode(uint256(keccak256("kopio.slot.common")) - 1)) & ~bytes32(uint256(0xff));
@@ -1921,14 +1924,15 @@ struct MaxLiqInfo {
     uint256 seizeAssetIndex;
 }
 
-struct RawPrice {
-    int256 answer;
+struct OraclePrice {
+    uint256 answer;
     uint256 timestamp;
     uint256 staleTime;
     bool isStale;
     bool isZero;
     Enums.OracleType oracle;
     address feed;
+    bytes32 pythId;
 }
 
 struct Pause {
@@ -1951,6 +1955,7 @@ struct CommonInitializer {
     address sequencerUptimeFeed;
     address pythEp;
     address marketStatusProvider;
+    address kopioCLV3;
 }
 
 struct ICDPState {
@@ -2057,7 +2062,9 @@ interface IAssetStateFacet {
     function getPrice(address addr) external view returns (uint256);
     function getPriceUnchecked(address addr) external view returns (uint256);
 
-    function getPushPrice(address addr) external view returns (RawPrice memory);
+    function getPushPrice(
+        address addr
+    ) external view returns (OraclePrice memory);
 
     function getValue(
         address addr,
@@ -2080,9 +2087,11 @@ interface ICommonConfigFacet {
         bool[] isClosables;
     }
 
-    function setFeeRecipient(address recipient) external;
+    function setFeeRecipient(address) external;
 
-    function setPythEndpoint(address addr) external;
+    function setPythEndpoint(address) external;
+
+    function setKCLV3(address) external;
 
     function setOracleDecimals(uint8 dec) external;
 
@@ -2095,20 +2104,6 @@ interface ICommonConfigFacet {
     function setFeedsForTicker(
         bytes32 ticker,
         FeedConfiguration memory feedCfg
-    ) external;
-
-    function setChainlinkFeeds(
-        bytes32[] calldata tickers,
-        address[] calldata feeds,
-        uint256[] memory staleTimes,
-        bool[] calldata isClosings
-    ) external;
-
-    function setAPI3Feeds(
-        bytes32[] calldata tickers,
-        address[] calldata feeds,
-        uint256[] memory staleTimes,
-        bool[] calldata isClosings
     ) external;
 
     function setVaultFeed(bytes32 ticker, address vault) external;
@@ -2133,6 +2128,13 @@ interface ICommonConfigFacet {
         bool isClosable
     ) external;
 
+    function setChainLinkDerivedFeed(
+        bytes32 ticker,
+        address feed,
+        uint256 staleTime,
+        bool isClosable
+    ) external;
+
     function setAPI3Feed(
         bytes32 ticker,
         address feed,
@@ -2148,6 +2150,8 @@ interface ICommonStateFacet {
 
     function getPythEndpoint() external view returns (address);
 
+    function getKCLV3() external view returns (address);
+
     function getOracleDecimals() external view returns (uint8);
 
     function getOracleDeviationPct() external view returns (uint16);
@@ -2159,17 +2163,25 @@ interface ICommonStateFacet {
     function getSequencerGracePeriod() external view returns (uint32);
 
     function getOracleOfTicker(
-        bytes32 _ticker,
-        Enums.OracleType _oracleType
+        bytes32 t,
+        Enums.OracleType o
     ) external view returns (Oracle memory);
 
-    function getChainlinkPrice(bytes32 _ticker) external view returns (uint256);
+    function getChainlinkPrice(bytes32 t) external view returns (uint256);
+    function getChainlinkDerivedPrice(
+        bytes32 t
+    ) external view returns (uint256);
 
-    function getVaultPrice(bytes32 _ticker) external view returns (uint256);
+    function getVaultPrice(bytes32 t) external view returns (uint256);
 
-    function getAPI3Price(bytes32 _ticker) external view returns (uint256);
+    function getAPI3Price(bytes32 t) external view returns (uint256);
 
-    function getPythPrice(bytes32 _ticker) external view returns (uint256);
+    function getPythPrice(bytes32 t) external view returns (uint256);
+
+    function getOraclePrice(
+        bytes32,
+        Enums.OracleType
+    ) external view returns (OraclePrice memory);
 }
 
 interface ISafetyCouncilFacet {
@@ -2332,7 +2344,7 @@ interface TData {
 
     struct TAsset {
         IKopio.Wraps wrap;
-        RawPrice priceRaw;
+        OraclePrice priceRaw;
         string name;
         string symbol;
         address addr;
@@ -2355,37 +2367,41 @@ interface TData {
     }
 }
 
-interface IDataViewFacet is TData {
-    function aDataProtocol(
-        PythView calldata prices
-    ) external view returns (Protocol memory);
-
+interface IDataAccountFacet is TData {
     function aDataAccount(
-        PythView calldata prices,
-        address account
+        PythView calldata,
+        address
     ) external view returns (Account memory);
 
     function iDataAccounts(
-        PythView calldata prices,
-        address[] memory accounts
+        PythView calldata,
+        address[] memory
     ) external view returns (IAccount[] memory);
 
     function sDataAccount(
-        PythView calldata prices,
+        PythView calldata,
         address account
     ) external view returns (SAccount memory);
 
     function sDataAccounts(
-        PythView calldata prices,
-        address[] memory accounts,
+        PythView calldata,
+        address[] memory,
         address[] memory assets
     ) external view returns (SAccount[] memory);
+}
+
+interface IDataCommonFacet is TData {
+    function aDataProtocol(
+        PythView calldata prices
+    ) external view returns (Protocol memory);
 
     function sDataAssets(
         PythView calldata prices,
         address[] memory assets
     ) external view returns (TPosAll[] memory);
 }
+
+interface IDataFacets is IDataCommonFacet, IDataAccountFacet {}
 
 interface IICDPLiquidationFacet {
     function liquidate(LiquidationArgs calldata args) external payable;
@@ -2421,10 +2437,12 @@ interface ISCDPFacet {
     ) external payable returns (uint256 fees);
 
     function repaySCDP(SCDPRepayArgs calldata args) external payable;
+}
 
+interface ISCDPLiquidationFacet {
     function liquidateSCDP(
-        SCDPLiquidationArgs memory args,
-        bytes[] calldata prices
+        SCDPLiquidationArgs memory,
+        bytes[] calldata
     ) external payable;
 
     function getMaxLiqValueSCDP(
@@ -2447,6 +2465,7 @@ interface IKopioCore is
     IAssetStateFacet,
     ISwapFacet,
     ISCDPFacet,
+    ISCDPLiquidationFacet,
     ISCDPConfigFacet,
     ISCDPStateFacet,
     ISDIFacet,
@@ -2458,6 +2477,6 @@ interface IKopioCore is
     IICDPCollateralFacet,
     IICDPAccountStateFacet,
     IICDPLiquidationFacet,
-    IDataViewFacet,
+    IDataFacets,
     IBatchFacet
 {}

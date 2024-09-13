@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.0;
+pragma solidity ^0.8.27;
 import {Auth} from "../src/utils/Auth.sol";
 import {Tested} from "../src/vm/Tested.t.sol";
 import {Connected} from "../src/vm/Connected.s.sol";

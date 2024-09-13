@@ -142,6 +142,7 @@ struct VaultConfiguration {
     address pendingGovernance;
     address feeRecipient;
     uint8 oracleDecimals;
+    address kopioCLV3;
 }
 
 interface IVault is IERC20Permit, IVaultFlash, VEvent {
@@ -249,6 +250,9 @@ interface IVault is IERC20Permit, IVaultFlash, VEvent {
     function setFeedPricePrecision(uint8 newDecimals) external;
     function setMaxDeposits(address assetAddr, uint248 newMaxDeposits) external;
     function setAssetEnabled(address assetAddr, bool isEnabled) external;
-    function setDepositFee(address assetAddr, uint16 newDepositFee) external;
-    function setWithdrawFee(address assetAddr, uint16 newWithdrawFee) external;
+    function setAssetFees(
+        address assetAddr,
+        uint16 newDepositFee,
+        uint16 newWithdrawFee
+    ) external;
 }

@@ -1,6 +1,7 @@
 // solhint-disable
 // SPDX-License-Identifier: UNLICENSED
-pragma solidity ^0.8.0;
+pragma solidity ^0.8.27;
+
 import {Tested} from "../src/vm/Tested.t.sol";
 import {VmCaller, VmHelp, Log} from "../src/vm/VmLibs.s.sol";
 import {ShortAssert} from "../src/vm/ShortAssert.t.sol";
@@ -29,7 +30,7 @@ contract TTest is Tested, Connected {
 
     function testConnected()
         public
-        ConnectAt("RPC_ARBITRUM_ALCHEMY", 200000000)
+        connectAt("RPC_ARBITRUM_ALCHEMY", 200000000)
     {
         Connections.count().eq(1, "c-1");
 

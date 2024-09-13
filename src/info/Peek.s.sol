@@ -2,7 +2,7 @@
 pragma solidity ^0.8.0;
 import {IData} from "../support/IData.sol";
 import {Log, VmHelp} from "../vm/VmLibs.s.sol";
-import {Asset, ICDPAccount, Oracle, RawPrice, TData} from "../IKopioCore.sol";
+import {Asset, ICDPAccount, Oracle, OraclePrice, TData} from "../IKopioCore.sol";
 import {IERC20} from "../token/IERC20.sol";
 import {PythView} from "../vendor/Pyth.sol";
 import {addr, iData, iCore} from "./ArbDeploy.sol";
@@ -225,7 +225,7 @@ library Peek {
                 config.ticker,
                 config.oracles[1]
             );
-            RawPrice memory secondaryPrice = iCore.getPushPrice(asset);
+            OraclePrice memory secondaryPrice = iCore.getPushPrice(asset);
             uint256 price2 = uint256(secondaryPrice.answer);
             price2.dlg("Secondary Price", 8);
             secondaryPrice.staleTime.clg("Staletime (s): ");
