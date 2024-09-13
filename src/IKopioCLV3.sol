@@ -36,14 +36,14 @@ interface IKopioCLV3 {
 
     function getAnswer(
         address priceFeed,
-        uint8 expectedDec
+        uint8 pdec
     ) external view returns (Answer memory);
 
     function getRatio(address ratioFeed) external view returns (Answer memory);
 
     function getRatio(
         address ratioFeed,
-        uint8 expectedDec
+        uint8 rdec
     ) external view returns (Answer memory);
 
     function getDerivedAnswer(
@@ -58,8 +58,8 @@ interface IKopioCLV3 {
     function getDerivedAnswer(
         address priceFeed,
         address ratioFeed,
-        uint8 priceDec,
-        uint8 ratioDec
+        uint8 pdec,
+        uint8 rdec
     ) external view returns (Derived memory);
 
     function getDerivedAnswer(
