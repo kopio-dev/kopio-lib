@@ -1756,7 +1756,7 @@ struct OraclePrice {
     uint256 staleTime;
     bool isStale;
     bool isZero;
-    Enums.OracleType oracle;
+    Enums.OracleType id;
     address feed;
     bytes32 pythId;
 }
@@ -1770,12 +1770,17 @@ struct PythConfig {
 }
 
 struct TickerOracles {
-    Enums.OracleType[2] oracleIds;
+    Enums.OracleType[2] ids;
     address[2] feeds;
-    uint256[2] staleTimes;
+    uint256[2] sts;
     bytes32 pythId;
     bool invertPyth;
     bool isClosable;
+}
+
+struct AssetOracles {
+    Enums.OracleType[2] ids;
+    Oracle[2] cfgs;
 }
 
 struct Asset {
