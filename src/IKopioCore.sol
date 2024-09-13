@@ -1,12 +1,11 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity ^0.8.0;
-import {IERC20} from "./token/IERC20Permit.sol";
-import {IAggregatorV3} from "./vendor/IAggregatorV3.sol";
 import {IKopio} from "./IKopio.sol";
 import {PythView} from "./vendor/Pyth.sol";
 import {Multi} from "./IKopioMulticall.sol";
 
 // solhint-disable
+import {VEvent, VaultAsset, IVault, IVaultFlashReceiver} from "./IVault.sol";
 
 library EnumerableSet {
     struct Set {
@@ -384,16 +383,11 @@ interface err {
         string symbol;
         address addr;
     }
-
-    error ADDRESS_HAS_NO_CODE(address);
+    error INSUFFICIENT_ASSETS(address asset, uint256 amount, uint256 max);
     error NOT_INITIALIZING();
     error TO_WAD_AMOUNT_IS_NEGATIVE(int256);
-    error COMMON_ALREADY_INITIALIZED();
-    error ICDP_ALREADY_INITIALIZED();
-    error SCDP_ALREADY_INITIALIZED();
     error STRING_HEX_LENGTH_INSUFFICIENT();
     error SAFETY_COUNCIL_NOT_ALLOWED();
-    error SAFETY_COUNCIL_SETTER_IS_NOT_ITS_OWNER(address);
     error SAFETY_COUNCIL_ALREADY_EXISTS(address given, address existing);
     error MULTISIG_NOT_ENOUGH_OWNERS(address, uint256 owners, uint256 required);
     error ACCESS_CONTROL_NOT_SELF(address who, address self);
@@ -411,7 +405,6 @@ interface err {
         uint256 repayIncreasePct
     );
     error INVALID_TICKER(ID, string ticker);
-    error PYTH_EP_ZERO();
     error ASSET_SET_FEEDS_FAILED(ID);
     error ASSET_PAUSED_FOR_THIS_ACTION(ID, uint8 action);
     error NOT_COVER_ASSET(ID);
@@ -464,34 +457,21 @@ interface err {
     error INVALID_DECIMALS(ID, uint256 decimals);
     error INVALID_FEE(ID, uint256 invalid, uint256 valid);
     error INVALID_FEE_TYPE(uint8 invalid, uint8 valid);
-    error INVALID_VAULT_PRICE(string ticker, address);
-    error INVALID_API3_PRICE(string ticker, address);
-    error INVALID_CL_PRICE(string ticker, address);
-    error INVALID_PRICE(ID, address oracle, int256 price);
-    error INVALID_KOPIO_OPERATOR(
-        ID,
-        address invalidOperator,
-        address validOperator
-    );
+    error INVALID_KOPIO_OPERATOR(ID, address invalid, address valid);
     error INVALID_DENOMINATOR(ID, uint256 denominator, uint256 valid);
     error INVALID_OPERATOR(ID, address who, address valid);
     error INVALID_SUPPLY_LIMIT(ID, uint256 invalid, uint256 valid);
     error NEGATIVE_PRICE(address asset, int256 price);
     error INVALID_PYTH_PRICE(bytes32 id, uint256 price);
-    error STALE_PRICE(
-        string ticker,
-        uint256 price,
-        uint256 timeFromUpdate,
-        uint256 threshold
-    );
+    error STALE_PRICE(string ticker, uint256 price, uint256 age, uint256 st);
     error STALE_PUSH_PRICE(
         ID asset,
         string ticker,
         int256 price,
         uint8 oracleType,
         address feed,
-        uint256 timeFromUpdate,
-        uint256 threshold
+        uint256 age,
+        uint256 st
     );
     error PRICE_UNSTABLE(
         uint256 primaryPrice,
@@ -504,29 +484,16 @@ interface err {
         uint8 oracleType,
         address feed,
         uint256 time,
-        uint256 staleTime
+        uint256 st
     );
-    error ZERO_OR_NEGATIVE_PUSH_PRICE(
-        ID asset,
-        string ticker,
-        int256 price,
-        uint8 oracleType,
-        address feed
-    );
-    error UNSUPPORTED_ORACLE(string ticker, uint8 oracle);
-    error NO_PUSH_ORACLE_SET(string ticker);
-    error NO_VIEW_PRICE_AVAILABLE(string ticker);
+    error INVALID_ORACLE_PRICE(OraclePrice);
+    error NO_ORACLE_SET(string ticker);
     error NOT_SUPPORTED_YET();
     error WRAP_NOT_SUPPORTED();
     error BURN_AMOUNT_OVERFLOW(ID, uint256 burnAmount, uint256 debtAmount);
     error PAUSED(address who);
     error L2_SEQUENCER_DOWN();
     error FEED_ZERO_ADDRESS(string ticker);
-    error INVALID_SEQUENCER_UPTIME_FEED(address);
-    error NO_MINTED_ASSETS(address who);
-    error NO_COLLATERALS_DEPOSITED(address who);
-    error ONLY_WHITELISTED();
-    error BLACKLISTED();
     error CANNOT_RE_ENTER();
     error PYTH_ID_ZERO(string ticker);
     error ARRAY_LENGTH_MISMATCH(string ticker, uint256 arr1, uint256 arr2);
@@ -606,12 +573,6 @@ interface err {
     error SWAP_ROUTE_NOT_ENABLED(ID assetIn, ID assetOut);
     error RECEIVED_LESS_THAN_DESIRED(ID, uint256 invalid, uint256 valid);
     error SWAP_ZERO_AMOUNT_IN(ID tokenIn);
-    error INVALID_WITHDRAW(
-        ID withdrawAsset,
-        uint256 sharesIn,
-        uint256 assetsOut
-    );
-    error ROUNDING_ERROR(ID asset, uint256 sharesIn, uint256 assetsOut);
     error MAX_DEPOSIT_EXCEEDED(ID asset, uint256 assetsIn, uint256 maxDeposit);
     error COLLATERAL_AMOUNT_LOW(
         ID kopioCollateral,
@@ -633,11 +594,10 @@ interface err {
     error NOT_ENOUGH_BALANCE(address who, uint256 requested, uint256 available);
     error SENDER_NOT_OPERATOR(ID, address sender, address operator);
     error ZERO_SHARES_FROM_ASSETS(ID, uint256 assets, ID);
-    error ZERO_SHARES_OUT(ID, uint256 assets);
-    error ZERO_SHARES_IN(ID, uint256 assets);
+    error ZERO_SHARES_IN(address asset, uint256 assets);
     error ZERO_ASSETS_FROM_SHARES(ID, uint256 shares, ID);
-    error ZERO_ASSETS_OUT(ID, uint256 shares);
-    error ZERO_ASSETS_IN(ID, uint256 shares);
+    error ZERO_ASSETS_OUT(address);
+    error ZERO_ASSETS_IN(address);
     error ZERO_ADDRESS();
     error ZERO_DEPOSIT(ID);
     error ZERO_AMOUNT(ID);
@@ -647,8 +607,11 @@ interface err {
     error ZERO_REPAY(ID, uint256 repayAmount, uint256 seizeAmount);
     error ZERO_BURN(ID);
     error ZERO_DEBT(ID);
-    error UPDATE_FEE_OVERFLOW(uint256 sent, uint256 required);
     error BatchResult(uint256 timestamp, bytes[] results);
+    /**
+     * @notice Cannot directly rethrow or redeclare panic errors in try/catch - so using a similar error instead.
+     * @param code The panic code received.
+     */
     error Panicked(uint256 code);
 }
 
@@ -850,51 +813,6 @@ struct SCDPAccountIndexes {
     uint256 timestamp;
 }
 
-interface VEvent {
-    event Deposit(
-        address indexed caller,
-        address indexed receiver,
-        address indexed asset,
-        uint256 assetsIn,
-        uint256 sharesOut
-    );
-
-    event OracleSet(
-        address indexed asset,
-        address indexed feed,
-        uint256 staletime,
-        uint256 price,
-        uint256 timestamp
-    );
-
-    event AssetAdded(
-        address indexed asset,
-        address indexed feed,
-        string indexed symbol,
-        uint256 staletime,
-        uint256 price,
-        uint256 depositLimit,
-        uint256 timestamp
-    );
-
-    event AssetRemoved(address indexed asset, uint256 timestamp);
-
-    event AssetEnabledChange(
-        address indexed asset,
-        bool enabled,
-        uint256 timestamp
-    );
-
-    event Withdraw(
-        address indexed caller,
-        address indexed receiver,
-        address indexed asset,
-        address owner,
-        uint256 assetsOut,
-        uint256 sharesIn
-    );
-}
-
 struct Facet {
     address facetAddress;
     bytes4[] functionSelectors;
@@ -1013,23 +931,23 @@ interface IAuthorizationFacet {
 
 interface IBatchFacet {
     function batchCall(
-        bytes[] calldata _calls,
-        bytes[] calldata _updateData
+        bytes[] calldata calls,
+        bytes[] calldata prices
     ) external payable;
 
     function batchStaticCall(
-        bytes[] calldata _staticCalls,
-        bytes[] calldata _updateData
-    ) external payable returns (uint256 timestamp, bytes[] memory results);
+        bytes[] calldata sCalls,
+        bytes[] calldata prices
+    ) external payable returns (uint256, bytes[] memory);
 
     function batchCallToError(
-        bytes[] calldata _calls,
-        bytes[] calldata _updateData
+        bytes[] calldata calls,
+        bytes[] calldata prices
     ) external payable returns (uint256, bytes[] memory);
 
     function decodeErrorData(
         bytes calldata _errorData
-    ) external pure returns (uint256 timestamp, bytes[] memory results);
+    ) external pure returns (uint256, bytes[] memory);
 }
 
 interface IDiamondStateFacet {
@@ -1150,7 +1068,7 @@ interface ISDIFacet {
 
     function disableCoverAssetSDI(address asset) external;
 
-    function setCoverRecipientSDI(address _coverRecipient) external;
+    function setCoverRecipientSDI(address) external;
 
     function getCoverAssetsSDI() external view returns (address[] memory);
 }
@@ -1160,29 +1078,29 @@ interface IVaultExtender {
     event Withdraw(address indexed _from, address indexed _to, uint256 _amount);
 
     function vaultDeposit(
-        address _assetAddr,
-        uint256 _assets,
-        address _receiver
+        address addr,
+        uint256 assets,
+        address receiver
     ) external returns (uint256 sharesOut, uint256 assetFee);
 
     function vaultMint(
-        address _assetAddr,
-        uint256 _shares,
-        address _receiver
+        address addr,
+        uint256 shares,
+        address receiver
     ) external returns (uint256 assetsIn, uint256 assetFee);
 
     function vaultWithdraw(
-        address _assetAddr,
-        uint256 _assets,
-        address _receiver,
-        address _owner
+        address addr,
+        uint256 assets,
+        address receiver,
+        address owner
     ) external returns (uint256 sharesIn, uint256 assetFee);
 
     function vaultRedeem(
-        address _assetAddr,
-        uint256 _shares,
-        address _receiver,
-        address _owner
+        address addr,
+        uint256 shares,
+        address receiver,
+        address owner
     ) external returns (uint256 assetsOut, uint256 assetFee);
 
     function maxRedeem(
@@ -1190,9 +1108,9 @@ interface IVaultExtender {
         address owner
     ) external view returns (uint256 max, uint256 fee);
 
-    function deposit(uint256 _shares, address _receiver) external;
+    function deposit(uint256 shares, address receiver) external;
 
-    function withdraw(uint256 _amount, address _receiver) external;
+    function withdraw(uint256 _amount, address receiver) external;
 
     function withdrawFrom(address _from, address _to, uint256 _amount) external;
 }
@@ -1359,36 +1277,28 @@ function ds() pure returns (DiamondState storage state) {
 
 interface IDiamondCutFacet {
     function diamondCut(
-        FacetCut[] calldata _diamondCut,
-        address _initializer,
-        bytes calldata _calldata
+        FacetCut[] calldata cuts,
+        address addr,
+        bytes calldata data
     ) external;
 }
 
 interface IExtendedDiamondCutFacet is IDiamondCutFacet {
-    function executeInitializer(
-        address _initializer,
-        bytes calldata _calldata
-    ) external;
+    function executeInitializer(address, bytes calldata data) external;
 
-    function executeInitializers(Initializer[] calldata _initializers) external;
+    function executeInitializers(Initializer[] calldata) external;
 }
 
 interface IDiamondLoupeFacet {
-    function facets() external view returns (Facet[] memory facets_);
+    function facets() external view returns (Facet[] memory);
 
     function facetFunctionSelectors(
-        address _facet
-    ) external view returns (bytes4[] memory facetFunctionSelectors_);
+        address
+    ) external view returns (bytes4[] memory);
 
-    function facetAddresses()
-        external
-        view
-        returns (address[] memory facetAddresses_);
+    function facetAddresses() external view returns (address[] memory);
 
-    function facetAddress(
-        bytes4 _functionSelector
-    ) external view returns (address facetAddress_);
+    function facetAddress(bytes4 s) external view returns (address);
 }
 
 interface IICDPBurnFacet {
@@ -1596,33 +1506,12 @@ interface ISwapFacet {
         view
         returns (uint256 amountOut, uint256 feeAmount, uint256 protocolFee);
 
-    function swapSCDP(SwapArgs calldata args) external payable;
+    function swapSCDP(SwapArgs calldata) external payable;
 
     function addGlobalIncome(
         address collateral,
         uint256 amount
     ) external payable returns (uint256 nextLiquidityIndex);
-}
-
-struct VaultAsset {
-    IERC20 token;
-    IAggregatorV3 feed;
-    uint24 staleTime;
-    uint8 decimals;
-    uint32 depositFee;
-    uint32 withdrawFee;
-    uint248 maxDeposits;
-    bool enabled;
-}
-
-struct VaultConfiguration {
-    address sequencerUptimeFeed;
-    uint96 sequencerGracePeriodTime;
-    address governance;
-    address pendingGovernance;
-    address feeRecipient;
-    uint8 oracleDecimals;
-    address kopioCLV3;
 }
 
 interface IICDPAccountStateFacet {
@@ -1852,6 +1741,7 @@ function cs() pure returns (CommonState storage state) {
     }
 }
 
+/// @notice Oracle configuration mapped to a ticker.
 struct Oracle {
     address feed;
     bytes32 pythId;
@@ -1860,7 +1750,26 @@ struct Oracle {
     bool isClosable;
 }
 
-struct FeedConfiguration {
+struct OraclePrice {
+    uint256 answer;
+    uint256 timestamp;
+    uint256 staleTime;
+    bool isStale;
+    bool isZero;
+    Enums.OracleType oracle;
+    address feed;
+    bytes32 pythId;
+}
+
+/// @notice Pyth-only configuration.
+struct PythConfig {
+    bytes32 pythId;
+    uint256 staleTime;
+    bool invertPyth;
+    bool isClosable;
+}
+
+struct TickerOracles {
     Enums.OracleType[2] oracleIds;
     address[2] feeds;
     uint256[2] staleTimes;
@@ -1922,17 +1831,6 @@ struct MaxLiqInfo {
     uint256 repayAssetIndex;
     uint256 seizeAssetPrice;
     uint256 seizeAssetIndex;
-}
-
-struct OraclePrice {
-    uint256 answer;
-    uint256 timestamp;
-    uint256 staleTime;
-    bool isStale;
-    bool isZero;
-    Enums.OracleType oracle;
-    address feed;
-    bytes32 pythId;
 }
 
 struct Pause {
@@ -2031,7 +1929,7 @@ interface IAssetConfigFacet {
     function addAsset(
         address addr,
         Asset memory cfg,
-        FeedConfiguration memory feeds
+        TickerOracles memory feeds
     ) external returns (Asset memory);
 
     function updateAsset(
@@ -2055,8 +1953,6 @@ interface IAssetConfigFacet {
 }
 
 interface IAssetStateFacet {
-    function getAssetAddresses(uint8) external view returns (address[] memory);
-
     function getAsset(address addr) external view returns (Asset memory);
 
     function getPrice(address addr) external view returns (uint256);
@@ -2080,69 +1976,91 @@ interface IAssetStateFacet {
 }
 
 interface ICommonConfigFacet {
-    struct PythConfig {
-        bytes32[] pythIds;
-        uint256[] staleTimes;
-        bool[] invertPyth;
-        bool[] isClosables;
-    }
+    function initializeCommon(CommonInitializer calldata args) external;
 
-    function setFeeRecipient(address) external;
+    /**
+     * @notice Sets the fee recipient.
+     * @param recipient The new fee recipient.
+     */
+    function setFeeRecipient(address recipient) external;
 
-    function setPythEndpoint(address) external;
+    /**
+     * @notice Sets the pyth endpoint address
+     * @param addr Pyth endpoint address
+     */
+    function setPythEndpoint(address addr) external;
 
-    function setKCLV3(address) external;
+    /**
+     * @notice Sets the kopioCLV3 address
+     * @param addr kopioCLV3 address
+     */
+    function setKCLV3(address addr) external;
 
+    /**
+     * @notice Sets the decimal precision of external oracle
+     * @param dec Amount of decimals
+     */
     function setOracleDecimals(uint8 dec) external;
 
+    /**
+     * @notice Sets the decimal precision of external oracle
+     * @param newDeviation Amount of decimals
+     */
     function setOracleDeviation(uint16 newDeviation) external;
 
+    /**
+     * @notice Sets L2 sequencer uptime feed address
+     * @param newFeed sequencer uptime feed address
+     */
     function setSequencerUptimeFeed(address newFeed) external;
 
+    /**
+     * @notice Sets sequencer grace period time
+     * @param newGracePeriod grace period time
+     */
     function setSequencerGracePeriod(uint32 newGracePeriod) external;
 
+    /**
+     * @notice Sets oracle configuration for a ticker.
+     * @param ticker bytes32, eg. "ETH"
+     * @param cfg Ticker configuration for primary and secondary oracles.
+     */
     function setFeedsForTicker(
         bytes32 ticker,
-        FeedConfiguration memory feedCfg
+        TickerOracles memory cfg
+    ) external;
+
+    function setPythFeeds(
+        bytes32[] calldata tickers,
+        PythConfig[] calldata cfgs
     ) external;
 
     function setVaultFeed(bytes32 ticker, address vault) external;
 
-    function setPythFeeds(
-        bytes32[] calldata tickers,
-        PythConfig calldata pythCfg
-    ) external;
-
-    function setPythFeed(
-        bytes32 ticker,
-        bytes32 pythId,
-        bool invert,
-        uint256 staleTime,
-        bool isClosable
-    ) external;
+    function setPythFeed(bytes32 ticker, PythConfig calldata) external;
 
     function setChainLinkFeed(
         bytes32 ticker,
         address feed,
-        uint256 staleTime,
-        bool isClosable
+        uint256 st,
+        bool closable
     ) external;
 
     function setChainLinkDerivedFeed(
         bytes32 ticker,
         address feed,
-        uint256 staleTime,
-        bool isClosable
+        uint256 st,
+        bool closable
     ) external;
 
     function setAPI3Feed(
         bytes32 ticker,
         address feed,
-        uint256 _staleTime,
-        bool _isClosable
+        uint256 st,
+        bool closable
     ) external;
 
-    function setMarketStatusProvider(address newProvider) external;
+    function setMarketStatusProvider(address) external;
 }
 
 interface ICommonStateFacet {
@@ -2186,7 +2104,7 @@ interface ICommonStateFacet {
 
 interface ISafetyCouncilFacet {
     function toggleAssetsPaused(
-        address[] memory _assets,
+        address[] memory assets,
         Enums.Action _action,
         bool _withDuration,
         uint256 _duration
@@ -2197,13 +2115,13 @@ interface ISafetyCouncilFacet {
     function safetyStateSet() external view returns (bool);
 
     function safetyStateFor(
-        address _assetAddr,
+        address addr,
         Enums.Action _action
     ) external view returns (SafetyState memory);
 
     function assetActionPaused(
         Enums.Action _action,
-        address _assetAddr
+        address addr
     ) external view returns (bool);
 }
 
@@ -2369,23 +2287,23 @@ interface TData {
 
 interface IDataAccountFacet is TData {
     function aDataAccount(
-        PythView calldata,
-        address
+        PythView calldata prices,
+        address account
     ) external view returns (Account memory);
 
     function iDataAccounts(
-        PythView calldata,
-        address[] memory
+        PythView calldata prices,
+        address[] memory accounts
     ) external view returns (IAccount[] memory);
 
     function sDataAccount(
-        PythView calldata,
+        PythView calldata prices,
         address account
     ) external view returns (SAccount memory);
 
     function sDataAccounts(
-        PythView calldata,
-        address[] memory,
+        PythView calldata prices,
+        address[] memory accounts,
         address[] memory assets
     ) external view returns (SAccount[] memory);
 }
@@ -2399,8 +2317,21 @@ interface IDataCommonFacet is TData {
         PythView calldata prices,
         address[] memory assets
     ) external view returns (TPosAll[] memory);
+    /**
+     * @notice Addresses of assets, according to specified number:
+     *
+     * Default: All
+     *
+     * 1: ICDP Collaterals
+     * 2: ICDP Kopios (debt)
+     * 3: SCDP Depositable
+     * 4: SCDP Collaterals
+     * 5: SCDP Kopios (debt)
+     * @return address[] List of asset addresses
+     */
+    function getAssetAddresses(uint8) external view returns (address[] memory);
 }
-
+// solhint-disable-next-line
 interface IDataFacets is IDataCommonFacet, IDataAccountFacet {}
 
 interface IICDPLiquidationFacet {
@@ -2453,6 +2384,7 @@ interface ISCDPLiquidationFacet {
     function getLiquidatableSCDP() external view returns (bool);
 }
 
+// solhint-disable-next-line
 interface IKopioCore is
     IEmitted,
     IExtendedDiamondCutFacet,
