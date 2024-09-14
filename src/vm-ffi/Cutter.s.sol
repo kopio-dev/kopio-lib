@@ -36,17 +36,7 @@ contract Cutter is ArbDeploy, Json, Scripted {
     }
 
     function previewCuts(string memory glob) internal returns (bytes memory) {
-        return previewCuts(glob, createMode, true);
-    }
-
-    function previewCuts(
-        string memory glob,
-        CreateMode cmode,
-        bool dry
-    ) internal returns (bytes memory) {
-        clearAndCut(glob, cmode);
-        clgCuts();
-        return executeCuts(dry);
+        return fullCut(glob, createMode, false);
     }
 
     /// @notice execute stored cuts, save to json with `_id`
@@ -62,7 +52,7 @@ contract Cutter is ArbDeploy, Json, Scripted {
             ),
             "calldata"
         );
-        if (!exec) {
+        if (exec) {
             (bool success, bytes memory retdata) = address(_diamond).call(data);
             if (!success) {
                 _revert(retdata);
@@ -102,7 +92,7 @@ contract Cutter is ArbDeploy, Json, Scripted {
         clearCuts();
         createMode = cmode;
         createFacet(artifact);
-        executeCuts(false);
+        executeCuts(true);
     }
 
     /**
