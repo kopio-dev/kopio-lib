@@ -453,18 +453,16 @@ abstract contract Cutter is ArbDeploy, Json, Scripted {
     ) internal view returns (string memory r) {
         r = "\n"
         "*****************************************************************"
-        "\n"
-        "[";
+        "\n";
 
         string memory cutAction = "ADD";
         uint8 a = uint8(cut.action);
         if (a == 1) cutAction = "REPLACE";
         if (a == 2) cutAction = "REMOVE";
+        cutAction = string.concat(START, cutAction, "-FACET", END);
 
-        r = string.concat(r, cutAction, "-FACET", END);
-        r = string.concat(r, " (#", vm.toString(idx), ")\n");
-
-        r = string.concat(r, d().fileInfo[idx], "\n");
+        r = string.concat(r, cutAction, " ", d().fileInfo[idx]);
+        r = string.concat(r, " (#", vm.toString(idx), ")", "\n");
 
         r = string.concat(r, "[ADDRESS] ", vm.toString(cut.facetAddress), "\n");
         r = string.concat(r, "[SELECTORS] ", _toString(cut.functionSelectors));
