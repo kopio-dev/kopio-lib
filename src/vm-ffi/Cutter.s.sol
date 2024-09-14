@@ -430,17 +430,17 @@ abstract contract Cutter is ArbDeploy, Json, Scripted {
         PLog.clg(
             string.concat(
                 "\n- - - - - - SUMMARY - - - - - -",
-                "\n[SUMMARY] Total Facets -> ",
-                vm.toString(d().facets.length),
-                "\n[SUMMARY] Total Cuts -> ",
+                "\n[SUMMARY] Facet Cuts       -> ",
                 vm.toString(d().cuts.length),
-                "\n[SUMMARY] Total Removed -> Facets: ",
+                "\n[SUMMARY] Deployed Facets  -> ",
+                vm.toString(d().facets.length),
+                "\n\n[SUMMARY] Removed Facets   -> ",
                 string.concat(
                     vm.toString(d().removes),
                     " - Fns: ",
                     vm.toString(d().rselsArr.length)
                 ),
-                "\n[SUMMARY] Total Added   -> Facets: ",
+                "\n[SUMMARY] Added Facets     -> ",
                 string.concat(
                     vm.toString(d().adds),
                     " - Fns: ",
@@ -493,8 +493,8 @@ abstract contract Cutter is ArbDeploy, Json, Scripted {
         if (d().skipInfo.length != 0) {
             for (uint256 i; i < d().skipInfo.length; i++) {
                 PLog.clg(
-                    "\n*****************************************************************\n",
                     string.concat(
+                        "\n",
                         d().skipInfo[i],
                         " (SKIP #",
                         vm.toString(i),
