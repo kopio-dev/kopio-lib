@@ -424,9 +424,27 @@ abstract contract Cutter is ArbDeploy, Json, Scripted {
             _toString(d().cuts[i], i).clg();
 
         clgSkippedDiamondCuts();
-        d().cuts.length.clg("[INFO] Total Cuts:");
-        d().rselsArr.length.clg("[INFO] Total Functions Removed:");
-        d().aselsArr.length.clg("[INFO] Total Functions Added:");
+        "\n - - - - - -\n".clg();
+        d().cuts.length.clg("[SUMMARY] Total Cuts ->");
+
+        string memory removeStr = string.concat(
+            "[SUMMARY] Total Removed ->",
+            vm.toString(d().removes),
+            " facets / ",
+            vm.toString(d().rselsArr.length),
+            " fns"
+        );
+        removeStr.clg();
+
+        string memory addStr = string.concat(
+            "[SUMMARY] Total Added ->",
+            vm.toString(d().adds),
+            " facets / ",
+            vm.toString(d().aselsArr.length),
+            " fns"
+        );
+
+        addStr.clg();
     }
 
     function _toString(
