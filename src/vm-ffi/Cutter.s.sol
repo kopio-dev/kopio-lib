@@ -35,6 +35,20 @@ contract Cutter is ArbDeploy, Json, Scripted {
         createMode = cmode;
     }
 
+    function previewCuts(string memory glob) internal returns (bytes memory) {
+        return previewCuts(glob, createMode, true);
+    }
+
+    function previewCuts(
+        string memory glob,
+        CreateMode cmode,
+        bool dry
+    ) internal returns (bytes memory) {
+        clearAndCut(glob, cmode);
+        clgCuts();
+        return executeCuts(dry);
+    }
+
     /// @notice execute stored cuts, save to json with `_id`
     function executeCuts(bool exec) internal returns (bytes memory data) {
         jsonKey("diamondCut");
@@ -56,26 +70,26 @@ contract Cutter is ArbDeploy, Json, Scripted {
         }
     }
 
-    function clearCuts() internal {
-        delete _cuts;
-        delete _fileInfo;
-        delete _skipInfo;
-        delete _initializer;
-    }
-
     function fullCut() internal {
         fullCut("full-cut-default", defaultFacetLoc);
     }
 
-    /**
-     * @param glob search string for facets, wildcard support
-     */
     function fullCut(
         string memory id,
         string memory glob
     ) internal withJSON(string.concat(id, "-full-cutter")) {
         clearAndCut(glob, createMode);
-        executeCuts(false);
+        executeCuts(true);
+    }
+
+    function fullCut(
+        string memory glob,
+        CreateMode cmode,
+        bool exec
+    ) internal returns (bytes memory) {
+        clearAndCut(glob, cmode);
+        clgCuts();
+        return executeCuts(exec);
     }
 
     /**
@@ -91,26 +105,6 @@ contract Cutter is ArbDeploy, Json, Scripted {
         executeCuts(false);
     }
 
-    function previewCuts(string memory glob) internal returns (bytes memory) {
-        return previewCuts(glob, createMode, true);
-    }
-
-    function previewCuts(
-        string memory glob,
-        CreateMode cmode,
-        bool dry
-    ) internal returns (bytes memory) {
-        clearAndCut(glob, cmode);
-        clgCuts();
-        return executeCuts(dry);
-    }
-
-    function clearAndCut(string memory glob, CreateMode cmode) private {
-        clearCuts();
-        createMode = cmode;
-        createFacetsFrom(glob);
-    }
-
     /**
      * @notice Deploys a new facet and adds it to the diamond cut without executing the cut.
      */
@@ -118,9 +112,24 @@ contract Cutter is ArbDeploy, Json, Scripted {
         _handleFacet(getFacet(artifact));
     }
 
-    function createFacetsFrom(string memory glob) private {
+    function createFacets(string memory glob) private {
         FacetData[] memory facets = getFacets(glob);
         for (uint256 i; i < facets.length; i++) _handleFacet(facets[i]);
+    }
+
+    function facetDeploy(
+        bytes memory ccode,
+        string memory salt
+    ) internal returns (address addr) {
+        if (createMode == CreateMode.Create1) {
+            addr = _create1(ccode);
+        } else if (createMode == CreateMode.Create2) {
+            addr = Factory.d2(ccode, "", bytes32(bytes(salt))).implementation;
+        } else {
+            addr = Factory
+                .d3(ccode, "", keccak256(abi.encodePacked(ccode)))
+                .implementation;
+        }
     }
 
     function _handleFacet(
@@ -191,21 +200,6 @@ contract Cutter is ArbDeploy, Json, Scripted {
         jsonKey();
     }
 
-    function facetDeploy(
-        bytes memory ccode,
-        string memory salt
-    ) internal returns (address addr) {
-        if (createMode == CreateMode.Create1) {
-            addr = _create1(ccode);
-        } else if (createMode == CreateMode.Create2) {
-            addr = Factory.d2(ccode, "", bytes32(bytes(salt))).implementation;
-        } else {
-            addr = Factory
-                .d3(ccode, "", keccak256(abi.encodePacked(ccode)))
-                .implementation;
-        }
-    }
-
     function compareCuts(address[] memory facets) internal {
         if (_cuts.length == 0) {
             "No cuts to compare".clg();
@@ -239,7 +233,6 @@ contract Cutter is ArbDeploy, Json, Scripted {
         string.concat("Facets replaced: ", vm.toString(pairs.length)).clg();
     }
 
-    address[2][] private _findResult;
     function findBySelector(
         address[] memory prev,
         address[] memory next
@@ -267,8 +260,7 @@ contract Cutter is ArbDeploy, Json, Scripted {
 
         return _findResult;
     }
-
-    // string memory title = string.concat("Facets -> ", vm.toString(a), " | ", vm.toString(b));
+    address[2][] private _findResult;
     function clgCuts() internal view {
         _cuts.length.clg("[Cutter] FacetCuts:");
         for (uint256 i; i < _cuts.length; i++) {
@@ -308,5 +300,18 @@ contract Cutter is ArbDeploy, Json, Scripted {
                 _skipInfo[i].clg(string.concat("[SKIP #", vm.toString(i), "]"));
             }
         }
+    }
+
+    function clearCuts() internal {
+        delete _cuts;
+        delete _fileInfo;
+        delete _skipInfo;
+        delete _initializer;
+    }
+
+    function clearAndCut(string memory glob, CreateMode cmode) private {
+        clearCuts();
+        createMode = cmode;
+        createFacets(glob);
     }
 }
