@@ -420,28 +420,29 @@ abstract contract Cutter is ArbDeploy, Json, Scripted {
     }
 
     function clgDiamondCuts() internal view {
+        PLog.clg("- - - - - - CUTS - - - - - -");
+
         for (uint256 i; i < d().cuts.length; i++)
             _toString(d().cuts[i], i).clg();
 
         clgSkippedDiamondCuts();
-        "\n - - - - - -\n".clg();
+
+        PLog.clg("- - - - - - SUMMARY - - - - - -");
         d().cuts.length.clg("[SUMMARY] Total Cuts ->");
 
         string memory removeStr = string.concat(
-            "[SUMMARY] Total Removed ->",
+            "[SUMMARY] Total Removed -> Facets: ",
             vm.toString(d().removes),
-            " facets / ",
-            vm.toString(d().rselsArr.length),
-            " fns"
+            " - Fns: ",
+            vm.toString(d().rselsArr.length)
         );
         removeStr.clg();
 
         string memory addStr = string.concat(
-            "[SUMMARY] Total Added ->",
+            "[SUMMARY] Total Added   -> Facets: ",
             vm.toString(d().adds),
-            " facets / ",
-            vm.toString(d().aselsArr.length),
-            " fns"
+            " - Fns: ",
+            vm.toString(d().aselsArr.length)
         );
 
         addStr.clg();
@@ -485,14 +486,18 @@ abstract contract Cutter is ArbDeploy, Json, Scripted {
     }
 
     function clgSkippedDiamondCuts() internal view {
-        if (d().skipInfo.length > 0) {
-            PLog.clg("\n");
-            PLog.clg(
-                "*****************************************************************"
-            );
+        PLog.clg("- - - - - - SKIPS - - - - - -");
+
+        if (d().skipInfo.length != 0) {
             for (uint256 i; i < d().skipInfo.length; i++) {
-                d().skipInfo[i].clg(
-                    string.concat("[SKIP #", vm.toString(i), "]")
+                PLog.clg(
+                    "*****************************************************************",
+                    string.concat(
+                        d().skipInfo[i],
+                        " (SKIP #",
+                        vm.toString(i),
+                        ")"
+                    )
                 );
             }
         } else {
