@@ -29,17 +29,17 @@ contract Cutter is ArbDeploy, Json, Scripted {
         createMode = CreateMode.Create1;
     }
 
-    function cutterBase(address _diamondAddr, CreateMode _createMode) internal {
-        _diamond = IDiamond(_diamondAddr);
-        createMode = _createMode;
+    function cutterBase(address diamond, CreateMode cmode) internal {
+        _diamond = IDiamond(diamond);
+        createMode = cmode;
     }
 
     /// @notice execute stored cuts, save to json with `_id`
-    function executeCuts(bool _dry) internal returns (bytes memory _txData) {
+    function executeCuts(bool exec) internal returns (bytes memory data) {
         jsonKey("diamondCut");
         json(address(_diamond), "to");
         json(
-            _txData = abi.encodeWithSelector(
+            data = abi.encodeWithSelector(
                 _diamond.diamondCut.selector,
                 _cuts,
                 _initializer.initContract,
@@ -47,10 +47,8 @@ contract Cutter is ArbDeploy, Json, Scripted {
             ),
             "calldata"
         );
-        if (!_dry) {
-            (bool success, bytes memory retdata) = address(_diamond).call(
-                _txData
-            );
+        if (!exec) {
+            (bool success, bytes memory retdata) = address(_diamond).call(data);
             if (!success) {
                 _revert(retdata);
             }
@@ -65,18 +63,17 @@ contract Cutter is ArbDeploy, Json, Scripted {
     }
 
     function fullCut() internal {
-        fullCut("full", defaultFacetLoc);
+        fullCut("full-cut-default", defaultFacetLoc);
     }
 
     /**
-     * @param _facetsLoc search string for facets, wildcard support
+     * @param glob search string for facets, wildcard support
      */
     function fullCut(
         string memory id,
-        string memory _facetsLoc
-    ) internal withJSON(string.concat(id, "-full")) {
-        clearCuts();
-        _createAllFacets(_facetsLoc);
+        string memory glob
+    ) internal withJSON(string.concat(id, "-full-cutter")) {
+        clearAndCut(glob, createMode);
         executeCuts(false);
     }
 
@@ -84,54 +81,72 @@ contract Cutter is ArbDeploy, Json, Scripted {
      * @notice Deploys a new facet and executes the diamond cut.
      */
     function createFacetAndCut(
-        string memory _artifact,
-        CreateMode _createMode
-    ) internal withJSON(_artifact) {
+        string memory artifact,
+        CreateMode cmode
+    ) internal withJSON(artifact) {
         clearCuts();
-        createMode = _createMode;
-        createFacet(_artifact);
+        createMode = cmode;
+        createFacet(artifact);
         executeCuts(false);
+    }
+
+    function previewCuts(string memory glob) internal returns (bytes memory) {
+        return previewCuts(glob, createMode, true);
+    }
+
+    function previewCuts(
+        string memory glob,
+        CreateMode cmode,
+        bool dry
+    ) internal returns (bytes memory) {
+        clearAndCut(glob, cmode);
+        clgCuts();
+        return executeCuts(dry);
+    }
+
+    function clearAndCut(string memory glob, CreateMode cmode) private {
+        clearCuts();
+        createMode = cmode;
+        createFacetsFrom(glob);
     }
 
     /**
      * @notice Deploys a new facet and adds it to the diamond cut without executing the cut.
      */
-    function createFacet(string memory _artifact) internal {
-        _handleFacet(getFacet(_artifact));
+    function createFacet(string memory artifact) internal {
+        _handleFacet(getFacet(artifact));
     }
 
-    function _createAllFacets(string memory _facetsLoc) private {
-        FacetData[] memory facetDatas = getFacets(_facetsLoc);
-        for (uint256 i; i < facetDatas.length; i++) _handleFacet(facetDatas[i]);
+    function createFacetsFrom(string memory glob) private {
+        FacetData[] memory facets = getFacets(glob);
+        for (uint256 i; i < facets.length; i++) _handleFacet(facets[i]);
     }
 
     function _handleFacet(
-        FacetData memory _facet
+        FacetData memory f
     ) private returns (address facetAddr) {
-        address oldFacet = _diamond.facetAddress(_facet.selectors[0]);
+        address oldFacet = _diamond.facetAddress(f.selectors[0]);
         if (oldFacet == address(0)) {
             oldFacet = _diamond.facetAddress(
-                _facet.selectors[_facet.selectors.length - 1]
+                f.selectors[f.selectors.length - 1]
             );
         }
 
         bytes4[] memory oldSelectors;
-        if (oldFacet != address(0) && bytes(_facet.file).length > 0) {
+        if (oldFacet != address(0) && bytes(f.file).length > 0) {
             bytes32 newCodeHash = keccak256(
-                vm.getDeployedCode(
-                    string.concat(_facet.file, ".sol:", _facet.file)
-                )
+                vm.getDeployedCode(string.concat(f.file, ".sol:", f.file))
             );
             // skip if code is the same
             if (newCodeHash == oldFacet.codehash) {
-                jsonKey(string.concat(_facet.file, "-skip"));
+                jsonKey(string.concat(f.file, "-skip"));
                 json(oldFacet);
                 json(true, "skipped");
                 jsonKey();
                 _skipInfo.push(
                     string.concat(
                         "Skip -> ",
-                        _facet.file,
+                        f.file,
                         " exists @ ",
                         vm.toString(oldFacet)
                     )
@@ -150,46 +165,109 @@ contract Cutter is ArbDeploy, Json, Scripted {
             _fileInfo.push(
                 string.concat(
                     "Remove Facet -> ",
-                    _facet.file,
+                    f.file,
                     " (",
                     vm.toString(oldFacet),
                     ")"
                 )
             );
         }
-        jsonKey(_facet.file);
+        jsonKey(f.file);
         json(oldSelectors.length, "oldSelectors");
-        facetAddr = _deployFacet(_facet.facet, _facet.file);
+        facetAddr = facetDeploy(f.facet, f.file);
         json(facetAddr);
 
         _cuts.push(
             FacetCut({
                 facetAddress: facetAddr,
                 action: FacetCutAction.Add,
-                functionSelectors: _facet.selectors
+                functionSelectors: f.selectors
             })
         );
-        _fileInfo.push(string.concat("New Facet -> ", _facet.file));
-        json(_facet.selectors.length, "newSelectors");
+        _fileInfo.push(string.concat("New Facet -> ", f.file));
+        json(f.selectors.length, "newSelectors");
         jsonKey();
     }
 
-    function _deployFacet(
-        bytes memory _code,
-        string memory _salt
+    function facetDeploy(
+        bytes memory ccode,
+        string memory salt
     ) internal returns (address addr) {
         if (createMode == CreateMode.Create1) {
-            addr = _create1(_code);
+            addr = _create1(ccode);
         } else if (createMode == CreateMode.Create2) {
-            addr = Factory.d2(_code, "", bytes32(bytes(_salt))).implementation;
+            addr = Factory.d2(ccode, "", bytes32(bytes(salt))).implementation;
         } else {
             addr = Factory
-                .d3(_code, "", keccak256(abi.encodePacked(_code)))
+                .d3(ccode, "", keccak256(abi.encodePacked(ccode)))
                 .implementation;
         }
     }
 
-    function logCuts() internal view {
+    function compareCuts(address[] memory facets) internal {
+        if (_cuts.length == 0) {
+            "No cuts to compare".clg();
+            return;
+        }
+        executeCuts(true);
+        address[] memory nextFacets = _diamond.facetAddresses();
+        string
+            .concat(
+                "Facets -> Prev: ",
+                vm.toString(facets.length),
+                " | Next: ",
+                vm.toString(nextFacets.length)
+            )
+            .clg();
+        address[2][] memory pairs = findBySelector(nextFacets, facets);
+
+        for (uint256 i; i < pairs.length; i++) {
+            string
+                .concat(
+                    "Facet ",
+                    string.concat("#", vm.toString(i)),
+                    " replaced -> ",
+                    vm.toString(pairs[i][0]),
+                    " <-> ",
+                    vm.toString(pairs[i][1])
+                )
+                .clg();
+        }
+
+        string.concat("Facets replaced: ", vm.toString(pairs.length)).clg();
+    }
+
+    address[2][] private _findResult;
+    function findBySelector(
+        address[] memory prev,
+        address[] memory next
+    ) internal returns (address[2][] memory result) {
+        (uint256 i, uint256 j, uint256 k, uint256 l) = (0, 0, 0, 0);
+
+        while (i < next.length) {
+            address nextFacet = next[i++];
+            bytes4[] memory nextSels = _diamond.facetFunctionSelectors(
+                nextFacet
+            );
+            while (j < prev.length) {
+                address prevFacet = prev[j++];
+                bytes4[] memory prevSels = _diamond.facetFunctionSelectors(
+                    prevFacet
+                );
+                while (k < prevSels.length) {
+                    bytes4 prevSel = prevSels[k++];
+                    while (l < nextSels.length)
+                        if (prevSel == nextSels[l++])
+                            _findResult.push([prevFacet, nextFacet]);
+                }
+            }
+        }
+
+        return _findResult;
+    }
+
+    // string memory title = string.concat("Facets -> ", vm.toString(a), " | ", vm.toString(b));
+    function clgCuts() internal view {
         _cuts.length.clg("[Cutter] FacetCuts:");
         for (uint256 i; i < _cuts.length; i++) {
             PLog.clg("\n");
