@@ -420,32 +420,34 @@ abstract contract Cutter is ArbDeploy, Json, Scripted {
     }
 
     function clgDiamondCuts() internal view {
-        PLog.clg("- - - - - - CUTS - - - - - -");
+        PLog.clg("\n- - - - - - CUTS - - - - - -");
 
         for (uint256 i; i < d().cuts.length; i++)
             _toString(d().cuts[i], i).clg();
 
         clgSkippedDiamondCuts();
 
-        PLog.clg("- - - - - - SUMMARY - - - - - -");
-        d().cuts.length.clg("[SUMMARY] Total Cuts ->");
-
-        string memory removeStr = string.concat(
-            "[SUMMARY] Total Removed -> Facets: ",
-            vm.toString(d().removes),
-            " - Fns: ",
-            vm.toString(d().rselsArr.length)
+        PLog.clg(
+            string.concat(
+                "\n- - - - - - SUMMARY - - - - - -",
+                "\n[SUMMARY] Total Facets -> ",
+                vm.toString(d().facets.length),
+                "\n[SUMMARY] Total Cuts -> ",
+                vm.toString(d().cuts.length),
+                "\n[SUMMARY] Total Removed -> Facets: ",
+                string.concat(
+                    vm.toString(d().removes),
+                    " - Fns: ",
+                    vm.toString(d().rselsArr.length)
+                ),
+                "\n[SUMMARY] Total Added   -> Facets: ",
+                string.concat(
+                    vm.toString(d().adds),
+                    " - Fns: ",
+                    vm.toString(d().aselsArr.length)
+                )
+            )
         );
-        removeStr.clg();
-
-        string memory addStr = string.concat(
-            "[SUMMARY] Total Added   -> Facets: ",
-            vm.toString(d().adds),
-            " - Fns: ",
-            vm.toString(d().aselsArr.length)
-        );
-
-        addStr.clg();
     }
 
     function _toString(
@@ -486,12 +488,12 @@ abstract contract Cutter is ArbDeploy, Json, Scripted {
     }
 
     function clgSkippedDiamondCuts() internal view {
-        PLog.clg("- - - - - - SKIPS - - - - - -");
+        PLog.clg("\n- - - - - - SKIPS - - - - - -");
 
         if (d().skipInfo.length != 0) {
             for (uint256 i; i < d().skipInfo.length; i++) {
                 PLog.clg(
-                    "*****************************************************************",
+                    "\n*****************************************************************\n",
                     string.concat(
                         d().skipInfo[i],
                         " (SKIP #",
@@ -502,7 +504,7 @@ abstract contract Cutter is ArbDeploy, Json, Scripted {
             }
         } else {
             PLog.clg("\n");
-            "[INFO] No skipped cuts".clg();
+            "\n[INFO] No skipped cuts".clg();
         }
     }
 
