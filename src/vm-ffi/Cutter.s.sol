@@ -23,6 +23,7 @@ contract Cutter is ArbDeploy, Json, Scripted {
     FacetCut[] internal _cuts;
     string[] internal _fileInfo;
     string[] internal _skipInfo;
+    address[] internal _facets;
     Initializer internal _initializer;
 
     constructor() {
@@ -184,6 +185,7 @@ contract Cutter is ArbDeploy, Json, Scripted {
                 functionSelectors: f.selectors
             })
         );
+        _facets.push(facetAddr);
         _fileInfo.push(string.concat("New Facet -> ", f.file));
         json(f.selectors.length, "newSelectors");
         jsonKey();
