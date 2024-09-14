@@ -209,15 +209,16 @@ abstract contract Cutter is ArbDeploy, Json, Scripted {
             if (rsels.length != 0) {
                 d().fileInfo.push(
                     string.concat(
-                        fileStr(f.file, "DELETE-FACET: "),
+                        fileStr(f.file, "previously @ "),
                         vm.toString(oldFacet)
                     )
                 );
             } else {
                 d().skipInfo.push(
                     string.concat(
-                        fileStr(f.file, "All selectors are already removed ->"),
-                        vm.toString(oldFacet)
+                        fileStr(f.file, "Selectors already removed (prev @ "),
+                        vm.toString(oldFacet),
+                        ")"
                     )
                 );
             }
@@ -229,7 +230,9 @@ abstract contract Cutter is ArbDeploy, Json, Scripted {
         );
 
         d().facets.push(newFacet);
-        d().fileInfo.push(string.concat(FILE, f.file, " (ADD-FACET)"));
+        d().fileInfo.push(
+            string.concat(FILE, f.file, " created @ ", vm.toString(newFacet))
+        );
 
         jsonKey(f.file);
         json(rsels.length, "selectorsBefore");
@@ -549,7 +552,7 @@ function fileStr(
     string memory loc,
     string memory info
 ) pure returns (string memory) {
-    return string.concat(FILE, loc, " -> ", info);
+    return string.concat("File -> ", loc, " | ", info);
 }
 
 string constant START = "[";
