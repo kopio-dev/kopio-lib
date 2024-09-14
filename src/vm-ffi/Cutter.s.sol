@@ -25,6 +25,7 @@ contract Cutter is ArbDeploy, Json, Scripted {
     string[] internal _skipInfo;
     address[] internal _facets;
     Initializer internal _initializer;
+    mapping(bytes4 => address) internal _selectors;
 
     constructor() {
         createMode = CreateMode.Create1;
@@ -155,6 +156,9 @@ contract Cutter is ArbDeploy, Json, Scripted {
             }
 
             oldSelectors = _diamond.facetFunctionSelectors(oldFacet);
+            for (uint256 i; i < oldSelectors.length; i++) {
+                _selectors[oldSelectors[i]] = oldFacet;
+            }
             _cuts.push(
                 FacetCut({
                     facetAddress: address(0),
@@ -188,6 +192,23 @@ contract Cutter is ArbDeploy, Json, Scripted {
         _fileInfo.push(string.concat("New Facet -> ", f.file));
         json(f.selectors.length, "newSelectors");
         jsonKey();
+    }
+
+    bytes4[] private _tempSelectors;
+    function _getUniqueSelectors(
+        address facet
+    ) private returns (bytes4[] memory result) {
+        bytes4[] memory sels = _diamond.facetFunctionSelectors(facet);
+        result = new bytes4[](sels.length);
+        for (uint256 i; i < sels.length; i++) {
+            if (_selectors[sels[i]] == address(0)) {
+                _tempSelectors.push(sels[i]);
+                _selectors[sels[i]] = facet;
+            }
+        }
+
+        result = _tempSelectors;
+        delete _tempSelectors;
     }
 
     function compareCuts(address[] memory facets) internal {
@@ -248,7 +269,8 @@ contract Cutter is ArbDeploy, Json, Scripted {
             }
         }
 
-        return _findResult;
+        result = _findResult;
+        delete _findResult;
     }
     address[2][] private _findResult;
     function clgCuts() internal view {
