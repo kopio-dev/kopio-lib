@@ -193,7 +193,7 @@ abstract contract Cutter is ArbDeploy, Json, Scripted {
             if (newCodeHash == oldFacet.codehash) {
                 d().skipInfo.push(
                     string.concat(
-                        fileStr(f.file, "Identical code exists @ "),
+                        fileStr(f.file, "Skipped as identical code exists @ "),
                         vm.toString(oldFacet)
                     )
                 );
@@ -216,7 +216,10 @@ abstract contract Cutter is ArbDeploy, Json, Scripted {
             } else {
                 d().skipInfo.push(
                     string.concat(
-                        fileStr(f.file, "Selectors already removed (prev @ "),
+                        fileStr(
+                            f.file,
+                            "All selectors already removed (prev @ "
+                        ),
                         vm.toString(oldFacet),
                         ")"
                     )
@@ -231,7 +234,7 @@ abstract contract Cutter is ArbDeploy, Json, Scripted {
 
         d().facets.push(newFacet);
         d().fileInfo.push(
-            string.concat(FILE, f.file, " created @ ", vm.toString(newFacet))
+            fileStr(f.file, string.concat("created @ ", vm.toString(newFacet)))
         );
 
         jsonKey(f.file);
@@ -552,7 +555,7 @@ function fileStr(
     string memory loc,
     string memory info
 ) pure returns (string memory) {
-    return string.concat("File -> ", loc, " | ", info);
+    return string.concat(loc, " -> ", info);
 }
 
 string constant START = "[";
