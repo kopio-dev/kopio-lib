@@ -101,13 +101,14 @@ abstract contract UpgradeBase is Cutter {
         bytes memory data
     ) internal returns (ProxyUpgrade memory) {
         Deployment memory upgraded = abi.decode(data, (Deployment));
-        info.proxy = address(upgraded.proxy);
-        info.newImpl = upgraded.implementation;
-
         address(upgraded.proxy).clg("upgraded-proxy");
         upgraded.implementation.clg("new-implementation");
-        _saveJSON(info);
-        return info;
+
+        info.proxy = address(upgraded.proxy);
+        info.newImpl = upgraded.implementation;
+        info.newHash = upgraded.implementation.codehash;
+
+        return _toJSON(info);
     }
 
     modifier initBatch() {
@@ -121,7 +122,9 @@ abstract contract UpgradeBase is Cutter {
         _;
     }
 
-    function _saveJSON(ProxyUpgrade memory data) private {
+    function _toJSON(
+        ProxyUpgrade memory data
+    ) private returns (ProxyUpgrade memory) {
         jsonKey("info");
         json(data.prevImpl, "prev-implementation");
         json(bytes.concat(data.prevHash), "prev-implementation-codehash");
@@ -131,5 +134,7 @@ abstract contract UpgradeBase is Cutter {
         json(data.newImpl, "new-implementation");
         json(data.proxy, "proxy");
         jsonKey();
+
+        return data;
     }
 }
