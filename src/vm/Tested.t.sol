@@ -8,7 +8,7 @@ import {Scripted, VmCaller} from "./Scripted.s.sol";
 import {IERC20} from "../token/IERC20.sol";
 import {Tokens} from "../utils/Tokens.sol";
 
-abstract contract Tested is Scripted, Test {
+abstract contract Tested is Test, Scripted {
     using VmCaller for IMinVm.CallerMode;
     address payable user0;
     address payable user1;
@@ -27,80 +27,114 @@ abstract contract Tested is Scripted, Test {
         _;
     }
 
-    modifier prankedById(uint32 _mIdx) {
-        address who = getAddr(_mIdx);
-        vm.startPrank(who, who);
+    modifier pranked(address addr) {
+        prank(addr);
         _;
         VmCaller.clear();
     }
 
-    modifier prankedByKey(string memory _pkEnv) {
-        address who = getAddr(_pkEnv);
-        vm.startPrank(who, who);
+    modifier prankedById(uint32 mIdx) {
+        prank(mIdx);
         _;
         VmCaller.clear();
     }
 
-    modifier hoaxMake(string memory _label) {
-        address who = makeHoax(_label);
-        vm.startPrank(who, who);
+    modifier prankedByKey(string memory pkEnv) {
+        prank(pkEnv);
+        _;
+        VmCaller.clear();
+    }
+
+    modifier hoaxMake(string memory lbl) {
+        prank(makeHoax(lbl));
         _;
         VmCaller.clear();
     }
 
     modifier rehoaxed(
         address who,
-        address token,
-        uint256 amount
+        address tkn,
+        uint256 amt
     ) {
         (IMinVm.CallerMode _m, address _s, address _o) = VmCaller.clear();
-        hoaxed(who, token, amount);
+        hoaxed(who, tkn, amt);
         _;
-        VmCaller.clear();
         _m.restore(_s, _o);
     }
 
-    modifier reprankedById(uint32 _mIdx) {
+    /// @dev clear call modes, prank function body and restore callers after
+    modifier repranked(address addr) {
+        (IMinVm.CallerMode _m, address _s, address _o) = prank(addr);
+        _;
+        _m.restore(_s, _o);
+    }
+
+    modifier reprankedById(uint32 mIdx) {
+        (IMinVm.CallerMode _m, address _s, address _o) = prank(mIdx);
+        _;
+        _m.restore(_s, _o);
+    }
+
+    modifier reprankedByKey(string memory pkEnv) {
+        (IMinVm.CallerMode _m, address _s, address _o) = prank(pkEnv);
+        _;
+        _m.restore(_s, _o);
+    }
+
+    modifier remakeHoax(string memory lbl) {
         (IMinVm.CallerMode _m, address _s, address _o) = VmCaller.clear();
-
-        address who = getAddr(_mIdx);
-        vm.startPrank(who, who);
-        _;
-        VmCaller.clear();
-        _m.restore(_s, _o);
-    }
-
-    modifier reprankedByKey(string memory _pkEnv) {
-        (IMinVm.CallerMode _m, address _s, address _o) = VmCaller.clear();
-
-        address who = getAddr(_pkEnv);
-        vm.startPrank(who, who);
-        _;
-        VmCaller.clear();
-        _m.restore(_s, _o);
-    }
-
-    modifier remakeHoax(string memory _label) {
-        (IMinVm.CallerMode _m, address _s, address _o) = VmCaller.clear();
-
-        makeHoax(_label);
+        makeHoax(lbl);
         _;
 
         VmCaller.clear();
         _m.restore(_s, _o);
     }
 
-    function prank(address _sno, string memory _label) internal {
-        vm.label(_sno, _label);
-        prank(_sno, _sno);
+    /// @notice vm.prank, but clears callers first
+    function prank(
+        address addr
+    ) internal returns (IMinVm.CallerMode, address, address) {
+        return prank(addr, addr);
     }
 
-    function prank(string memory _pkEnv, string memory _label) internal {
-        prank(getAddr(_pkEnv), _label);
+    function prank(
+        address _s,
+        address _o
+    )
+        internal
+        returns (
+            IMinVm.CallerMode prevMode,
+            address prevSender,
+            address prevOrigin
+        )
+    {
+        (prevMode, prevSender, prevOrigin) = VmCaller.clear();
+        vm.startPrank(_s, _o);
     }
 
-    function prank(uint32 _mIdx, string memory _label) internal {
-        prank(getAddr(_mIdx), _label);
+    function prank(
+        uint32 mIdx
+    ) internal returns (IMinVm.CallerMode, address, address) {
+        return prank(getAddr(mIdx));
+    }
+
+    function prank(
+        string memory pkEnv
+    ) internal returns (IMinVm.CallerMode, address, address) {
+        return prank(getAddr(pkEnv));
+    }
+
+    function prank(address addr, string memory lbl) internal {
+        vm.label(addr, lbl);
+        prank(addr);
+    }
+
+    function prank(string memory pkEnv, string memory lbl) internal {
+        prank(getAddr(pkEnv), lbl);
+    }
+
+    function prank(uint32 mIdx, string memory lbl) internal {
+        prank(getAddr(mIdx), lbl);
     }
 
     function hoaxed(address who) internal returns (address payable) {
@@ -109,8 +143,8 @@ abstract contract Tested is Scripted, Test {
         return payable(who);
     }
 
-    function hoaxed(string memory _pkEnv) internal returns (address payable) {
-        return hoaxed(getAddr(_pkEnv));
+    function hoaxed(string memory pkEnv) internal returns (address payable) {
+        return hoaxed(getAddr(pkEnv));
     }
 
     function hoaxed(uint32 idx) internal returns (address payable) {
@@ -122,8 +156,8 @@ abstract contract Tested is Scripted, Test {
         address token,
         uint256 amount,
         address spender
-    ) internal virtual returns (address payable addr_) {
-        deal(token, addr_ = hoaxed(who), amount);
+    ) internal virtual returns (address payable addr) {
+        deal(token, addr = hoaxed(who), amount);
         if (spender != address(0)) allowMax(token, who, spender);
     }
 
@@ -144,56 +178,56 @@ abstract contract Tested is Scripted, Test {
     }
 
     function hoaxed(
-        string memory _pkEnv,
+        string memory pkEnv,
         address token,
         uint256 amount
     ) internal virtual returns (address payable) {
-        return hoaxed(getAddr(_pkEnv), token, amount);
+        return hoaxed(getAddr(pkEnv), token, amount);
     }
 
     /// @notice Pranks with a new account derived from label with ether (and the label).
-    function makeKeyedHoax(
-        string memory _label
-    ) internal returns (Account memory who) {
-        hoaxed((who = makeAccount(_label)).addr);
+    function makeHoaxAccount(
+        string memory lbl
+    ) internal returns (Account memory acc) {
+        hoaxed((acc = makeAccount(lbl)).addr);
     }
-    function makeHoax(string memory _label) internal returns (address payable) {
-        return hoaxed(makePayable(_label));
+    function makeHoax(string memory lbl) internal returns (address payable) {
+        return hoaxed(makePayable(lbl));
     }
 
     function makeHoax(
-        string memory _label,
-        address tAddr,
+        string memory lbl,
+        address tkn,
         uint256 amt
     ) internal returns (address payable) {
-        return hoaxed(makePayable(_label), tAddr, amt);
+        return hoaxed(makePayable(lbl), tkn, amt);
     }
 
     function make(
-        string memory _label,
-        address tAddr,
+        string memory lbl,
+        address tkn,
         uint256 amt
     ) internal returns (address payable addr) {
-        deal(tAddr, (addr = makePayable(_label)), amt);
+        deal(tkn, (addr = makePayable(lbl)), amt);
     }
 
     function make(
-        string memory _label,
-        address tAddr,
+        string memory lbl,
+        address tkn,
         uint256 amt,
         address spender
     ) internal returns (address payable addr) {
-        deal(tAddr, (addr = makePayable(_label)), amt, spender);
+        deal(tkn, (addr = makePayable(lbl)), amt, spender);
     }
 
     function deal(
-        address tAddr,
+        address tkn,
         address to,
         uint256 amt,
         address spender
     ) internal virtual returns (IERC20) {
-        deal(tAddr, to, amt);
-        allowMax(tAddr, to, spender);
-        return Tokens.I20(tAddr);
+        deal(tkn, to, amt);
+        allowMax(tkn, to, spender);
+        return Tokens.I20(tkn);
     }
 }

@@ -14,8 +14,9 @@ library VmCaller {
         string mode;
     }
 
-    function msgSender() internal returns (address s_) {
-        (, s_, ) = mvm.readCallers();
+    function msgSender() internal returns (address payable) {
+        (, address sender, ) = mvm.readCallers();
+        return payable(sender);
     }
 
     function clear()
@@ -55,6 +56,7 @@ library VmCaller {
     }
 
     function restore(IMinVm.CallerMode _m, address _ss, address _so) internal {
+        VmCaller.clear();
         if (_m == IMinVm.CallerMode.Broadcast) mvm.broadcast(_ss);
         if (_m == IMinVm.CallerMode.RecurrentBroadcast) mvm.startBroadcast(_ss);
         if (_m == IMinVm.CallerMode.Prank) {
@@ -92,26 +94,23 @@ library VmCaller {
     }
 
     function values() internal returns (Values memory) {
-        (IMinVm.CallerMode m_, address s_, address o_) = mvm.readCallers();
-        return Values(s_, o_, callModeStr(m_));
+        (IMinVm.CallerMode m, address s, address o) = mvm.readCallers();
+        return Values(s, o, mode(m));
     }
 
-    function callModeStr(
-        IMinVm.CallerMode _mode
-    ) internal pure returns (string memory) {
-        if (_mode == IMinVm.CallerMode.Broadcast) return "broadcast";
-        if (_mode == IMinVm.CallerMode.RecurrentBroadcast)
+    function mode(IMinVm.CallerMode _m) internal pure returns (string memory) {
+        if (_m == IMinVm.CallerMode.Broadcast) return "broadcast";
+        if (_m == IMinVm.CallerMode.RecurrentBroadcast)
             return "persistent broadcast";
-        if (_mode == IMinVm.CallerMode.Prank) return "prank";
-        if (_mode == IMinVm.CallerMode.RecurrentPrank)
-            return "persistent prank";
-        if (_mode == IMinVm.CallerMode.None) return "none";
+        if (_m == IMinVm.CallerMode.Prank) return "prank";
+        if (_m == IMinVm.CallerMode.RecurrentPrank) return "persistent prank";
+        if (_m == IMinVm.CallerMode.None) return "none";
         return "unknown";
     }
 
     function mode() internal returns (string memory) {
         (IMinVm.CallerMode _m, , ) = mvm.readCallers();
-        return callModeStr(_m);
+        return mode(_m);
     }
 }
 
