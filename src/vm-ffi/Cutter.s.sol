@@ -117,7 +117,7 @@ abstract contract Cutter is ArbDeploy, Json, Scripted {
         CreateMode cmode,
         bool exec
     ) internal returns (bytes memory) {
-        return diamondCutFull(vm.toString(getTime()), glob, cmode, exec);
+        return diamondCutFull("full", glob, cmode, exec);
     }
 
     function diamondCutFull(
@@ -127,7 +127,7 @@ abstract contract Cutter is ArbDeploy, Json, Scripted {
         bool exec
     )
         internal
-        withJSON(string.concat(id, "-diamond-cut"))
+        withJSON(string.concat("diamond-cut-", id))
         returns (bytes memory)
     {
         resetCreateFacets(glob, cmode);
