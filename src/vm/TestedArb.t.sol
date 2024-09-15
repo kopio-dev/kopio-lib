@@ -4,8 +4,9 @@ pragma solidity ^0.8.0;
 import {Tested} from "./Tested.t.sol";
 import {ArbDeploy} from "../info/ArbDeploy.sol";
 import {IERC20} from "../token/IERC20.sol";
-import {ICDPAccount, SwapArgs} from "../IKopioCore.sol";
+import {BurnArgs, ICDPAccount, MintArgs, SwapArgs} from "../IKopioCore.sol";
 import {Log, Utils, VmHelp} from "./VmLibs.s.sol";
+import {Revert} from "../utils/Funcs.sol";
 
 abstract contract TestedArb is Tested, ArbDeploy {
     using Utils for *;
@@ -44,27 +45,31 @@ abstract contract TestedArb is Tested, ArbDeploy {
         user2 = makePayable("user2");
     }
 
-    function dealONE(address to, uint256 amount) internal repranked(bank) {
-        return dealONE(to, amount, usdceAddr);
+    function dealONE(address to, uint256 amount) internal returns (uint256) {
+        return dealONE(usdceAddr, to, amount);
     }
 
     function dealONE(
+        address stable,
         address to,
-        uint256 amount,
-        address stable
-    ) internal repranked(bank) {
+        uint256 amount
+    ) internal repranked(bank) returns (uint256 out) {
+        approve(bank, vaultAddr, stable);
+
         (uint256 depositAmount, ) = vault.previewMint(stable, amount);
         deal(stable, bank, depositAmount);
-        one.vaultDeposit(stable, depositAmount, to);
+
+        (out, ) = one.vaultDeposit(stable, depositAmount, bank);
+        one.transfer(to, out);
     }
 
-    function dealCollateral(address to, uint256 amount) internal repranked(to) {
+    function dealCollateral(address to, uint256 amount) internal {
         return dealCollateral(to, usdceAddr, amount);
     }
 
     function dealCollateral(
-        address to,
         address token,
+        address to,
         uint256 amount
     ) internal repranked(to) {
         if (token == oneAddr) dealONE(to, amount);
@@ -73,12 +78,22 @@ abstract contract TestedArb is Tested, ArbDeploy {
         core.depositCollateral(to, token, amount);
     }
 
+    function dealKopio(
+        address kopio,
+        address to,
+        uint256 amount
+    ) internal repranked(bank) {
+        uint256 value = core.getValue(kopio, amount) * 2;
+        dealCollateral(oneAddr, bank, value.wdiv(core.getPrice(oneAddr)));
+        mintKopio(bank, kopio, amount, to);
+    }
+
     function dealLiquidity(
         address stable,
         uint256 amountVault,
         uint256 amountSCDP
     ) internal repranked(bank) {
-        dealONE(bank, amountVault + amountSCDP, stable);
+        dealONE(stable, bank, amountVault + amountSCDP);
         approve(bank, protocolAddr, oneAddr);
         if (amountSCDP != 0) core.depositSCDP(bank, oneAddr, amountSCDP);
     }
@@ -89,12 +104,108 @@ abstract contract TestedArb is Tested, ArbDeploy {
         core.addGlobalIncome(oneAddr, amount);
     }
 
+    function dealFees(
+        uint256 value
+    )
+        internal
+        repranked(bank)
+        returns (uint256 ETH_TO_USDCE, uint256 USDCE_TO_ETH)
+    {
+        approve(bank, protocolAddr, oneAddr);
+        approve(bank, protocolAddr, kETHAddr);
+
+        uint256 amountONE = (value / 2).wdiv(core.getPrice(oneAddr));
+        uint256 amountETH = (value / 2).wdiv(core.getPrice(kETHAddr));
+
+        uint256 kETHReceived = swap(
+            bank,
+            oneAddr,
+            kETHAddr,
+            dealONE(bank, amountONE)
+        );
+
+        (ETH_TO_USDCE, ) = one.vaultRedeem(
+            usdceAddr,
+            swap(bank, kETHAddr, oneAddr, dealkETH(amountETH)),
+            bank,
+            bank
+        );
+        USDCE_TO_ETH = unwrapKETH(kETHReceived, bank);
+    }
+
+    function unwrapKETH(
+        uint256 amount,
+        address to
+    ) internal returns (uint256 received) {
+        address from = msgSender();
+        uint256 balance = kETH.balanceOf(from);
+        uint256 max = kETHAddr.balance;
+
+        if (amount > balance) amount = balance;
+        if (amount > max) amount = max;
+
+        received = to.balance;
+        kETH.unwrap(to, amount, true);
+
+        return to.balance - received;
+    }
+
+    function dealkETH(
+        uint256 amount
+    ) internal virtual returns (uint256 received) {
+        address to = msgSender();
+        deal(to, amount);
+
+        received = kETH.balanceOf(to);
+        (bool s, bytes memory d) = kETHAddr.call{value: amount}("");
+        if (!s) Revert(d);
+
+        return kETH.balanceOf(to) - received;
+    }
+
+    function mintKopio(
+        address account,
+        address asset,
+        uint256 amount,
+        address receiver
+    ) internal virtual {
+        core.mintKopio(
+            MintArgs({
+                account: account,
+                kopio: asset,
+                amount: amount,
+                receiver: receiver
+            }),
+            noPyth
+        );
+    }
+
+    function burnKopio(
+        address account,
+        address kopio,
+        uint256 amount,
+        address repayee
+    ) internal virtual {
+        core.burnKopio(
+            BurnArgs({
+                account: account,
+                kopio: kopio,
+                amount: amount,
+                repayee: repayee
+            }),
+            noPyth
+        );
+    }
+
     function swap(
         address receiver,
         address assetIn,
         address assetOut,
         uint256 amount
-    ) internal {
+    ) internal virtual returns (uint256 received) {
+        IERC20 aOut = i20(assetOut);
+        received = aOut.balanceOf(receiver);
+
         core.swapSCDP(
             SwapArgs({
                 receiver: receiver,
@@ -105,6 +216,8 @@ abstract contract TestedArb is Tested, ArbDeploy {
                 prices: noPyth
             })
         );
+
+        return aOut.balanceOf(receiver) - received;
     }
 
     function approve(
@@ -112,18 +225,14 @@ abstract contract TestedArb is Tested, ArbDeploy {
         address spender,
         address token
     ) internal repranked(owner) {
-        if (IERC20(token).allowance(owner, spender) == 0) {
-            IERC20(token).approve(spender, type(uint256).max);
+        if (i20(token).allowance(owner, spender) == 0) {
+            i20(token).approve(spender, type(uint256).max);
         }
     }
 
     function getApprovals(address to) internal pranked(to) {
-        for (uint256 i; i < allKopios.length; i++) {
-            _approveMax(allKopios[i]);
-        }
-        for (uint256 i; i < allNonKopios.length; i++) {
-            _approveMax(allNonKopios[i]);
-        }
+        for (uint256 i; i < allKopios.length; ) _approve(allKopios[i++]);
+        for (uint256 i; i < allNonKopios.length; ) _approve(allNonKopios[i++]);
 
         kETH.approve(kETHAddr, type(uint256).max);
         weth.approve(kETHAddr, type(uint256).max);
@@ -131,8 +240,8 @@ abstract contract TestedArb is Tested, ArbDeploy {
         wbtc.approve(kBTCAddr, type(uint256).max);
     }
 
-    function _approveMax(address tkn) private {
-        IERC20 token = IERC20(tkn);
+    function _approve(address tkn) private {
+        IERC20 token = i20(tkn);
         token.approve(multicallAddr, type(uint256).max);
         token.approve(protocolAddr, type(uint256).max);
         token.approve(oneAddr, type(uint256).max);

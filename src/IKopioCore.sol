@@ -1078,26 +1078,26 @@ interface IVaultExtender {
     event Withdraw(address indexed _from, address indexed _to, uint256 _amount);
 
     function vaultDeposit(
-        address addr,
+        address asset,
         uint256 assets,
         address receiver
     ) external returns (uint256 sharesOut, uint256 assetFee);
 
     function vaultMint(
-        address addr,
+        address asset,
         uint256 shares,
         address receiver
     ) external returns (uint256 assetsIn, uint256 assetFee);
 
     function vaultWithdraw(
-        address addr,
+        address asset,
         uint256 assets,
         address receiver,
         address owner
     ) external returns (uint256 sharesIn, uint256 assetFee);
 
     function vaultRedeem(
-        address addr,
+        address asset,
         uint256 shares,
         address receiver,
         address owner
