@@ -44,6 +44,13 @@ abstract contract Cutter is ArbDeploy, Json, Scripted {
         (r = d()).init = Initializer(to, data);
     }
 
+    function setInitializer(
+        address to,
+        bytes4 fn
+    ) internal virtual returns (CutterData storage) {
+        return setInitializer(to, bytes.concat(fn));
+    }
+
     function setCreateMode(
         CreateMode cmode
     ) internal returns (CutterData storage r) {
