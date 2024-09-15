@@ -2,6 +2,7 @@
 pragma solidity ^0.8.0;
 import {IERC20Permit, IERC20} from "./token/IERC20Permit.sol";
 import {IAggregatorV3} from "./vendor/IAggregatorV3.sol";
+import {IKopioCLV3} from "./IKopioCLV3.sol";
 
 interface IVaultFlash {
     enum FlashKind {
@@ -121,7 +122,6 @@ struct VaultConfiguration {
     address pendingGovernance;
     address feeRecipient;
     uint8 oracleDecimals;
-    address kopioCLV3;
 }
 
 interface IVault is IERC20Permit, IVaultFlash, VEvent {
@@ -215,36 +215,24 @@ interface IVault is IERC20Permit, IVaultFlash, VEvent {
 
     /**
      * @notice Returns the current vault configuration
-     * @return config Vault configuration struct
+     * @return Vault configuration struct
      */
-    function getConfig()
-        external
-        view
-        returns (VaultConfiguration memory config);
+    function getConfig() external view returns (VaultConfiguration memory);
 
     /**
      * @notice Returns the total value of all assets in the shares contract in USD WAD precision.
      */
     function totalAssets() external view returns (uint256 result);
 
-    /**
-     * @notice Array of all assets
-     */
-    function allAssets() external view returns (VaultAsset[] memory assets);
+    function allAssets() external view returns (VaultAsset[] memory);
 
-    /**
-     * @notice Assets array used for iterating through the assets in the shares contract
-     */
-    function assetList(uint256 index) external view returns (address assetAddr);
+    function assetList(uint256) external view returns (address);
 
-    /**
-     * @notice Returns the asset struct for a given asset
-     * @param asset Supported asset address
-     * @return asset Asset struct for `asset`
-     */
-    function assets(address) external view returns (VaultAsset memory asset);
+    function assets(address) external view returns (VaultAsset memory);
 
     function assetPrice(address assetAddr) external view returns (uint256);
+
+    function kopioCLV3() external view returns (IKopioCLV3);
 
     /**
      * @notice This function is used for previewing the amount of shares minted for `assetsIn` of `asset`.
@@ -340,9 +328,7 @@ interface IVault is IERC20Permit, IVaultFlash, VEvent {
      */
     function exchangeRate() external view returns (uint256 rate);
 
-    /* -------------------------------------------------------------------------- */
-    /*                                    Admin                                   */
-    /* -------------------------------------------------------------------------- */
+    /* ------------------------------- Restricted ------------------------------- */
 
     function feeWithdraw(address assetAddr) external;
 
