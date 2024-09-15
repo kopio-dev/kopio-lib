@@ -23,6 +23,7 @@ abstract contract Cutter is ArbDeploy, Json, Scripted {
         CreateMode cmode
     ) internal returns (CutterData storage) {
         setDiamond(dAddr);
+        d().copyConfig = true;
         return setCreateMode(cmode);
     }
 
@@ -47,6 +48,10 @@ abstract contract Cutter is ArbDeploy, Json, Scripted {
         CreateMode cmode
     ) internal returns (CutterData storage r) {
         (r = d()).cmode = cmode;
+    }
+
+    function setCopyConfig(bool copy) internal returns (CutterData storage r) {
+        (r = d()).copyConfig = copy;
     }
 
     function diamond() internal view virtual returns (IDiamond) {
@@ -128,10 +133,11 @@ abstract contract Cutter is ArbDeploy, Json, Scripted {
     )
         internal
         withJSON(string.concat("diamond-cut-", id))
-        returns (bytes memory)
+        returns (bytes memory callData)
     {
         resetCreateFacets(glob, cmode);
-        return diamondCut(exec);
+        callData = diamondCut(exec);
+        _copyConfig(id);
     }
 
     /**
@@ -140,11 +146,12 @@ abstract contract Cutter is ArbDeploy, Json, Scripted {
     function diamondCutSingle(
         string memory artifact,
         CreateMode cmode
-    ) internal withJSON(artifact) returns (bytes memory) {
+    ) internal withJSON(artifact) returns (bytes memory callData) {
         clearCutterData();
         d().cmode = cmode;
         createFacetCut(artifact);
-        return diamondCut(true);
+        callData = diamondCut(true);
+        _copyConfig(artifact);
     }
 
     /**
@@ -318,6 +325,7 @@ abstract contract Cutter is ArbDeploy, Json, Scripted {
         delete d().fileInfo;
         delete d().skipInfo;
         delete d().facets;
+        delete d().copyConfig;
 
         for (uint256 i; i < d().rselsArr.length; i++) {
             delete d().rsels[d().rselsArr[i]];
@@ -354,6 +362,19 @@ abstract contract Cutter is ArbDeploy, Json, Scripted {
             revert NoDiamondSet();
         }
         _;
+    }
+
+    function _copyConfig(string memory id) internal {
+        try
+            vm.copyFile(
+                "foundry.toml",
+                string.concat("temp/", id, ".foundry.toml")
+            )
+        {
+            PLog.clg("[COPY-CONFIG] Success!");
+        } catch {
+            PLog.clg("[COPY-CONFIG] Failed.");
+        }
     }
 
     /* -------------------------------------------------------------------------- */
@@ -542,6 +563,7 @@ struct CutterData {
     IDiamond diamond;
     uint256 adds;
     uint256 removes;
+    bool copyConfig;
 }
 
 struct CutterTemp {
