@@ -85,6 +85,8 @@ abstract contract Cutter is ArbDeploy, Json, Scripted {
 
         (bool success, bytes memory err) = address(d().diamond).call(callData);
         if (!success) _revert(err);
+
+        delete d().init;
     }
 
     function diamondCut(
@@ -114,7 +116,15 @@ abstract contract Cutter is ArbDeploy, Json, Scripted {
         string memory id,
         string memory glob
     ) internal returns (bytes memory) {
-        return diamondCutFull(id, glob, d().cmode, true);
+        return diamondCutFull(id, glob, true);
+    }
+
+    function diamondCutFull(
+        string memory id,
+        string memory glob,
+        bool exec
+    ) internal returns (bytes memory) {
+        return diamondCutFull(id, glob, d().cmode, exec);
     }
 
     function diamondCutFull(
@@ -161,7 +171,7 @@ abstract contract Cutter is ArbDeploy, Json, Scripted {
         _createFacetCut(getFacet(artifact));
     }
 
-    function createFacetCuts(string memory glob) private {
+    function createFacetCuts(string memory glob) internal {
         FacetData[] memory facets = getFacets(glob);
         for (uint256 i; i < facets.length; i++) _createFacetCut(facets[i]);
     }
@@ -336,8 +346,6 @@ abstract contract Cutter is ArbDeploy, Json, Scripted {
             delete d().aselsArr[i];
         }
         delete d().aselsArr;
-
-        delete d().init;
 
         delete d().adds;
         delete d().removes;
