@@ -2,7 +2,7 @@
 pragma solidity ^0.8.0;
 
 import {Auth, AuthorizationFull} from "../src/utils/AuthorizationFull.sol";
-import {__revert} from "../src/utils/Funcs.sol";
+import {Revert} from "../src/utils/Funcs.sol";
 
 struct Init {
     address operator;
@@ -93,6 +93,6 @@ contract TFullAuth is AuthorizationFull {
         bytes memory data
     ) public payable guard(addr) {
         (bool success, bytes memory retData) = addr.delegatecall(data);
-        if (!success) __revert(retData);
+        if (!success) Revert(retData);
     }
 }

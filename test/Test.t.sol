@@ -7,7 +7,7 @@ import {VmCaller, VmHelp, Log} from "../src/vm/VmLibs.s.sol";
 import {ShortAssert} from "../src/vm/ShortAssert.t.sol";
 import {PLog, logp} from "../src/vm/PLog.s.sol";
 import {Utils} from "../src/utils/Libs.sol";
-import {__revert, split} from "../src/utils/Funcs.sol";
+import {Revert, split} from "../src/utils/Funcs.sol";
 import {MockPyth} from "../src/mocks/MockPyth.sol";
 import {Connected} from "../src/vm/Connected.s.sol";
 import {File, Files} from "../src/vm/Files.s.sol";
@@ -239,20 +239,20 @@ contract TTest is Tested, Connected {
         address second = getAddr(1);
         address third = getAddr(2);
         vm.startBroadcast(first);
-        vmSender().eq(first);
+        msgSender().eq(first);
 
         broadcastWith(second);
-        vmSender().eq(second);
+        msgSender().eq(second);
 
         broadcastWith(first);
         _broadcastRestored().eq(second);
 
-        vmSender().eq(first);
+        msgSender().eq(first);
         thing.addr().eq(second);
 
         broadcastWith(third);
         _unbroadcastedRestored().eq(msg.sender);
-        vmSender().eq(third);
+        msgSender().eq(third);
         vm.stopBroadcast();
 
         _unbroadcastedRestored();
@@ -264,7 +264,7 @@ contract TTest is Tested, Connected {
         returns (address)
     {
         thing.save();
-        return vmSender();
+        return msgSender();
     }
 
     function _unbroadcastedRestored()
@@ -273,7 +273,7 @@ contract TTest is Tested, Connected {
         returns (address)
     {
         thing.save();
-        return vmSender();
+        return msgSender();
     }
 
     function testPranks() public {
@@ -281,28 +281,28 @@ contract TTest is Tested, Connected {
         address second = getAddr(1);
         address third = getAddr(2);
         vm.startPrank(first);
-        vmSender().eq(first);
+        msgSender().eq(first);
 
         prank(second);
-        vmSender().eq(second);
+        msgSender().eq(second);
 
         prank(first);
         _prankRestored().eq(second);
-        vmSender().eq(first);
+        msgSender().eq(first);
         thing.addr().eq(second);
 
         prank(third);
         _unprankRestored().eq(msg.sender);
-        vmSender().eq(third);
+        msgSender().eq(third);
     }
     function _prankRestored() internal repranked(getAddr(1)) returns (address) {
         thing.save();
-        return vmSender();
+        return msgSender();
     }
 
     function _unprankRestored() internal restoreCallers returns (address) {
         thing.save();
-        return vmSender();
+        return msgSender();
     }
 
     function testMinLog() public pure {
@@ -341,7 +341,7 @@ contract TestContract {
         (, bytes memory data) = address(thing2).staticcall(
             abi.encodeWithSelector(thing2.nope.selector)
         );
-        __revert(data);
+        Revert(data);
     }
 }
 
