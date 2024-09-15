@@ -2317,6 +2317,10 @@ interface IDataCommonFacet is TData {
     function aDataProtocol(
         PythView calldata prices
     ) external view returns (Protocol memory);
+    function aDataAssetConfigs()
+        external
+        view
+        returns (address[] memory, Asset[] memory);
 
     function sDataAssets(
         PythView calldata prices,
@@ -2334,8 +2338,9 @@ interface IDataCommonFacet is TData {
      * 5: SCDP Kopios (debt)
      * @return address[] List of asset addresses
      */
-    function getAssetAddresses(uint8) external view returns (address[] memory);
+    function aDataAssetAddrs(uint8) external view returns (address[] memory);
 }
+
 // solhint-disable-next-line
 interface IDataFacets is IDataCommonFacet, IDataAccountFacet {}
 
