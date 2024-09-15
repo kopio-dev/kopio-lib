@@ -20,7 +20,7 @@ function store() view returns (Store storage s) {
     }
 }
 
-function getSeconds()  returns (uint256) {
+function getSeconds() returns (uint256) {
     return uint256(mvm.unixTime() / 1000);
 }
 

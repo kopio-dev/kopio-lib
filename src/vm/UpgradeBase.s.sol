@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.26;
 
-import {Cutter,Revert} from "../vm-ffi/Cutter.s.sol";
+import {Cutter, Revert} from "../vm-ffi/Cutter.s.sol";
 import {Log, VmHelp} from "./VmLibs.s.sol";
 import {Deployment} from "../IProxyFactory.sol";
 import {ITransparentUpgradeableProxy} from "../vendor/TransparentUpgradeableProxy.sol";
-import {Utils} from "../utils/Libs.sol"; 
+import {Utils} from "../utils/Libs.sol";
 
 struct ProxyUpgrade {
     address proxy;
@@ -119,7 +119,7 @@ abstract contract UpgradeBase is Cutter {
                 string(bytes.concat(VmHelp.getRandomId()))
             );
             jsonStart(_batchId);
-        } 
+        }
     }
 
     function _endBatch() internal {

@@ -1,17 +1,16 @@
-
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
 import {PLog} from "../vm/PLog.s.sol";
 import {FacetCut, FacetCutAction, IDiamond, Initializer} from "../support/IDiamond.sol";
 import {defaultFacetLoc, FacetData, getFacet, getFacets} from "./ffi-facets.s.sol";
-import {Revert} from "../utils/Funcs.sol"; 
-import {ArbDeploy} from "../info/ArbDeploy.sol"; 
+import {Revert} from "../utils/Funcs.sol";
+import {ArbDeploy} from "../info/ArbDeploy.sol";
 import {Factory, Json} from "../vm/Json.s.sol";
 import {mvm} from "../vm/MinVm.s.sol";
 
 abstract contract Cutter is ArbDeploy, Json {
-    using PLog for *; 
+    using PLog for *;
 
     enum CreateMode {
         Create1,
@@ -511,7 +510,12 @@ abstract contract Cutter is ArbDeploy, Json {
         r = string.concat(r, cutAction, " ", d().fileInfo[idx]);
         r = string.concat(r, " (#", mvm.toString(idx), ")", "\n");
 
-        r = string.concat(r, "[ADDRESS] ", mvm.toString(cut.facetAddress), "\n");
+        r = string.concat(
+            r,
+            "[ADDRESS] ",
+            mvm.toString(cut.facetAddress),
+            "\n"
+        );
         r = string.concat(r, "[SELECTORS] ", _toString(cut.functionSelectors));
     }
 
