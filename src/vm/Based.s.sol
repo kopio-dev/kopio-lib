@@ -15,9 +15,13 @@ abstract contract Based is PythScript, Scripted {
     }
 
     modifier usePythSync() {
+        updatePythSync();
+        _;
+    }
+
+    function updatePythSync() internal {
         syncTime();
         updatePyth();
-        _;
     }
 
     modifier forked(string memory _network, uint256 _blockNr) {

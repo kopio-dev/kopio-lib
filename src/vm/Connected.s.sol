@@ -16,9 +16,13 @@ contract Connected is PythScript, Scripted {
     }
 
     modifier usePythSync() virtual {
+        updatePythSync();
+        _;
+    }
+
+    function updatePythSync() internal {
         syncTime();
         updatePyth();
-        _;
     }
 
     modifier connect1(string memory _mnemonic, string memory _network) virtual {
