@@ -2317,10 +2317,9 @@ interface IDataCommonFacet is TData {
     function aDataProtocol(
         PythView calldata prices
     ) external view returns (Protocol memory);
-    function aDataAssetConfigs()
-        external
-        view
-        returns (address[] memory, Asset[] memory);
+    function aDataAssetConfigs(
+        uint8
+    ) external view returns (address[] memory, Asset[] memory);
 
     function sDataAssets(
         PythView calldata prices,
