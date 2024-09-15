@@ -238,9 +238,10 @@ abstract contract Cutter is ArbDeploy, Json, Scripted {
         );
 
         jsonKey(f.file);
-        json(rsels.length, "selectorsBefore");
-        json(newFacet);
-        json(f.selectors.length, "selectorsAfter");
+        json(newFacet, "1_addr");
+        json(f.selectors.length, "2_selectors");
+        json(oldFacet, "3_prev_addr");
+        json(rsels.length, "3_prev_selectors");
         jsonKey();
     }
 
