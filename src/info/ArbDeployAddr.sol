@@ -10,6 +10,9 @@ library addr {
     address constant usdce = 0xFF970A61A04b1cA14834A43f5dE4533eBDDB5CC8;
     address constant wbtc = 0x2f2a2543B76A4166549F7aaB2e75Bef0aefC5B0f;
     address constant weth = 0x82aF49447D8a07e3bd95BD0d56f35241523fBab1;
+    address constant wsteth = 0x5979D7b546E38E414F7E9822514be443A4800529;
+    address constant weeth = 0x35751007a407ca6FEFfE80b3cB397736D2cf4dbe;
+    address constant ezeth = 0x2416092f143378750bb29b79eD961ab195CcEea5;
     address constant dai = 0xDA10009cBd5D07dd0CeCc66161FC93D7c9000da1;
     address constant usdt = 0xFd086bC7CD5C481DCC9C85ebE478A1C0b69FCbb9;
     address constant one = 0x10000000001b2cc3aeEfDF01815B5D5FcBaf05Fc;
@@ -25,6 +28,7 @@ library addr {
     address constant marketStatus = 0x77777777775c600736D65AD78623c0D563635e02;
     address constant pythUpdater = 0xfeEFeEfeED0bd9Df8d23dC0242FEF943c574468f;
     address constant migration = 0xaaaaaAaAaAa186774266Ea9b3FC0B588B3232795;
+    address constant kclv3 = 0x333333333331Bb94E66b5aB3acfa0D30936C028A;
     address constant kETH = 0x6788C6aEd8CB32E166484796C533bF21abfe0354;
     address constant kBTC = 0x3074Bf9512F2d945f2C54A3A5893A1Fda895321A;
     address constant kSOL = 0xe0492d73E8E950616Da6C766E952204aB39455e9;
@@ -52,6 +56,9 @@ abstract contract ArbAddr {
     address constant usdceAddr = addr.usdce;
     address constant wbtcAddr = addr.wbtc;
     address constant wethAddr = addr.weth;
+    address constant wstethAddr = addr.wsteth;
+    address constant weethAddr = addr.weeth;
+    address constant ezethAddr = addr.ezeth;
     address constant daiAddr = addr.dai;
     address constant usdtAddr = addr.usdt;
 
@@ -68,6 +75,9 @@ abstract contract ArbAddr {
     IERC20 constant arb = IERC20(arbAddr);
     IERC20 constant dai = IERC20(daiAddr);
     IERC20 constant usdt = IERC20(usdtAddr);
+    IERC20 constant wsteth = IERC20(wstethAddr);
+    IERC20 constant weeth = IERC20(weethAddr);
+    IERC20 constant ezeth = IERC20(ezethAddr);
 }
 
 abstract contract ArbDeployAddr is ArbAddr {
@@ -79,6 +89,7 @@ abstract contract ArbDeployAddr is ArbAddr {
     address constant marketStatusAddr = addr.marketStatus;
     address constant pythUpdaterAddr = addr.pythUpdater;
     address constant migrationAddr = addr.migration;
+    address constant kclv3Addr = addr.kclv3;
     address constant kETHAddr = addr.kETH;
     address constant kBTCAddr = addr.kBTC;
     address constant kSOLAddr = addr.kSOL;

@@ -10,18 +10,20 @@ import {Tokens} from "../utils/Tokens.sol";
 
 abstract contract Tested is Scripted, Test {
     using VmCaller for IMinVm.CallerMode;
-    address user0;
-    address user1;
-    address user2;
+    address payable user0;
+    address payable user1;
+    address payable user2;
+
+    address payable bank;
 
     modifier users(
         address _u0,
         address _u1,
         address _u2
     ) {
-        user0 = _u0;
-        user1 = _u1;
-        user2 = _u2;
+        user0 = payable(_u0);
+        user1 = payable(_u1);
+        user2 = payable(_u2);
         _;
     }
 
