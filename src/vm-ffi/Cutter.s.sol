@@ -99,8 +99,9 @@ abstract contract Cutter is ArbDeploy, Json, Scripted {
 
     function previewDiamondCut(
         string memory glob
-    ) internal returns (bytes memory) {
-        return diamondCutFull(glob, d().cmode, false);
+    ) internal returns (bytes memory callData) {
+        callData = diamondCutFull(glob, d().cmode, false);
+        clgDiamondCuts();
     }
 
     function previewDiamondCut() internal returns (bytes memory) {
@@ -320,7 +321,6 @@ abstract contract Cutter is ArbDeploy, Json, Scripted {
         clearCutterData();
         setCreateMode(cmode);
         createFacetCuts(glob);
-        clgDiamondCuts();
     }
 
     function d() private pure returns (CutterData storage data) {
