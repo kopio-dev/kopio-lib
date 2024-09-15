@@ -74,7 +74,8 @@ abstract contract UpgradeBase is Cutter {
         }
     }
 
-    function _upgradeBatch(address proxy) internal initBatch returns (uint256) {
+    function _upgradeBatch(address proxy) internal returns (uint256) {
+        _startBatch();
         _upgrade(proxy, true);
         return _upgrades.length;
     }
@@ -90,16 +91,16 @@ abstract contract UpgradeBase is Cutter {
         for (uint256 i; i < deploys.length; i++) {
             _upgrades[i] = _handleResult(_upgrades[i], deploys[i]);
         }
-        jsonEnd();
 
         res = _upgrades;
-        delete _upgrades;
+
+        _endBatch();
     }
 
     function _handleResult(
         ProxyUpgrade memory info,
         bytes memory data
-    ) internal returns (ProxyUpgrade memory) {
+    ) private returns (ProxyUpgrade memory) {
         Deployment memory upgraded = abi.decode(data, (Deployment));
         address(upgraded.proxy).clg("upgraded-proxy");
         upgraded.implementation.clg("new-implementation");
@@ -111,7 +112,7 @@ abstract contract UpgradeBase is Cutter {
         return _toJSON(info);
     }
 
-    modifier initBatch() {
+    function _startBatch() internal {
         if (bytes(_batchId).length == 0) {
             _batchId = string.concat(
                 "ugprade-batch-",
@@ -119,7 +120,12 @@ abstract contract UpgradeBase is Cutter {
             );
             jsonStart(_batchId);
         }
-        _;
+    }
+
+    function _endBatch() internal {
+        jsonEnd();
+        delete _upgrades;
+        delete _batchId;
     }
 
     function _toJSON(
