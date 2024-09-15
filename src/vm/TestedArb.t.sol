@@ -51,11 +51,11 @@ abstract contract TestedArb is Tested, ArbDeploy {
     function dealONE(
         address to,
         uint256 amount,
-        address fromStable
+        address stable
     ) internal repranked(bank) {
-        (uint256 depositAmount, ) = vault.previewMint(fromStable, amount);
-        deal(bank, fromStable, depositAmount);
-        one.vaultDeposit(fromStable, depositAmount, to);
+        (uint256 depositAmount, ) = vault.previewMint(stable, amount);
+        deal(stable, bank, depositAmount);
+        one.vaultDeposit(stable, depositAmount, to);
     }
 
     function dealCollateral(address to, uint256 amount) internal repranked(to) {
@@ -68,17 +68,17 @@ abstract contract TestedArb is Tested, ArbDeploy {
         uint256 amount
     ) internal repranked(to) {
         if (token == oneAddr) dealONE(to, amount);
-        else deal(to, token, amount);
+        else deal(token, to, amount);
         approve(to, protocolAddr, token);
         core.depositCollateral(to, token, amount);
     }
 
     function dealLiquidity(
-        address fromStable,
+        address stable,
         uint256 amountVault,
         uint256 amountSCDP
     ) internal repranked(bank) {
-        dealONE(bank, amountVault + amountSCDP, fromStable);
+        dealONE(bank, amountVault + amountSCDP, stable);
         approve(bank, protocolAddr, oneAddr);
         if (amountSCDP != 0) core.depositSCDP(bank, oneAddr, amountSCDP);
     }
