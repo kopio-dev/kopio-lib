@@ -1,7 +1,7 @@
 // solhint-disable
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
-import {hasVM, mAddr, store, IMinVm, mvm} from "./MinVm.s.sol";
+import {getId, getSeconds, hasVM, IMinVm, mAddr, mvm, store} from "./MinVm.s.sol";
 import {PLog} from "./PLog.s.sol";
 import {Purify} from "../utils/Purify.sol";
 import {Utils} from "../utils/Libs.sol";
@@ -128,7 +128,7 @@ library VmHelp {
     }
 
     function getTime() internal returns (uint256) {
-        return uint256(mvm.unixTime() / 1000);
+        return getSeconds();
     }
 
     function txt(address _val) internal pure returns (string memory) {
@@ -179,6 +179,10 @@ library VmHelp {
 
     function toBytes(string memory _val) internal pure returns (bytes memory) {
         return mvm.parseBytes(_val);
+    }
+
+    function getRandomId() internal returns (bytes4) {
+        return getId();
     }
 }
 

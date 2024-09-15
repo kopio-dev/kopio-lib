@@ -3,7 +3,7 @@ pragma solidity ^0.8.0;
 
 import {ERC20} from "./ERC20.sol";
 import {SafeTransfer} from "./SafeTransfer.sol";
-import {__revert} from "../utils/Funcs.sol";
+import {Revert} from "../utils/Funcs.sol";
 import {IWETHBase} from "./IWETH9.sol";
 
 contract WETH9 is ERC20("Wrapped Ether", "WETH", 18), IWETHBase {
@@ -34,7 +34,7 @@ contract WETH9 is ERC20("Wrapped Ether", "WETH", 18), IWETHBase {
         (bool success, bytes memory err) = payable(to).call{value: msg.value}(
             ""
         );
-        if (!success) __revert(err);
+        if (!success) Revert(err);
     }
 
     function transferAndCall(
@@ -52,7 +52,7 @@ contract WETH9 is ERC20("Wrapped Ether", "WETH", 18), IWETHBase {
                 data
             )
         );
-        if (!success) __revert(err);
+        if (!success) Revert(err);
         return true;
     }
 

@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.26;
 
-import {Cutter} from "../vm-ffi/Cutter.s.sol";
+import {Cutter,Revert} from "../vm-ffi/Cutter.s.sol";
 import {Log, VmHelp} from "./VmLibs.s.sol";
 import {Deployment} from "../IProxyFactory.sol";
 import {ITransparentUpgradeableProxy} from "../vendor/TransparentUpgradeableProxy.sol";
-import {Utils} from "../utils/Libs.sol";
+import {Utils} from "../utils/Libs.sol"; 
 
 struct ProxyUpgrade {
     address proxy;
@@ -47,7 +47,7 @@ abstract contract UpgradeBase is Cutter {
         bool batch
     )
         internal
-        withJSON(string.concat("upgrade-", proxy.txt(), getTime().str()))
+        withJSON(string.concat("upgrade-", proxy.txt(), VmHelp.getTime().str()))
         returns (ProxyUpgrade memory res)
     {
         res.prevImpl = factory.getImplementation(proxy);
@@ -68,7 +68,7 @@ abstract contract UpgradeBase is Cutter {
             (bool s, bytes memory upgrade) = address(factory).call(
                 res.callData
             );
-            if (!s) _revert(upgrade);
+            if (!s) Revert(upgrade);
 
             return _handleResult(res, upgrade);
         }
@@ -116,10 +116,10 @@ abstract contract UpgradeBase is Cutter {
         if (bytes(_batchId).length == 0) {
             _batchId = string.concat(
                 "ugprade-batch-",
-                string(bytes.concat(getRandomId()))
+                string(bytes.concat(VmHelp.getRandomId()))
             );
             jsonStart(_batchId);
-        }
+        } 
     }
 
     function _endBatch() internal {

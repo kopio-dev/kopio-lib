@@ -2,7 +2,7 @@
 pragma solidity ^0.8.0;
 import {MultisendAddr} from "./Multisends.s.sol";
 import {mvm, execFFI, getFFIPath} from "../vm/MinVm.s.sol";
-import {__revert} from "../utils/Funcs.sol";
+import {Revert} from "../utils/Funcs.sol";
 import {Utils} from "../utils/Libs.sol";
 import {PLog} from "../vm/PLog.s.sol";
 
@@ -160,7 +160,7 @@ contract SafeScript is MultisendAddr {
             );
             if (!successRevert) {
                 "Simulation fail: ".clg(mvm.toString(successReturnData));
-                __revert(successReturnData);
+                Revert(successReturnData);
             }
             if (successReturnData.length == 0) {
                 "Simulation success.".clg();
@@ -222,9 +222,8 @@ contract SafeScript is MultisendAddr {
                 batch.nonce
             )
         );
-        if (!success) {
-            __revert(returnData);
-        }
+        if (!success) Revert(returnData);
+
         return abi.decode(returnData, (bytes32));
     }
 
@@ -285,9 +284,7 @@ contract SafeScript is MultisendAddr {
         (bool success, bytes memory ret) = address(mvm).call(
             abi.encodeWithSignature("removeFile(string)", filename)
         );
-        if (!success) {
-            __revert(ret);
-        }
+        if (!success) Revert(ret);
 
         "Removed Safe Tx: ".clg(mvm.toString(safeTxHash));
         "Deleted file: ".clg(filename);

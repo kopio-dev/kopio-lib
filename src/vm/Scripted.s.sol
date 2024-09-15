@@ -6,7 +6,7 @@ import {Wallet} from "./Wallet.s.sol";
 import {getId} from "./MinVm.s.sol";
 import {File, VmCaller, IMinVm} from "./VmLibs.s.sol";
 import {Script} from "forge-std/Script.sol";
-import {__revert} from "../utils/Funcs.sol";
+import {Revert} from "../utils/Funcs.sol";
 import {IERC20} from "../token/IERC20.sol";
 import {Tokens} from "../utils/Tokens.sol";
 
@@ -139,7 +139,7 @@ abstract contract Scripted is Script, Wallet {
         VmCaller.clear();
     }
 
-    function vmSender() internal returns (address payable) {
+    function msgSender() internal returns (address payable) {
         return payable(VmCaller.msgSender());
     }
 
@@ -148,7 +148,7 @@ abstract contract Scripted is Script, Wallet {
     }
 
     function _revert(bytes memory _d) internal pure virtual {
-        __revert(_d);
+        Revert(_d);
     }
 
     function getTime() internal virtual returns (uint256) {

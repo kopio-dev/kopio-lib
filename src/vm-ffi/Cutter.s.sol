@@ -1,16 +1,17 @@
-// solhint-disable
+
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
 import {PLog} from "../vm/PLog.s.sol";
 import {FacetCut, FacetCutAction, IDiamond, Initializer} from "../support/IDiamond.sol";
 import {defaultFacetLoc, FacetData, getFacet, getFacets} from "./ffi-facets.s.sol";
-import {Scripted} from "../vm/Scripted.s.sol";
-import {ArbDeploy} from "../info/ArbDeploy.sol";
+import {Revert} from "../utils/Funcs.sol"; 
+import {ArbDeploy} from "../info/ArbDeploy.sol"; 
 import {Factory, Json} from "../vm/Json.s.sol";
+import {mvm} from "../vm/MinVm.s.sol";
 
-abstract contract Cutter is ArbDeploy, Json, Scripted {
-    using PLog for *;
+abstract contract Cutter is ArbDeploy, Json {
+    using PLog for *; 
 
     enum CreateMode {
         Create1,
@@ -91,7 +92,7 @@ abstract contract Cutter is ArbDeploy, Json, Scripted {
         if (!exec) return callData;
 
         (bool success, bytes memory err) = address(d().diamond).call(callData);
-        if (!success) _revert(err);
+        if (!success) Revert(err);
 
         delete d().init;
     }
@@ -212,14 +213,14 @@ abstract contract Cutter is ArbDeploy, Json, Scripted {
 
         if (oldFacet != address(0) && bytes(f.file).length > 0) {
             bytes32 newCodeHash = keccak256(
-                vm.getDeployedCode(string.concat(f.file, ".sol:", f.file))
+                mvm.getDeployedCode(string.concat(f.file, ".sol:", f.file))
             );
 
             if (newCodeHash == oldFacet.codehash) {
                 d().skipInfo.push(
                     string.concat(
                         fileStr(f.file, "Skipped as identical code exists @ "),
-                        vm.toString(oldFacet)
+                        mvm.toString(oldFacet)
                     )
                 );
 
@@ -235,7 +236,7 @@ abstract contract Cutter is ArbDeploy, Json, Scripted {
                 d().fileInfo.push(
                     string.concat(
                         fileStr(f.file, "previously @ "),
-                        vm.toString(oldFacet)
+                        mvm.toString(oldFacet)
                     )
                 );
             } else {
@@ -245,7 +246,7 @@ abstract contract Cutter is ArbDeploy, Json, Scripted {
                             f.file,
                             "All selectors already removed (prev @ "
                         ),
-                        vm.toString(oldFacet),
+                        mvm.toString(oldFacet),
                         ")"
                     )
                 );
@@ -259,7 +260,7 @@ abstract contract Cutter is ArbDeploy, Json, Scripted {
 
         d().facets.push(newFacet);
         d().fileInfo.push(
-            fileStr(f.file, string.concat("created @ ", vm.toString(newFacet)))
+            fileStr(f.file, string.concat("created @ ", mvm.toString(newFacet)))
         );
 
         jsonKey(f.file);
@@ -381,7 +382,7 @@ abstract contract Cutter is ArbDeploy, Json, Scripted {
 
     function _copyConfig(string memory id) internal {
         try
-            vm.copyFile(
+            mvm.copyFile(
                 "foundry.toml",
                 string.concat("temp/", id, ".foundry.toml")
             )
@@ -404,9 +405,9 @@ abstract contract Cutter is ArbDeploy, Json, Scripted {
         string
             .concat(
                 "[COMPARE-CUTS] Facet Count -> Before: ",
-                vm.toString(facets.length),
+                mvm.toString(facets.length),
                 " | After: ",
-                vm.toString(facetsAfter.length)
+                mvm.toString(facetsAfter.length)
             )
             .clg();
 
@@ -416,11 +417,11 @@ abstract contract Cutter is ArbDeploy, Json, Scripted {
             string
                 .concat(
                     "[COMPARE-CUTS] Facet Replaced ->",
-                    vm.toString(pairs[i][0]),
+                    mvm.toString(pairs[i][0]),
                     " -> ",
-                    vm.toString(pairs[i][1]),
+                    mvm.toString(pairs[i][1]),
                     "(",
-                    string.concat("#", vm.toString(i)),
+                    string.concat("#", mvm.toString(i)),
                     ")"
                 )
                 .clg();
@@ -429,7 +430,7 @@ abstract contract Cutter is ArbDeploy, Json, Scripted {
         string
             .concat(
                 "[COMPARE-CUTS] Replaced Facets -> ",
-                vm.toString(pairs.length)
+                mvm.toString(pairs.length)
             )
             .clg();
     }
@@ -474,20 +475,20 @@ abstract contract Cutter is ArbDeploy, Json, Scripted {
             string.concat(
                 "\n- - - - - - SUMMARY - - - - - -",
                 "\n[SUMMARY] Facet Cuts       -> ",
-                vm.toString(d().cuts.length),
+                mvm.toString(d().cuts.length),
                 "\n[SUMMARY] Deployed Facets  -> ",
-                vm.toString(d().facets.length),
+                mvm.toString(d().facets.length),
                 "\n\n[SUMMARY] Removed Facets   -> ",
                 string.concat(
-                    vm.toString(d().removes),
+                    mvm.toString(d().removes),
                     " - Fns: ",
-                    vm.toString(d().rselsArr.length)
+                    mvm.toString(d().rselsArr.length)
                 ),
                 "\n[SUMMARY] Added Facets     -> ",
                 string.concat(
-                    vm.toString(d().adds),
+                    mvm.toString(d().adds),
                     " - Fns: ",
-                    vm.toString(d().aselsArr.length)
+                    mvm.toString(d().aselsArr.length)
                 )
             )
         );
@@ -508,9 +509,9 @@ abstract contract Cutter is ArbDeploy, Json, Scripted {
         cutAction = string.concat(START, cutAction, "-FACET", END);
 
         r = string.concat(r, cutAction, " ", d().fileInfo[idx]);
-        r = string.concat(r, " (#", vm.toString(idx), ")", "\n");
+        r = string.concat(r, " (#", mvm.toString(idx), ")", "\n");
 
-        r = string.concat(r, "[ADDRESS] ", vm.toString(cut.facetAddress), "\n");
+        r = string.concat(r, "[ADDRESS] ", mvm.toString(cut.facetAddress), "\n");
         r = string.concat(r, "[SELECTORS] ", _toString(cut.functionSelectors));
     }
 
@@ -523,11 +524,11 @@ abstract contract Cutter is ArbDeploy, Json, Scripted {
         for (uint256 i; i < len; i++) {
             r = string.concat(
                 r,
-                vm.toString(abi.encodePacked(sels[i])),
+                mvm.toString(abi.encodePacked(sels[i])),
                 i == len - 1 ? END : ","
             );
         }
-        return string.concat("(", vm.toString(len), ") -> ", r);
+        return string.concat("(", mvm.toString(len), ") -> ", r);
     }
 
     function clgSkippedDiamondCuts() internal view {
@@ -540,7 +541,7 @@ abstract contract Cutter is ArbDeploy, Json, Scripted {
                         "\n",
                         d().skipInfo[i],
                         " (SKIP #",
-                        vm.toString(i),
+                        mvm.toString(i),
                         ")"
                     )
                 );
