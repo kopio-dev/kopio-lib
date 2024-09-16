@@ -15,6 +15,10 @@ library VmCaller {
         string mode;
     }
 
+    function isActive() internal returns (bool) {
+        return mode() != IMinVm.CallerMode.None;
+    }
+
     function msgSender() internal returns (address payable) {
         return sender();
     }
@@ -38,6 +42,12 @@ library VmCaller {
     ) internal returns (IMinVm.CallerMode m_, address s_, address o_) {
         (m_, s_, o_) = clear();
         mvm.prank(_s);
+    }
+
+    function pranked(
+        address _s
+    ) internal returns (IMinVm.CallerMode m_, address s_, address o_) {
+        return prank(_s, _s);
     }
 
     function prank(
@@ -108,9 +118,30 @@ library VmCaller {
         return "unknown";
     }
 
-    function mode() internal returns (string memory) {
-        (IMinVm.CallerMode _m, , ) = mvm.readCallers();
-        return mode(_m);
+    function mode() internal returns (IMinVm.CallerMode m_) {
+        (m_, , ) = mvm.readCallers();
+    }
+
+    function activeOr(function(address) f, address addr) internal {
+        if (!isActive()) {
+            f(addr);
+        }
+    }
+
+    function activeOr(
+        function(address) returns (IMinVm.CallerMode, address, address) f,
+        address addr
+    ) internal {
+        if (!isActive()) {
+            f(addr);
+        }
+    }
+
+    function sendFrom(
+        address addr
+    ) internal returns (IMinVm.CallerMode m_, address s_, address o_) {
+        (m_, s_, o_) = clear();
+        mvm.startBroadcast(addr);
     }
 }
 

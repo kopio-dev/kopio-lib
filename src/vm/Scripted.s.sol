@@ -46,6 +46,24 @@ abstract contract Scripted is Script, Wallet {
         VmCaller.clear();
     }
 
+    modifier reuse(
+        function(address) returns (IMinVm.CallerMode, address, address) f,
+        address addr
+    ) virtual {
+        (IMinVm.CallerMode _m, address _s, address _o) = f(addr);
+        _;
+        _m.restore(_s, _o);
+    }
+
+    modifier use(
+        function(address) returns (IMinVm.CallerMode, address, address) f,
+        address addr
+    ) virtual {
+        f(addr);
+        _;
+        VmCaller.clear();
+    }
+
     /// @dev clear call modes, broadcast function body and restore callers after
     modifier rebroadcasted(address addr) {
         (IMinVm.CallerMode _m, address _s, address _o) = broadcastWith(addr);
