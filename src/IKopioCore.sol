@@ -1971,6 +1971,8 @@ interface IAssetStateFacet {
         address addr,
         uint256 amount
     ) external view returns (uint256);
+    function getDepositValue(address, uint256) external view returns (uint256);
+    function getDebtValue(address, uint256) external view returns (uint256);
 
     function getFeedForAddress(
         address addr,
