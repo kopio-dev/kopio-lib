@@ -71,7 +71,7 @@ abstract contract ArbTest is Tested, ArbScript {
         uint256 value,
         address to
     ) internal virtual returns (uint256 amount) {
-        dealCollateral(to, usdceAddr, amount = toAmount(value, usdceAddr));
+        dealCollateral(usdceAddr, to, amount = toAmount(value, usdceAddr));
     }
 
     function dealCollateral(
