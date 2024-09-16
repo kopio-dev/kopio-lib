@@ -53,17 +53,38 @@ abstract contract TestedArb is Tested, ArbDeploy {
         return value.wdiv(core.getPrice(token)).fromWad(token);
     }
 
+    function convert(
+        uint256 amount,
+        address from,
+        address to
+    ) internal view returns (uint256) {
+        return toAmount(core.getValue(from, amount), to);
+    }
+
     function dealAsset(
-        address to,
-        address asset,
-        uint256 value
+        uint256 value,
+        address asset
     ) internal returns (uint256 amount) {
-        amount = toAmount(value, asset);
+        dealAsset(asset, amount = toAmount(value, asset));
+    }
+
+    function dealAsset(address asset, uint256 amount) internal {
+        dealAsset(msgSender(), asset, amount);
+    }
+
+    function dealAsset(address to, address asset, uint256 amount) internal {
         if (core.getAsset(asset).dFactor != 0) {
             dealKopio(asset, to, amount);
         } else {
             deal(asset, to, amount);
         }
+    }
+
+    function dealONE(
+        uint256 value,
+        address to
+    ) internal returns (uint256 amount) {
+        return dealONE(to, amount = toAmount(value, oneAddr));
     }
 
     function dealONE(address to, uint256 amount) internal returns (uint256) {
@@ -84,13 +105,11 @@ abstract contract TestedArb is Tested, ArbDeploy {
         one.transfer(to, out);
     }
 
-    function dealCollateral(address to, uint256 value) internal {
-        return
-            dealCollateral(
-                to,
-                usdceAddr,
-                value.wdiv(core.getPrice(usdceAddr)).fromWad(6)
-            );
+    function dealCollateral(
+        uint256 value,
+        address to
+    ) internal returns (uint256 amount) {
+        dealCollateral(to, usdceAddr, amount = toAmount(value, usdceAddr));
     }
 
     function dealCollateral(
@@ -107,8 +126,8 @@ abstract contract TestedArb is Tested, ArbDeploy {
     }
 
     function dealKopio(
-        address kopio,
-        uint256 value
+        uint256 value,
+        address kopio
     ) internal returns (uint256 amount) {
         dealKopio(
             kopio,
@@ -122,8 +141,7 @@ abstract contract TestedArb is Tested, ArbDeploy {
         address to,
         uint256 amount
     ) internal repranked(bank) {
-        uint256 value = core.getValue(kopio, amount) * 2;
-        dealCollateral(bank, value);
+        dealCollateral(core.getValue(kopio, amount) * 2, bank);
         mintKopio(bank, kopio, amount, to);
     }
 
@@ -155,11 +173,11 @@ abstract contract TestedArb is Tested, ArbDeploy {
         }
 
         if (valkETH != 0) {
-            amtkETH = dealkETH(toAmount(valkETH, kETHAddr), bank);
+            amtkETH = dealkETH(bank, toAmount(valkETH, kETHAddr));
         }
 
         if (valkBTC != 0) {
-            amtkBTC = dealkBTC(toAmount(valkBTC, wbtcAddr), bank);
+            amtkBTC = dealkBTC(bank, toAmount(valkBTC, wbtcAddr));
         }
     }
 
@@ -191,34 +209,34 @@ abstract contract TestedArb is Tested, ArbDeploy {
 
         (ETH_TO_USDCE, ) = one.vaultRedeem(
             usdceAddr,
-            swap(bank, kETHAddr, oneAddr, dealkETH(amountETH, bank)),
+            swap(bank, kETHAddr, oneAddr, dealkETH(bank, amountETH)),
             bank,
             bank
         );
-        USDCE_TO_ETH = unwrapKopio(kETHAddr, kETHReceived, bank);
+        USDCE_TO_ETH = unwrapKopio(kETHAddr, bank, kETHReceived);
     }
 
     function dealkETH(
-        uint256 amount,
-        address to
+        address to,
+        uint256 amount
     ) internal virtual repranked(bank) returns (uint256 received) {
         deal(bank, amount);
-        return wrapKopio(address(0), amount, to);
+        return wrapKopio(address(0), to, amount);
     }
 
     function dealkBTC(
-        uint256 amount,
-        address to
+        address to,
+        uint256 amount
     ) internal virtual repranked(bank) returns (uint256 received) {
         approve(bank, kBTCAddr, wbtcAddr);
         deal(wbtcAddr, bank, amount);
-        return wrapKopio(kBTCAddr, amount, to);
+        return wrapKopio(kBTCAddr, to, amount);
     }
 
     function wrapKopio(
         address kopio,
-        uint256 amount,
-        address to
+        address to,
+        uint256 amount
     ) internal returns (uint256 received) {
         bool native = kopio == address(0);
         kopio = native ? kETHAddr : kopio;
@@ -236,8 +254,8 @@ abstract contract TestedArb is Tested, ArbDeploy {
 
     function unwrapKopio(
         address kopio,
-        uint256 amount,
-        address to
+        address to,
+        uint256 amount
     ) internal returns (uint256 received) {
         bool native = kopio == address(0);
         kopio = native ? kETHAddr : kopio;
@@ -256,8 +274,8 @@ abstract contract TestedArb is Tested, ArbDeploy {
     }
 
     function depositCollateral(
-        address asset,
-        uint256 value
+        uint256 value,
+        address asset
     ) internal virtual returns (uint256 amount) {
         core.depositCollateral(
             msgSender(),
@@ -266,9 +284,12 @@ abstract contract TestedArb is Tested, ArbDeploy {
         );
     }
 
-    function mintKopio(address asset, uint256 value) internal virtual {
+    function mintKopio(
+        uint256 value,
+        address asset
+    ) internal virtual returns (uint256 amount) {
         address account = msgSender();
-        mintKopio(account, asset, toAmount(value, asset), account);
+        mintKopio(account, asset, amount = toAmount(value, asset), account);
     }
 
     function mintKopio(
@@ -303,6 +324,30 @@ abstract contract TestedArb is Tested, ArbDeploy {
             }),
             noPyth
         );
+    }
+
+    function previewSwap(
+        uint256 valueIn,
+        address assetIn,
+        address assetOut
+    ) internal view returns (uint256 received) {
+        return previewSwap(assetIn, assetOut, toAmount(valueIn, assetIn));
+    }
+
+    function previewSwap(
+        address assetIn,
+        address assetOut,
+        uint256 amountIn
+    ) internal view returns (uint256 received) {
+        (received, , ) = core.previewSwapSCDP(assetIn, assetOut, amountIn);
+    }
+
+    function swap(
+        uint256 valueIn,
+        address assetIn,
+        address assetOut
+    ) internal virtual returns (uint256 received) {
+        return swap(msgSender(), assetIn, assetOut, toAmount(valueIn, assetIn));
     }
 
     function swap(
@@ -357,6 +402,14 @@ abstract contract TestedArb is Tested, ArbDeploy {
         token.approve(routerv3Addr, type(uint256).max);
     }
 
+    function clgAmt(uint256 amount, address token) internal view {
+        Log.clg(amountStr(token, amount));
+    }
+
+    function clgAmt(address user, address token) internal view {
+        return clgAmt(i20(token).balanceOf(user), token);
+    }
+
     function clgCoreUser(address addr) internal view {
         Log.h1(string.concat("User -> ", addr.txt()));
 
@@ -391,10 +444,10 @@ abstract contract TestedArb is Tested, ArbDeploy {
 
         Log.clg(
             string.concat(
-                "[ICDP] Summary -> Collateral: $",
-                summary.totalCollateralValue.dstr(8),
-                " Debt: $",
-                summary.totalDebtValue.dstr(8),
+                "[ICDP] Summary -> Collateral: ",
+                summary.totalCollateralValue.vstr(),
+                " Debt: ",
+                summary.totalDebtValue.vstr(),
                 " CR: ",
                 summary.collateralRatio.dstr(2),
                 "%"
@@ -414,10 +467,11 @@ abstract contract TestedArb is Tested, ArbDeploy {
     ) internal view returns (string memory) {
         return
             string.concat(
-                amount.dstr(IERC20(token).decimals()),
+                "Amount: ",
+                amount.dstr(token),
                 IERC20(token).symbol(),
-                " ($",
-                core.getValue(token, amount).dstr(8),
+                " (",
+                core.getValue(token, amount).vstr(),
                 ")"
             );
     }

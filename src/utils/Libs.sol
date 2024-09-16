@@ -170,6 +170,10 @@ library Utils {
         }
     }
 
+    function vstr(uint256 val) internal pure returns (string memory) {
+        return string.concat("$", dstr(val, 8));
+    }
+
     function dstr(uint256 val) internal pure returns (string memory) {
         return dstr(val, 18);
     }
