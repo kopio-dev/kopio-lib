@@ -7,6 +7,7 @@ import {IERC20} from "../token/IERC20.sol";
 import {BurnArgs, ICDPAccount, MintArgs, SwapArgs} from "../IKopioCore.sol";
 import {Log, Utils, VmHelp} from "./VmLibs.s.sol";
 import {Revert} from "../utils/Funcs.sol";
+import {IKopio} from "../IKopio.sol";
 
 abstract contract TestedArb is Tested, ArbDeploy {
     using Utils for *;
@@ -45,6 +46,26 @@ abstract contract TestedArb is Tested, ArbDeploy {
         user2 = makePayable("user2");
     }
 
+    function toAmount(
+        uint256 value,
+        address token
+    ) internal view returns (uint256) {
+        return value.wdiv(core.getPrice(token)).fromWad(token);
+    }
+
+    function dealAsset(
+        address to,
+        address asset,
+        uint256 value
+    ) internal returns (uint256 amount) {
+        amount = toAmount(value, asset);
+        if (core.getAsset(asset).dFactor != 0) {
+            dealKopio(asset, to, amount);
+        } else {
+            deal(asset, to, amount);
+        }
+    }
+
     function dealONE(address to, uint256 amount) internal returns (uint256) {
         return dealONE(usdceAddr, to, amount);
     }
@@ -63,8 +84,13 @@ abstract contract TestedArb is Tested, ArbDeploy {
         one.transfer(to, out);
     }
 
-    function dealCollateral(address to, uint256 amount) internal {
-        return dealCollateral(to, usdceAddr, amount);
+    function dealCollateral(address to, uint256 value) internal {
+        return
+            dealCollateral(
+                to,
+                usdceAddr,
+                value.wdiv(core.getPrice(usdceAddr)).fromWad(6)
+            );
     }
 
     function dealCollateral(
@@ -72,10 +98,23 @@ abstract contract TestedArb is Tested, ArbDeploy {
         address to,
         uint256 amount
     ) internal repranked(to) {
+        approve(to, protocolAddr, token);
+
         if (token == oneAddr) dealONE(to, amount);
         else deal(token, to, amount);
-        approve(to, protocolAddr, token);
+
         core.depositCollateral(to, token, amount);
+    }
+
+    function dealKopio(
+        address kopio,
+        uint256 value
+    ) internal returns (uint256 amount) {
+        dealKopio(
+            kopio,
+            msgSender(),
+            amount = value.wdiv(core.getPrice(kopio))
+        );
     }
 
     function dealKopio(
@@ -84,18 +123,44 @@ abstract contract TestedArb is Tested, ArbDeploy {
         uint256 amount
     ) internal repranked(bank) {
         uint256 value = core.getValue(kopio, amount) * 2;
-        dealCollateral(oneAddr, bank, value.wdiv(core.getPrice(oneAddr)));
+        dealCollateral(bank, value);
         mintKopio(bank, kopio, amount, to);
     }
 
     function dealLiquidity(
-        address stable,
-        uint256 amountVault,
-        uint256 amountSCDP
-    ) internal repranked(bank) {
-        dealONE(stable, bank, amountVault + amountSCDP);
-        approve(bank, protocolAddr, oneAddr);
-        if (amountSCDP != 0) core.depositSCDP(bank, oneAddr, amountSCDP);
+        uint256 valVault,
+        uint256 valSCDP,
+        uint256 valkETH,
+        uint256 valkBTC
+    )
+        internal
+        repranked(bank)
+        returns (
+            uint256 amtVault,
+            uint256 amtSCDP,
+            uint256 amtkETH,
+            uint256 amtkBTC
+        )
+    {
+        uint256 onePrice = core.getPrice(oneAddr);
+
+        if (valVault != 0) {
+            dealONE(bank, amtVault = valVault.wdiv(onePrice));
+        }
+
+        if (valSCDP != 0) {
+            dealKopio(oneAddr, bank, amtSCDP = valSCDP.wdiv(onePrice));
+            approve(bank, protocolAddr, oneAddr);
+            core.depositSCDP(bank, oneAddr, amtSCDP);
+        }
+
+        if (valkETH != 0) {
+            amtkETH = dealkETH(toAmount(valkETH, kETHAddr), bank);
+        }
+
+        if (valkBTC != 0) {
+            amtkBTC = dealkBTC(toAmount(valkBTC, wbtcAddr), bank);
+        }
     }
 
     function dealYield(uint256 amount) internal repranked(bank) {
@@ -105,7 +170,7 @@ abstract contract TestedArb is Tested, ArbDeploy {
     }
 
     function dealFees(
-        uint256 value
+        uint256 txValue
     )
         internal
         repranked(bank)
@@ -114,8 +179,8 @@ abstract contract TestedArb is Tested, ArbDeploy {
         approve(bank, protocolAddr, oneAddr);
         approve(bank, protocolAddr, kETHAddr);
 
-        uint256 amountONE = (value / 2).wdiv(core.getPrice(oneAddr));
-        uint256 amountETH = (value / 2).wdiv(core.getPrice(kETHAddr));
+        uint256 amountONE = toAmount(txValue / 2, oneAddr);
+        uint256 amountETH = toAmount(txValue / 2, kETHAddr);
 
         uint256 kETHReceived = swap(
             bank,
@@ -126,41 +191,84 @@ abstract contract TestedArb is Tested, ArbDeploy {
 
         (ETH_TO_USDCE, ) = one.vaultRedeem(
             usdceAddr,
-            swap(bank, kETHAddr, oneAddr, dealkETH(amountETH)),
+            swap(bank, kETHAddr, oneAddr, dealkETH(amountETH, bank)),
             bank,
             bank
         );
-        USDCE_TO_ETH = unwrapKETH(kETHReceived, bank);
-    }
-
-    function unwrapKETH(
-        uint256 amount,
-        address to
-    ) internal returns (uint256 received) {
-        address from = msgSender();
-        uint256 balance = kETH.balanceOf(from);
-        uint256 max = kETHAddr.balance;
-
-        if (amount > balance) amount = balance;
-        if (amount > max) amount = max;
-
-        received = to.balance;
-        kETH.unwrap(to, amount, true);
-
-        return to.balance - received;
+        USDCE_TO_ETH = unwrapKopio(kETHAddr, kETHReceived, bank);
     }
 
     function dealkETH(
-        uint256 amount
-    ) internal virtual returns (uint256 received) {
-        address to = msgSender();
-        deal(to, amount);
+        uint256 amount,
+        address to
+    ) internal virtual repranked(bank) returns (uint256 received) {
+        deal(bank, amount);
+        return wrapKopio(address(0), amount, to);
+    }
 
-        received = kETH.balanceOf(to);
-        (bool s, bytes memory d) = kETHAddr.call{value: amount}("");
-        if (!s) Revert(d);
+    function dealkBTC(
+        uint256 amount,
+        address to
+    ) internal virtual repranked(bank) returns (uint256 received) {
+        approve(bank, kBTCAddr, wbtcAddr);
+        deal(wbtcAddr, bank, amount);
+        return wrapKopio(kBTCAddr, amount, to);
+    }
 
-        return kETH.balanceOf(to) - received;
+    function wrapKopio(
+        address kopio,
+        uint256 amount,
+        address to
+    ) internal returns (uint256 received) {
+        bool native = kopio == address(0);
+        kopio = native ? kETHAddr : kopio;
+
+        received = i20(kopio).balanceOf(to);
+
+        if (native) {
+            (bool s, bytes memory d) = kopio.call{value: amount}("");
+            if (!s) Revert(d);
+        } else {
+            IKopio(kopio).wrap(to, amount);
+        }
+        return i20(kopio).balanceOf(to) - received;
+    }
+
+    function unwrapKopio(
+        address kopio,
+        uint256 amount,
+        address to
+    ) internal returns (uint256 received) {
+        bool native = kopio == address(0);
+        kopio = native ? kETHAddr : kopio;
+
+        uint256 maxIn = i20(kopio).balanceOf(msgSender());
+        IERC20 ulying = i20(IKopio(kopio).wraps().underlying);
+        uint256 maxOut = native ? kETHAddr.balance : ulying.balanceOf(kopio);
+
+        if (amount > maxOut) amount = maxOut;
+        if (amount > maxIn) amount = maxIn;
+
+        received = native ? to.balance : ulying.balanceOf(to);
+        IKopio(kopio).unwrap(to, amount, native);
+
+        return (native ? to.balance : ulying.balanceOf(to)) - received;
+    }
+
+    function depositCollateral(
+        address asset,
+        uint256 value
+    ) internal virtual returns (uint256 amount) {
+        core.depositCollateral(
+            msgSender(),
+            asset,
+            amount = toAmount(value, asset)
+        );
+    }
+
+    function mintKopio(address asset, uint256 value) internal virtual {
+        address account = msgSender();
+        mintKopio(account, asset, toAmount(value, asset), account);
     }
 
     function mintKopio(

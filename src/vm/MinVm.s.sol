@@ -36,6 +36,11 @@ function pkAddr(string memory _pkEnv) returns (address) {
     return mvm.rememberKey(mvm.envOr(_pkEnv, 0));
 }
 
+function msgSender() returns (address payable s) {
+    (, address _s, ) = mvm.readCallers();
+    return payable(_s);
+}
+
 function envOr(
     string memory _envKey,
     string memory _fbKey

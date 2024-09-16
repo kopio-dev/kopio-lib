@@ -3,7 +3,7 @@ pragma solidity ^0.8.0;
 import {Utils} from "./Libs.sol";
 import {Permit} from "./Permit.sol";
 import {IERC20Permit, IERC20} from "../token/IERC20Permit.sol";
-import {mvm} from "../vm/MinVm.s.sol";
+import {mvm, msgSender} from "../vm/MinVm.s.sol";
 
 library Tokens {
     using Tokens for *;
@@ -96,7 +96,9 @@ library Tokens {
     }
 
     function allowMax(IERC20 token, address spender) internal returns (IERC20) {
-        token.approve(spender, type(uint256).max);
+        if (token.allowance(msgSender(), spender) == 0) {
+            token.approve(spender, type(uint256).max);
+        }
         return token;
     }
 

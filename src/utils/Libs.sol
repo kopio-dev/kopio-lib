@@ -1,6 +1,9 @@
 // solhint-disable
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
+interface IDec {
+    function decimals() external view returns (uint8);
+}
 
 library Utils {
     using Utils for *;
@@ -18,17 +21,45 @@ library Utils {
         return _val / (10 ** (_from - _to));
     }
 
-    function toWad(int256 _val, uint8 _dec) internal pure returns (uint256) {
-        if (_val < 0) revert("-");
-        return toWad(uint256(_val), _dec);
+    function toDec(
+        uint256 v,
+        uint8 f,
+        address t
+    ) internal view returns (uint256) {
+        return toDec(uint256(v), f, dec(t));
     }
 
-    function toWad(uint256 _val, uint8 _dec) internal pure returns (uint256) {
-        return toDec(_val, _dec, 18);
+    function toDec(
+        uint256 v,
+        address f,
+        uint8 t
+    ) internal view returns (uint256) {
+        return toDec(uint256(v), dec(f), t);
     }
 
-    function fromWad(uint256 _val, uint8 _dec) internal pure returns (uint256) {
-        return toDec(_val, 18, _dec);
+    function toWad(int256 val, uint8 d) internal pure returns (uint256) {
+        if (val < 0) revert("-");
+        return toWad(uint256(val), d);
+    }
+
+    function toWad(uint256 val, address t) internal view returns (uint256) {
+        return toWad(val, dec(t));
+    }
+
+    function dec(address _t) internal view returns (uint8) {
+        return IDec(_t).decimals();
+    }
+
+    function toWad(uint256 val, uint8 d) internal pure returns (uint256) {
+        return toDec(val, d, 18);
+    }
+
+    function fromWad(uint256 val, uint8 d) internal pure returns (uint256) {
+        return toDec(val, 18, d);
+    }
+
+    function fromWad(uint256 val, address d) internal view returns (uint256) {
+        return toDec(val, 18, dec(d));
     }
 
     struct FindResult {
@@ -128,50 +159,57 @@ library Utils {
         return keccak256(_a) == keccak256(_b);
     }
 
-    function str(bytes32 _val) internal pure returns (string memory) {
-        return str(bytes.concat(_val));
+    function str(bytes32 val) internal pure returns (string memory) {
+        return str(bytes.concat(val));
     }
 
-    function str(bytes memory _val) internal pure returns (string memory res) {
-        for (uint256 i; i < _val.length; i++) {
-            if (_val[i] != 0)
-                res = string.concat(res, string(bytes.concat(_val[i])));
+    function str(bytes memory val) internal pure returns (string memory res) {
+        for (uint256 i; i < val.length; i++) {
+            if (val[i] != 0)
+                res = string.concat(res, string(bytes.concat(val[i])));
         }
     }
 
-    function dstr(uint256 _val) internal pure returns (string memory) {
-        return dstr(_val, 18);
+    function dstr(uint256 val) internal pure returns (string memory) {
+        return dstr(val, 18);
     }
 
     function dstr(
-        uint256 _val,
+        uint256 val,
+        address t
+    ) internal view returns (string memory) {
+        return dstr(val, dec(t));
+    }
+
+    function dstr(
+        uint256 val,
         uint256 _dec
     ) internal pure returns (string memory) {
         uint256 ds = 10 ** _dec;
 
-        bytes memory d = bytes(str(_val % ds));
+        bytes memory d = bytes(str(val % ds));
         (d = bytes.concat(bytes(str(10 ** (_dec - d.length))), d))[0] = 0;
 
         for (uint256 i = d.length; --i > 2; d[i] = 0) if (d[i] != "0") break;
 
-        return string.concat(str(_val / ds), ".", str(d));
+        return string.concat(str(val / ds), ".", str(d));
     }
 
-    function str(uint256 _val) internal pure returns (string memory s) {
+    function str(uint256 val) internal pure returns (string memory s) {
         unchecked {
-            if (_val == 0) return "0";
+            if (val == 0) return "0";
             else {
-                uint256 c1 = itoa32(_val % 1e32);
-                _val /= 1e32;
-                if (_val == 0) s = string(abi.encode(c1));
+                uint256 c1 = itoa32(val % 1e32);
+                val /= 1e32;
+                if (val == 0) s = string(abi.encode(c1));
                 else {
-                    uint256 c2 = itoa32(_val % 1e32);
-                    _val /= 1e32;
-                    if (_val == 0) {
+                    uint256 c2 = itoa32(val % 1e32);
+                    val /= 1e32;
+                    if (val == 0) {
                         s = string(abi.encode(c2, c1));
                         c1 = c2;
                     } else {
-                        uint256 c3 = itoa32(_val);
+                        uint256 c3 = itoa32(val);
                         s = string(abi.encode(c3, c2, c1));
                         c1 = c3;
                     }
@@ -279,36 +317,36 @@ library Utils {
     uint256 internal constant HALF_PCT_F = 0.5e4;
 
     function pmul(
-        uint256 _val,
-        uint256 _pct
+        uint256 val,
+        uint256 pct
     ) internal pure returns (uint256 result) {
         assembly {
             if iszero(
                 or(
-                    iszero(_pct),
-                    iszero(gt(_val, div(sub(not(0), HALF_PCT_F), _pct)))
+                    iszero(pct),
+                    iszero(gt(val, div(sub(not(0), HALF_PCT_F), pct)))
                 )
             ) {
                 revert(0, 0)
             }
 
-            result := div(add(mul(_val, _pct), HALF_PCT_F), PCT_F)
+            result := div(add(mul(val, pct), HALF_PCT_F), PCT_F)
         }
     }
 
     function pdiv(
         uint256 _val,
-        uint256 _pct
+        uint256 pct
     ) internal pure returns (uint256 result) {
         assembly {
             if or(
-                iszero(_pct),
-                iszero(iszero(gt(_val, div(sub(not(0), div(_pct, 2)), PCT_F))))
+                iszero(pct),
+                iszero(iszero(gt(_val, div(sub(not(0), div(pct, 2)), PCT_F))))
             ) {
                 revert(0, 0)
             }
 
-            result := div(add(mul(_val, PCT_F), div(_pct, 2)), _pct)
+            result := div(add(mul(_val, PCT_F), div(pct, 2)), pct)
         }
     }
 

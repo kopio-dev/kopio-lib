@@ -1,11 +1,12 @@
 // solhint-disable
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
-import {getId, getSeconds, hasVM, IMinVm, mAddr, mvm, store} from "./MinVm.s.sol";
+import {getId, getSeconds, hasVM, IMinVm, mAddr, mvm, store, msgSender as sender} from "./MinVm.s.sol";
 import {PLog} from "./PLog.s.sol";
 import {Purify} from "../utils/Purify.sol";
 import {Utils} from "../utils/Libs.sol";
 import {File} from "./Files.s.sol";
+import {IERC20} from "../token/IERC20.sol";
 
 library VmCaller {
     struct Values {
@@ -15,8 +16,7 @@ library VmCaller {
     }
 
     function msgSender() internal returns (address payable) {
-        (, address sender, ) = mvm.readCallers();
-        return payable(sender);
+        return sender();
     }
 
     function clear()
@@ -296,6 +296,21 @@ library Log {
 
     function dlg(uint256 _val, string memory _str) internal pure {
         dlg(_val, _str, 18);
+    }
+    function dlg(uint256 _val, string memory _str, address t) internal view {
+        dlg(_val, _str, Utils.dec(t));
+    }
+
+    function dlg(uint256 _val, address t) internal view {
+        dlg(_val, IERC20(t).symbol(), Utils.dec(t));
+    }
+
+    function vlg(uint256 _val, address t) internal view {
+        PLog.clg("$".cc(_val.dstr(8), " ", IERC20(t).symbol()));
+    }
+
+    function vlg(uint256 _val, string memory _lbl) internal pure {
+        PLog.clg(_lbl, "$".cc(_val.dstr(8)));
     }
 
     function dlg(uint256 _val, string memory _str, uint256 dec) internal pure {
