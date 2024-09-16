@@ -54,7 +54,7 @@ abstract contract TestedArb is Tested, ArbDeploy {
         address to,
         uint256 amount
     ) internal repranked(bank) returns (uint256 out) {
-        approve(bank, vaultAddr, stable);
+        approve(bank, oneAddr, stable);
 
         (uint256 depositAmount, ) = vault.previewMint(stable, amount);
         deal(stable, bank, depositAmount);
