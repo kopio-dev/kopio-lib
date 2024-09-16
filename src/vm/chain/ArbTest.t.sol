@@ -63,8 +63,9 @@ abstract contract ArbTest is Tested, ArbScript {
         (uint256 depositAmount, ) = vault.previewMint(stable, amount);
         deal(stable, bank, depositAmount);
 
-        (out, ) = one.vaultDeposit(stable, depositAmount, bank);
-        one.transfer(to, out);
+        one.vaultDeposit(stable, depositAmount, bank);
+        one.transfer(to, amount);
+        return amount;
     }
 
     function dealCollateral(
