@@ -24,7 +24,8 @@ library addr {
     address constant multicall = 0x000000000031188af86eb08b1C25a893B75a9a3B;
     address constant factory = 0x00000000000029398fcE86f09FF8453c8D0Cd60D;
     address constant vault = 0x000000000016777A0173d5d1717897d04485cC50;
-    address constant data = 0xddDdDddDDd14aC7aB83F957b804e6b714b75179E;
+    address constant prevData = 0xddDdDddDDd14aC7aB83F957b804e6b714b75179E;
+    address constant data = 0xdddDDdddDDb338eB3c0283AD729692Cd39e8e336;
     address constant marketStatus = 0x77777777775c600736D65AD78623c0D563635e02;
     address constant pythUpdater = 0xfeEFeEfeED0bd9Df8d23dC0242FEF943c574468f;
     address constant migration = 0xaaaaaAaAaAa186774266Ea9b3FC0B588B3232795;
