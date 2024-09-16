@@ -1551,6 +1551,10 @@ interface IICDPAccountStateFacet {
         address account,
         address asset
     ) external view returns (uint256);
+    function getAccountDebtValue(
+        address,
+        address
+    ) external view returns (uint256);
 
     function getAccountCollateralValues(
         address account,
@@ -1593,6 +1597,10 @@ interface IICDPAccountStateFacet {
     function getAccountCollateralAmount(
         address account,
         address asset
+    ) external view returns (uint256);
+    function getAccountCollateralValue(
+        address,
+        address
     ) external view returns (uint256);
 
     function previewFee(
