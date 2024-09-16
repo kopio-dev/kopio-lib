@@ -5,7 +5,7 @@ import {Tested} from "../Tested.t.sol";
 import {Utils, VmHelp} from "../VmLibs.s.sol";
 import {ArbScript} from "./ArbScript.s.sol";
 
-abstract contract TestedArb is Tested, ArbScript {
+abstract contract ArbTest is Tested, ArbScript {
     using Utils for *;
     using VmHelp for *;
 
