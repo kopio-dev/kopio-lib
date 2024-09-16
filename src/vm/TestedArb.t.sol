@@ -8,8 +8,9 @@ import {BurnArgs, ICDPAccount, MintArgs, SwapArgs} from "../IKopioCore.sol";
 import {Log, Utils, VmHelp} from "./VmLibs.s.sol";
 import {Revert} from "../utils/Funcs.sol";
 import {IKopio} from "../IKopio.sol";
+import {Connected} from "./Connected.s.sol";
 
-abstract contract TestedArb is Tested, ArbDeploy {
+abstract contract TestedArb is Tested, Connected, ArbDeploy {
     using Utils for *;
     using VmHelp for *;
     bytes[] noPyth;
@@ -44,6 +45,16 @@ abstract contract TestedArb is Tested, ArbDeploy {
         user0 = makePayable("user0");
         user1 = makePayable("user1");
         user2 = makePayable("user2");
+    }
+
+    function connect(uint256 blockNr) internal {
+        connect("MNEMONIC_KOPIO", "arbitrum", blockNr);
+        updatePythSync();
+    }
+
+    function connect() internal {
+        connect("MNEMONIC_KOPIO", "arbitrum");
+        updatePyth();
     }
 
     function toAmount(
