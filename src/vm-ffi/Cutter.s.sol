@@ -6,6 +6,7 @@ import "../vm/DeployerBase.s.sol";
 
 abstract contract Cutter is DeployerBase {
     using Log for *;
+    using Utils for *;
 
     function cutterBase(
         address dAddr,
@@ -129,7 +130,7 @@ abstract contract Cutter is DeployerBase {
         CreateMode cmode,
         bool exec
     ) internal returns (bytes memory) {
-        return diamondCutFull("full", glob, cmode, exec);
+        return diamondCutFull("full-cut", glob, cmode, exec);
     }
 
     function diamondCutFull(
@@ -137,11 +138,7 @@ abstract contract Cutter is DeployerBase {
         string memory glob,
         CreateMode cmode,
         bool exec
-    )
-        internal
-        withJSON(string.concat("diamond-cut-", id))
-        returns (bytes memory callData)
-    {
+    ) internal withJSONDir(_cutsDir, id) returns (bytes memory callData) {
         resetCreateFacets(glob, cmode);
         callData = diamondCut(exec);
         _copyConfig(id);
@@ -153,7 +150,7 @@ abstract contract Cutter is DeployerBase {
     function diamondCutSingle(
         string memory artifact,
         CreateMode cmode
-    ) internal withJSON(artifact) returns (bytes memory callData) {
+    ) internal withJSONDir(_cutsDir, artifact) returns (bytes memory callData) {
         clearCutterData();
         d().cmode = cmode;
         createFacetCut(artifact);

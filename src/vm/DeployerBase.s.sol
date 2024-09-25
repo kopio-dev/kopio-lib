@@ -15,6 +15,28 @@ import "../support/IDiamond.sol";
 import "../vm-ffi/ffi-facets.s.sol";
 
 abstract contract DeployerBase is ArbDeploy, Json {
+    string internal _outputDir;
+    string internal _cutsDir = "cuts/";
+    string internal _upgradeDir = "upgrade/";
+    string internal _deployDir = "deploy/";
+    string internal _batchDir = "batch/";
+
+    function setOutputDir(string memory dir) external {
+        _outputDir = dir;
+        _cutsDir = string.concat(dir, "cuts/");
+        _upgradeDir = string.concat(dir, "upgrade/");
+        _deployDir = string.concat(dir, "deploy/");
+        _batchDir = string.concat(dir, "batch/");
+    }
+
+    function resetOutputDir() external {
+        _outputDir = "";
+        _cutsDir = "cuts/";
+        _upgradeDir = "upgrade/";
+        _deployDir = "deploy/";
+        _batchDir = "batch/";
+    }
+
     enum CreateMode {
         Create1,
         Create2,

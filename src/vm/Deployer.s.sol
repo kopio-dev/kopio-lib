@@ -373,21 +373,14 @@ contract Deployer is Cutter {
         );
     }
 
-    function upgradeId(address proxy) internal returns (string memory) {
-        return string.concat("upgrade-", proxy.txt(), VmHelp.getTime().str());
+    function upgradeId(address proxy) internal pure returns (string memory) {
+        return string.concat("upgrade-", proxy.txt());
     }
     function deployId(
         bytes32 hash,
         CreateMode mode
-    ) internal returns (string memory) {
-        return
-            string.concat(
-                "deploy",
-                uint8(mode).str(),
-                "-",
-                hash.txt(),
-                VmHelp.getTime().str()
-            );
+    ) internal pure returns (string memory) {
+        return string.concat("deploy", uint8(mode).str(), "-", hash.txt());
     }
 
     function _toJSON(
