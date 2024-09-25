@@ -21,7 +21,7 @@ abstract contract DeployerBase is ArbDeploy, Json {
     string internal _deployDir = "deploy/";
     string internal _batchDir = "batch/";
 
-    function setOutputDir(string memory dir) external {
+    function setOutputDir(string memory dir) internal {
         _outputDir = dir;
         _cutsDir = string.concat(dir, "cuts/");
         _upgradeDir = string.concat(dir, "upgrade/");
@@ -29,7 +29,7 @@ abstract contract DeployerBase is ArbDeploy, Json {
         _batchDir = string.concat(dir, "batch/");
     }
 
-    function resetOutputDir() external {
+    function resetOutputDir() internal {
         _outputDir = "";
         _cutsDir = "cuts/";
         _upgradeDir = "upgrade/";
