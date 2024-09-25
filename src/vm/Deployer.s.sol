@@ -115,13 +115,11 @@ contract Deployer is Cutter {
         bytes memory data
     ) private returns (FactoryContract memory) {
         Deployment memory upgraded = abi.decode(data, (Deployment));
-        if (address(upgraded.proxy) != address(0)) {
-            address(upgraded.proxy).clg("[PROXY]");
-        }
-        upgraded.implementation.clg("[IMPL]");
-
-        info.proxy = address(upgraded.proxy);
-        info.newImpl = upgraded.implementation;
+        (info.proxy = address(upgraded.proxy)).clg("[PROXY]");
+        (info.newImpl = upgraded.implementation).clg("[IMPL]");
+        info.factoryIdx = upgraded.index;
+        info.salt = upgraded.salt;
+        info.version = upgraded.version;
         if (info.prevImpl != address(0)) info.prevHash = info.prevImpl.codehash;
         info.newHash = upgraded.implementation.codehash;
 
@@ -371,7 +369,7 @@ contract Deployer is Cutter {
     function _toJSON(
         FactoryContract memory data
     ) private returns (FactoryContract memory) {
-        jsonKey("info");
+        jsonKey(string.concat("info-", data.newImpl.txt()));
         json(data.prevImpl, "prevImplAddr");
         json(data.newImpl, "newImplAddr");
         json(bytes.concat(data.prevHash), "prevImplCodehash");

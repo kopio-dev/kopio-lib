@@ -38,6 +38,7 @@ abstract contract DeployerBase is ArbDeploy, Json {
     }
 
     enum CreateMode {
+        None,
         Create1,
         Create2,
         Create3,
@@ -57,6 +58,8 @@ abstract contract DeployerBase is ArbDeploy, Json {
         bytes functionCall;
         bytes ctor;
         bytes callData;
+        uint256 version;
+        uint256 factoryIdx;
         CreateMode mode;
     }
 }
