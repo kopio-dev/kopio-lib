@@ -31,6 +31,10 @@ abstract contract Json {
         _dir.initJSON(_id);
     }
 
+    function jsonReset() internal {
+        Factory.resetJSON();
+    }
+
     function jsonEnd() internal {
         Factory.writeJSON();
     }
