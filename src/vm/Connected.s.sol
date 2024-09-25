@@ -1,9 +1,10 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
-// solhint-disable no-global-import
+// solhint-disable no-global-import, no-unused-import
 
 import "./Scripted.s.sol";
 import {PythScript} from "../vm-ffi/PythScript.s.sol";
+import {ArbDeploy, ArbDeployAddr} from "../info/ArbDeploy.sol";
 import {Connections, Connection} from "./Connections.s.sol";
 
 contract Connected is PythScript, Scripted {
