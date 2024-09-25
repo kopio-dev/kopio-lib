@@ -36,13 +36,40 @@ contract Deployer is Cutter {
         callData = _callData;
     }
 
+    function setDeploy(bytes memory creationCode) internal virtual {
+        delete _ctor;
+        delete _callData;
+        _creationCode = creationCode;
+    }
+
+    function setDeploy(
+        bytes memory ctor,
+        bytes memory creationCode
+    ) internal virtual {
+        delete _callData;
+        _ctor = ctor;
+        _creationCode = creationCode;
+    }
+
+    function setDeploy(
+        bytes memory ctor,
+        bytes memory creationCode,
+        bytes memory callData
+    ) internal virtual {
+        _ctor = ctor;
+        _creationCode = creationCode;
+        _callData = callData;
+    }
+
+    function clearDeploy() internal {
+        delete _ctor;
+        delete _creationCode;
+        delete _callData;
+    }
+
     modifier clear() {
         _;
-        if (!_persistDeployment) {
-            delete _ctor;
-            delete _creationCode;
-            delete _callData;
-        }
+        if (!_persistDeployment) clearDeploy();
     }
 
     function deploy(
@@ -54,7 +81,7 @@ contract Deployer is Cutter {
         clear
         returns (FactoryContract memory)
     {
-        return execFactory(_getData(salt, mode, address(0)));
+        return execFactory(prepareDeploy(salt, mode, address(0)));
     }
 
     function upgrade(
@@ -65,7 +92,7 @@ contract Deployer is Cutter {
         clear
         returns (FactoryContract memory)
     {
-        return execFactory(_getData(0, CreateMode.Create1, proxy));
+        return execFactory(prepareDeploy(0, CreateMode.Create1, proxy));
     }
 
     function deployBatch(
@@ -73,13 +100,13 @@ contract Deployer is Cutter {
         CreateMode mode
     ) internal clear returns (uint256) {
         _startBatch();
-        _batch.push(_getData(salt, mode, address(0)));
+        _batch.push(prepareDeploy(salt, mode, address(0)));
         return _batch.length;
     }
 
     function upgradeBatch(address proxy) internal clear returns (uint256) {
         _startBatch();
-        _batch.push(_getData(0, CreateMode.Create1, proxy));
+        _batch.push(prepareDeploy(0, CreateMode.Create1, proxy));
         return _batch.length;
     }
 
@@ -143,13 +170,13 @@ contract Deployer is Cutter {
         return _handleResult(args, result);
     }
 
-    function _getData(
+    function prepareDeploy(
         bytes32 salt,
         CreateMode mode,
         address proxy
     ) internal view returns (FactoryContract memory res) {
         (bytes memory ctor, bytes memory creationCode) = _implementation();
-        require(creationCode.length > 0, "No code");
+        require(creationCode.length > 0, "No deployment code set");
 
         res.initCode = abi.encodePacked(creationCode, res.ctor = ctor);
         res.functionCall = _functionCall();
@@ -157,7 +184,7 @@ contract Deployer is Cutter {
 
         if (proxy != address(0)) {
             res.prevImpl = factory.getImplementation(proxy);
-            require(res.prevImpl != address(0), "No proxy");
+            require(res.prevImpl != address(0), "No proxy exists");
 
             res.prevHash = res.prevImpl.codehash;
             res.callData = abi.encodeCall(
