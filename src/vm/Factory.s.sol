@@ -21,10 +21,15 @@ library Factory {
         keccak256("vm.factory.state.slot");
 
     function initJSON(string memory cfgId) internal {
+        initJSON("", cfgId);
+    }
+
+    function initJSON(string memory dir, string memory cfgId) internal {
         string memory outDir = string.concat(
             "./temp/",
             mvm.toString(block.chainid),
-            "/"
+            "/",
+            dir
         );
         if (!mvm.exists(outDir)) mvm.createDir(outDir, true);
         data().id = cfgId;

@@ -16,6 +16,21 @@ contract Deployer is Cutter {
     bytes internal _ctor;
     bytes internal _callData;
     bool internal _persistDeployment;
+    string private deployDir = "deploy/";
+    string private upgradeDir = "upgrade/";
+    string private batchDir = "batch/";
+
+    function setDeployDir(string memory dir) internal {
+        deployDir = dir;
+        upgradeDir = dir;
+        batchDir = dir;
+    }
+
+    function resetDeployDir() internal {
+        deployDir = "deploy/";
+        upgradeDir = "upgrade/";
+        batchDir = "batch/";
+    }
 
     function _implementation()
         internal
@@ -77,7 +92,7 @@ contract Deployer is Cutter {
         CreateMode mode
     )
         internal
-        withJSON(deployId(salt, mode))
+        withJSONDir(deployDir, deployId(salt, mode))
         clear
         returns (FactoryContract memory)
     {
@@ -88,7 +103,7 @@ contract Deployer is Cutter {
         address proxy
     )
         internal
-        withJSON(upgradeId(proxy))
+        withJSONDir(upgradeDir, upgradeId(proxy))
         clear
         returns (FactoryContract memory)
     {
@@ -130,8 +145,8 @@ contract Deployer is Cutter {
 
     function _startBatch() internal {
         if (bytes(_batchId).length == 0) {
-            _batchId = string.concat("ugprade-batch-", VmHelp.getTime().str());
-            jsonStart(_batchId);
+            _batchId = string.concat("batch-", VmHelp.getTime().str());
+            jsonStart(batchDir, _batchId);
         }
     }
 
@@ -359,8 +374,7 @@ contract Deployer is Cutter {
     }
 
     function upgradeId(address proxy) internal returns (string memory) {
-        return
-            string.concat("upgradeProxy-", proxy.txt(), VmHelp.getTime().str());
+        return string.concat("upgrade-", proxy.txt(), VmHelp.getTime().str());
     }
     function deployId(
         bytes32 hash,
@@ -370,7 +384,7 @@ contract Deployer is Cutter {
             string.concat(
                 "deploy",
                 uint8(mode).str(),
-                "Proxy-",
+                "-",
                 hash.txt(),
                 VmHelp.getTime().str()
             );
