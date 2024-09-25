@@ -48,6 +48,7 @@ abstract contract DeployerBase is ArbDeploy, Json {
     }
 
     struct FactoryContract {
+        string id;
         address proxy;
         address prevImpl;
         bytes32 prevHash;

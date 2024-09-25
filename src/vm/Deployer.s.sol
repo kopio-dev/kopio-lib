@@ -23,17 +23,11 @@ contract Deployer is Cutter {
         virtual
         returns (bytes memory ctor, bytes memory creationCode)
     {
-        ctor = _ctor;
-        creationCode = _creationCode;
+        return (_ctor, _creationCode);
     }
 
-    function _functionCall()
-        internal
-        view
-        virtual
-        returns (bytes memory callData)
-    {
-        callData = _callData;
+    function _functionCall() internal view virtual returns (bytes memory) {
+        return _callData;
     }
 
     function setDeploy(bytes memory creationCode) internal virtual {
@@ -43,12 +37,12 @@ contract Deployer is Cutter {
     }
 
     function setDeploy(
-        bytes memory ctor,
-        bytes memory creationCode
+        bytes memory creationCode,
+        bytes memory callData
     ) internal virtual {
-        delete _callData;
-        _ctor = ctor;
+        delete _ctor;
         _creationCode = creationCode;
+        _callData = callData;
     }
 
     function setDeploy(
@@ -82,7 +76,7 @@ contract Deployer is Cutter {
         clear
         returns (FactoryContract memory)
     {
-        return execFactory(prepareDeploy(salt, mode, address(0)));
+        return execFactory(prepareDeploy(id, salt, mode, address(0)));
     }
 
     function upgrade(
@@ -94,21 +88,25 @@ contract Deployer is Cutter {
         clear
         returns (FactoryContract memory)
     {
-        return execFactory(prepareDeploy(0, CreateMode.Create1, proxy));
+        return execFactory(prepareDeploy(id, 0, CreateMode.Create1, proxy));
     }
 
     function deployBatch(
+        string memory id,
         bytes32 salt,
         CreateMode mode
     ) internal clear returns (uint256) {
         _startBatch();
-        _batch.push(prepareDeploy(salt, mode, address(0)));
+        _batch.push(prepareDeploy(id, salt, mode, address(0)));
         return _batch.length;
     }
 
-    function upgradeBatch(address proxy) internal clear returns (uint256) {
+    function upgradeBatch(
+        string memory id,
+        address proxy
+    ) internal clear returns (uint256) {
         _startBatch();
-        _batch.push(prepareDeploy(0, CreateMode.Create1, proxy));
+        _batch.push(prepareDeploy(id, 0, CreateMode.Create1, proxy));
         return _batch.length;
     }
 
@@ -171,6 +169,7 @@ contract Deployer is Cutter {
     }
 
     function prepareDeploy(
+        string memory id,
         bytes32 salt,
         CreateMode mode,
         address proxy
@@ -181,6 +180,7 @@ contract Deployer is Cutter {
         res.initCode = abi.encodePacked(creationCode, res.ctor = ctor);
         res.functionCall = _functionCall();
         res.mode = mode;
+        res.id = id;
 
         if (proxy != address(0)) {
             res.prevImpl = factory.getImplementation(proxy);
