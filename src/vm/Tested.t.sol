@@ -2,11 +2,9 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
+import "./Scripted.s.sol";
 import {Test} from "forge-std/Test.sol";
-import {IMinVm} from "./MinVm.s.sol";
-import {Scripted, VmCaller} from "./Scripted.s.sol";
-import {IERC20} from "../token/IERC20.sol";
-import {Tokens} from "../utils/Tokens.sol";
+import {ShortAssert} from "./ShortAssert.t.sol";
 
 abstract contract Tested is Test, Scripted {
     using VmCaller for IMinVm.CallerMode;

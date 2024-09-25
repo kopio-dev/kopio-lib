@@ -1,10 +1,9 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
+// solhint-disable no-global-import
 
-import {Scripted} from "./Scripted.s.sol";
-import {PLog} from "./PLog.s.sol";
+import "./Scripted.s.sol";
 import {PythScript} from "../vm-ffi/PythScript.s.sol";
-import {File} from "./Files.s.sol";
 import {Connections, Connection} from "./Connections.s.sol";
 
 contract Connected is PythScript, Scripted {
@@ -80,11 +79,11 @@ contract Connected is PythScript, Scripted {
     }
 
     modifier highlight() virtual {
-        PLog.clg(
+        Log.clg(
             "***************************************************************"
         );
         _;
-        PLog.clg(
+        Log.clg(
             "***************************************************************\n"
         );
     }
@@ -137,7 +136,7 @@ contract Connected is PythScript, Scripted {
     function getSenderOr(
         address _newSender
     ) internal virtual returns (address payable) {
-        PLog.clg(super.senderOr(_newSender), "sender:");
+        Log.clg(super.senderOr(_newSender), "sender:");
         return sender;
     }
 

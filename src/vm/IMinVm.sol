@@ -18,7 +18,7 @@ interface IMinVm is IFFIVm {
 
     function broadcast(address signer) external;
 
-    function getNonce(address) external returns (uint256);
+    function getNonce(address) external view returns (uint256);
 
     function readCallers() external returns (CallerMode, address, address);
 
@@ -127,7 +127,9 @@ interface IMinVm is IFFIVm {
     ) external returns (bytes32[] memory reads, bytes32[] memory wries);
 
     function getCode(string calldata a) external view returns (bytes memory cc);
-    function getDeployedCode(string calldata a) external view returns (bytes memory cc);
+    function getDeployedCode(
+        string calldata a
+    ) external view returns (bytes memory cc);
 
     function setEnv(string calldata k, string calldata v) external;
 

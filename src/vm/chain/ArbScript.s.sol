@@ -2,16 +2,10 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.27;
 
-import {Scripted} from "../Scripted.s.sol";
+import "../Connected.s.sol";
 import {ArbDeploy} from "../../info/ArbDeploy.sol";
-import {Connected} from "../Connected.s.sol";
 import {IKopio} from "../../IKopio.sol";
-import {Revert} from "../../utils/Funcs.sol";
-import {IERC20} from "../../token/IERC20.sol";
 import {BurnArgs, ICDPAccount, MintArgs, SwapArgs} from "../../IKopioCore.sol";
-import {Log, VmHelp} from "../VmLibs.s.sol";
-import {Utils} from "../../utils/Libs.sol";
-import {Connection} from "../Connections.s.sol";
 
 contract ArbScript is Connected, ArbDeploy {
     using Utils for *;

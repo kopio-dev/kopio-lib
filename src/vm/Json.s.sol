@@ -54,6 +54,10 @@ abstract contract Json {
         _val.set(_key);
     }
 
+    function json(bytes32 _val, string memory _key) internal {
+        bytes.concat(_val).set(_key);
+    }
+
     function jsons(string memory _id, address _val) internal {
         _id.initJSON();
         jsonKey(_id);

@@ -1,22 +1,11 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
-import {PLog} from "../vm/PLog.s.sol";
-import {FacetCut, FacetCutAction, IDiamond, Initializer} from "../support/IDiamond.sol";
-import {defaultFacetLoc, FacetData, getFacet, getFacets} from "./ffi-facets.s.sol";
-import {Revert} from "../utils/Funcs.sol";
-import {ArbDeploy} from "../info/ArbDeploy.sol";
-import {Factory, Json} from "../vm/Json.s.sol";
-import {mvm} from "../vm/MinVm.s.sol";
+// solhint-disable no-global-import, use-forbidden-name
+import "../vm/DeployerBase.s.sol";
 
-abstract contract Cutter is ArbDeploy, Json {
-    using PLog for *;
-
-    enum CreateMode {
-        Create1,
-        Create2,
-        Create3
-    }
+abstract contract Cutter is DeployerBase {
+    using Log for *;
 
     function cutterBase(
         address dAddr,
@@ -386,9 +375,9 @@ abstract contract Cutter is ArbDeploy, Json {
                 string.concat("temp/", id, ".foundry.toml")
             )
         {
-            PLog.clg("[COPY-CONFIG] Success!");
+            Log.clg("[COPY-CONFIG] Success!");
         } catch {
-            PLog.clg("[COPY-CONFIG] Failed.");
+            Log.clg("[COPY-CONFIG] Failed.");
         }
     }
 
@@ -463,14 +452,14 @@ abstract contract Cutter is ArbDeploy, Json {
     }
 
     function clgDiamondCuts() internal view {
-        PLog.clg("\n- - - - - - CUTS - - - - - -");
+        Log.clg("\n- - - - - - CUTS - - - - - -");
 
         for (uint256 i; i < d().cuts.length; i++)
             _toString(d().cuts[i], i).clg();
 
         clgSkippedDiamondCuts();
 
-        PLog.clg(
+        Log.clg(
             string.concat(
                 "\n- - - - - - SUMMARY - - - - - -",
                 "\n[SUMMARY] Facet Cuts       -> ",
@@ -536,11 +525,11 @@ abstract contract Cutter is ArbDeploy, Json {
     }
 
     function clgSkippedDiamondCuts() internal view {
-        PLog.clg("\n- - - - - - SKIPS - - - - - -");
+        Log.clg("\n- - - - - - SKIPS - - - - - -");
 
         if (d().skipInfo.length != 0) {
             for (uint256 i; i < d().skipInfo.length; i++) {
-                PLog.clg(
+                Log.clg(
                     string.concat(
                         "\n",
                         d().skipInfo[i],
@@ -551,7 +540,7 @@ abstract contract Cutter is ArbDeploy, Json {
                 );
             }
         } else {
-            PLog.clg("\n");
+            Log.clg("\n");
             "\n[INFO] No skipped cuts".clg();
         }
     }
