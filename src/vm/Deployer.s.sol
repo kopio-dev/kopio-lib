@@ -73,11 +73,12 @@ contract Deployer is Cutter {
     }
 
     function deploy(
+        string memory id,
         bytes32 salt,
         CreateMode mode
     )
         internal
-        withJSONDir(_deployDir, deployId(salt, mode))
+        withJSONDir(_deployDir, deployId(id, mode))
         clear
         returns (FactoryContract memory)
     {
@@ -85,10 +86,11 @@ contract Deployer is Cutter {
     }
 
     function upgrade(
+        string memory id,
         address proxy
     )
         internal
-        withJSONDir(_upgradeDir, upgradeId(proxy))
+        withJSONDir(_upgradeDir, upgradeId(id))
         clear
         returns (FactoryContract memory)
     {
@@ -356,20 +358,32 @@ contract Deployer is Cutter {
         );
     }
 
-    function upgradeId(address proxy) internal pure returns (string memory) {
-        return string.concat("upgrade-", proxy.txt());
+    function upgradeId(string memory id) internal pure returns (string memory) {
+        return string.concat("upgrade-", id);
     }
     function deployId(
-        bytes32 hash,
+        string memory id,
         CreateMode mode
     ) internal pure returns (string memory) {
-        return string.concat("deploy", uint8(mode).str(), "-", hash.txt());
+        return string.concat("deploy", uint8(mode).str(), "-", id);
     }
 
     function _toJSON(
         FactoryContract memory data
     ) private returns (FactoryContract memory) {
-        jsonKey(string.concat("info-", data.newImpl.txt()));
+        if (data.prevImpl != address(0)) {
+            jsonKey(
+                string.concat(
+                    "upgrade-",
+                    data.proxy.txt(),
+                    "-",
+                    data.version.str()
+                )
+            );
+        } else {
+            address addr = data.proxy != address(0) ? data.proxy : data.newImpl;
+            jsonKey(deployId(addr.txt(), data.mode));
+        }
         json(data.proxy, "proxyAddr");
         json(data.salt, "salt");
         json(data.version, "version");
