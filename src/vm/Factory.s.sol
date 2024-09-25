@@ -35,6 +35,8 @@ library Factory {
         data().id = cfgId;
         data().outputLocation = outDir;
         data().outputJson = cfgId;
+        data().currentKey = "";
+        data().currentJson = "";
     }
 
     function writeJSON() internal {
@@ -112,7 +114,7 @@ library Factory {
 
     function writeKey() internal {
         data().outputJson = mvm.serializeString(
-            "out",
+            string.concat(data().id, "-out"),
             data().currentKey,
             data().currentJson
         );
