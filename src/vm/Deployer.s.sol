@@ -370,14 +370,16 @@ contract Deployer is Cutter {
         FactoryContract memory data
     ) private returns (FactoryContract memory) {
         jsonKey(string.concat("info-", data.newImpl.txt()));
-        json(data.prevImpl, "prevImplAddr");
-        json(data.newImpl, "newImplAddr");
-        json(bytes.concat(data.prevHash), "prevImplCodehash");
-        json(bytes.concat(data.newHash), "newImplCodehash");
-        json(data.ctor, "ctor");
-        json(data.salt, "salt");
-        json(data.functionCall, "functionCall");
         json(data.proxy, "proxyAddr");
+        json(data.salt, "salt");
+        json(data.version, "version");
+        json(data.factoryIdx, "factoryIdx");
+        json(data.newImpl, "newImplAddr");
+        json(bytes.concat(data.newHash), "newImplCodehash");
+        json(data.prevImpl, "prevImplAddr");
+        json(bytes.concat(data.prevHash), "prevImplCodehash");
+        json(data.ctor, "ctor");
+        json(data.functionCall, "functionCall");
         json(uint8(data.mode), "mode");
         jsonKey();
 
