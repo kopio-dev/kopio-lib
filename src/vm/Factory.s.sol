@@ -60,6 +60,16 @@ library Factory {
             ),
             data().outputJson
         );
+
+        resetJSON();
+    }
+
+    function resetJSON() internal {
+        data().id = "";
+        data().currentKey = "";
+        data().currentJson = "";
+        data().outputLocation = "";
+        data().outputJson = "";
     }
 
     function data() internal pure returns (FactoryState storage ds) {
