@@ -42,15 +42,15 @@ abstract contract ArbDeploy is ArbDeployAddr {
     IKopio constant kXAG = IKopio(kXAGAddr);
     IKopio constant kDOGE = IKopio(kDOGEAddr);
 
-    IKopioShare constant fkETH = IKopioShare(fkETHAddr);
-    IKopioShare constant fkBTC = IKopioShare(fkBTCAddr);
-    IKopioShare constant fkSOL = IKopioShare(fkSOLAddr);
-    IKopioShare constant fkEUR = IKopioShare(fkEURAddr);
-    IKopioShare constant fkJPY = IKopioShare(fkJPYAddr);
-    IKopioShare constant fkGBP = IKopioShare(fkGBPAddr);
-    IKopioShare constant fkXAU = IKopioShare(fkXAUAddr);
-    IKopioShare constant fkXAG = IKopioShare(fkXAGAddr);
-    IKopioShare constant fkDOGE = IKopioShare(fkDOGEAddr);
+    IKopioShare constant skETH = IKopioShare(skETHAddr);
+    IKopioShare constant skBTC = IKopioShare(skBTCAddr);
+    IKopioShare constant skSOL = IKopioShare(skSOLAddr);
+    IKopioShare constant skEUR = IKopioShare(skEURAddr);
+    IKopioShare constant skJPY = IKopioShare(skJPYAddr);
+    IKopioShare constant skGBP = IKopioShare(skGBPAddr);
+    IKopioShare constant skXAU = IKopioShare(skXAUAddr);
+    IKopioShare constant skXAG = IKopioShare(skXAGAddr);
+    IKopioShare constant skDOGE = IKopioShare(skDOGEAddr);
 
     IPyth constant pythEP = IPyth(pythAddr);
     IMarketStatus constant marketStatus = IMarketStatus(marketStatusAddr);

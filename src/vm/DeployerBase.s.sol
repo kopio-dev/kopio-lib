@@ -4,10 +4,10 @@ pragma solidity ^0.8.0;
 // solhint-disable no-global-import, no-unused-import
 import "../vendor/TransparentUpgradeableProxy.sol";
 
-import {Utils} from "../utils/Libs.sol";
+import {Utils, Meta} from "../utils/Libs.sol";
 import {Log, VmHelp, mvm, getSeconds, getId} from "./VmLibs.s.sol";
 import {Revert} from "../utils/Funcs.sol";
-import {ArbDeploy} from "../info/ArbDeploy.sol";
+import {ArbDeploy, addr as Addr} from "../info/ArbDeploy.sol";
 import {Json, Factory} from "./Json.s.sol";
 import "../IProxyFactory.sol";
 

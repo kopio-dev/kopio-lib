@@ -39,15 +39,15 @@ library addr {
     address constant kXAU = 0xa47A706F0f07715760f96C4c2E322D25cDCb0A06;
     address constant kXAG = 0xA40c5780044fa125160770Cd29Bdbb631eA8ed0f;
     address constant kDOGE = 0x9DA7799E7896c542C13aD01Db5A9DC3A95Df193A;
-    address constant fkETH = 0x2aE27010F340062ceaAB3591B62351737f9E77B4;
-    address constant fkBTC = 0x8616281a8F9cA1860fbedf096581Db08B02A0297;
-    address constant fkSOL = 0x34b322DcA665754D5B1B07871aF8Ad2AD021d44D;
-    address constant fkEUR = 0x2F9727e769f9fB79D427Ca84dB35C366fA49600c;
-    address constant fkJPY = 0x03eeA39526534210e2471C54398E5Be8473C2c28;
-    address constant fkGBP = 0x6bA32Fd18d550f8E56ad93887A7f208A7eFB03C3;
-    address constant fkXAU = 0xd53FD8d8b0bF7116aeA20d8465c9A013002C5b6F;
-    address constant fkXAG = 0x77606e3670273A489234B11571EfAC4163aC93cD;
-    address constant fkDOGE = 0x100210d2d6058B9Aee92306aAe144944A756ff26;
+    address constant skETH = 0x2aE27010F340062ceaAB3591B62351737f9E77B4;
+    address constant skBTC = 0x8616281a8F9cA1860fbedf096581Db08B02A0297;
+    address constant skSOL = 0x34b322DcA665754D5B1B07871aF8Ad2AD021d44D;
+    address constant skEUR = 0x2F9727e769f9fB79D427Ca84dB35C366fA49600c;
+    address constant skJPY = 0x03eeA39526534210e2471C54398E5Be8473C2c28;
+    address constant skGBP = 0x6bA32Fd18d550f8E56ad93887A7f208A7eFB03C3;
+    address constant skXAU = 0xd53FD8d8b0bF7116aeA20d8465c9A013002C5b6F;
+    address constant skXAG = 0x77606e3670273A489234B11571EfAC4163aC93cD;
+    address constant skDOGE = 0x100210d2d6058B9Aee92306aAe144944A756ff26;
 
     address constant safe = 0xd884451eC95721BcF05948C37a9F939059c87E6a;
 }
@@ -101,15 +101,15 @@ abstract contract ArbDeployAddr is ArbAddr {
     address constant kXAGAddr = addr.kXAG;
     address constant kDOGEAddr = addr.kDOGE;
 
-    address constant fkETHAddr = addr.fkETH;
-    address constant fkBTCAddr = addr.fkBTC;
-    address constant fkSOLAddr = addr.fkSOL;
-    address constant fkEURAddr = addr.fkEUR;
-    address constant fkJPYAddr = addr.fkJPY;
-    address constant fkGBPAddr = addr.fkGBP;
-    address constant fkXAUAddr = addr.fkXAU;
-    address constant fkXAGAddr = addr.fkXAG;
-    address constant fkDOGEAddr = addr.fkDOGE;
+    address constant skETHAddr = addr.skETH;
+    address constant skBTCAddr = addr.skBTC;
+    address constant skSOLAddr = addr.skSOL;
+    address constant skEURAddr = addr.skEUR;
+    address constant skJPYAddr = addr.skJPY;
+    address constant skGBPAddr = addr.skGBP;
+    address constant skXAUAddr = addr.skXAU;
+    address constant skXAGAddr = addr.skXAG;
+    address constant skDOGEAddr = addr.skDOGE;
 
     address constant safe = addr.safe;
 }

@@ -490,10 +490,10 @@ library Meta {
     struct Result {
         string name;
         string symbol;
-        string fkName;
-        string fkSymbol;
-        bytes32 kSalt;
-        bytes32 fkSalt;
+        string skName;
+        string skSymbol;
+        SaltResult addr;
+        Salts salts;
     }
 
     struct Salts {
@@ -504,8 +504,8 @@ library Meta {
     struct SaltResult {
         address proxy;
         address impl;
-        address fkProxy;
-        address fkImpl;
+        address skProxy;
+        address skImpl;
     }
 
     bytes32 constant SALT_ID = "_1";
@@ -520,6 +520,17 @@ library Meta {
 
     string constant VAULT_NAME_PREFIX = "Kopio Vault: ";
     string constant VAULT_SYMBOL_PREFIX = "kv";
+
+    function getKopioAsset(
+        address factory,
+        string memory name,
+        string memory symbol
+    ) internal view returns (Result memory res) {
+        (res.name, res.symbol) = kopioMeta(name, symbol);
+        (res.skName, res.skSymbol) = fKopioMeta(name, symbol);
+        res.addr = kopioAddr(factory, res.symbol);
+        res.salts = getSalts(res.symbol, res.skSymbol);
+    }
 
     function kopioMeta(
         string memory name,
@@ -543,18 +554,18 @@ library Meta {
 
     function pathV3(
         address a,
-        uint24 f,
+        uint24 fee,
         address b
     ) internal pure returns (bytes memory) {
-        return bytes.concat(bytes20(a), bytes3(f), bytes20(b));
+        return bytes.concat(bytes20(a), bytes3(fee), bytes20(b));
     }
 
     function concatv3(
         bytes memory p,
-        uint24 f,
+        uint24 fee,
         address out
     ) internal pure returns (bytes memory) {
-        return bytes.concat(p, bytes3(f), bytes20(out));
+        return bytes.concat(p, bytes3(fee), bytes20(out));
     }
 
     function kopioAddr(
@@ -570,18 +581,18 @@ library Meta {
         (addrs.proxy, addrs.impl) = abi.decode(_data, (address, address));
 
         (, _data) = factory.staticcall(bytes.concat(sig, salts.share));
-        (addrs.fkProxy, addrs.fkImpl) = abi.decode(_data, (address, address));
+        (addrs.skProxy, addrs.skImpl) = abi.decode(_data, (address, address));
     }
 
     function getSalts(
-        string memory ksymbol,
-        string memory fsymbol
+        string memory symbol,
+        string memory skSymbol
     ) internal pure returns (Salts memory res) {
         res.kopio = bytes32(
-            bytes.concat(bytes(ksymbol), bytes(fsymbol), SALT_ID)
+            bytes.concat(bytes(symbol), bytes(skSymbol), SALT_ID)
         );
         res.share = bytes32(
-            bytes.concat(bytes(fsymbol), bytes(ksymbol), SALT_ID)
+            bytes.concat(bytes(skSymbol), bytes(symbol), SALT_ID)
         );
     }
 }

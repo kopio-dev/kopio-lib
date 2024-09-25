@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
-import {VaultAsset} from "../IVault.sol";
 import {TData} from "../IKopioCore.sol";
+import {VaultAsset} from "../IVault.sol";
 import {PythView} from "../vendor/Pyth.sol";
 
-interface IData {
+interface IData is TData {
     struct Oracles {
         address addr;
         bytes32 pythId;
@@ -51,10 +51,10 @@ interface IData {
     }
 
     struct G {
-        TData.SCDP scdp;
-        TData.ICDP icdp;
+        SCDP scdp;
+        ICDP icdp;
         V vault;
-        TData.TAsset[] assets;
+        TAsset[] assets;
         Tkn[] tokens;
         W[] wraps;
         C[] collections;
@@ -90,8 +90,8 @@ interface IData {
     struct A {
         address addr;
         uint256 chainId;
-        TData.IAccount icdp;
-        TData.SAccount scdp;
+        IAccount icdp;
+        SAccount scdp;
         C[] collections;
         Tkn[] tokens;
     }
@@ -108,28 +108,18 @@ interface IData {
         uint256 nativeVal;
     }
 
-    function refreshProtocolAssets() external;
-
     function previewWithdraw(
         PreviewWd calldata args
-    ) external payable returns (uint256 withdrawAmount, uint256 fee);
+    ) external payable returns (uint256, uint256);
 
     function getGlobals(
-        PythView calldata prices,
-        address[] calldata ext
+        PythView calldata,
+        address[] calldata exts
     ) external view returns (G memory);
 
     function getAccount(
-        PythView calldata _prices,
-        address _acc,
-        address[] calldata _ext
+        PythView calldata,
+        address acc,
+        address[] calldata exts
     ) external view returns (A memory);
-
-    function getTokens(
-        PythView calldata _prices,
-        address _account,
-        address[] calldata _extTokens
-    ) external view returns (Tkn[] memory result);
-
-    function getVAssets() external view returns (VA[] memory);
 }
