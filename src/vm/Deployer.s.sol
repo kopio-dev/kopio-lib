@@ -15,6 +15,7 @@ contract Deployer is Cutter {
     bytes internal _creationCode;
     bytes internal _ctor;
     bytes internal _callData;
+    bool internal _persistDeployment;
 
     function _implementation()
         internal
@@ -22,7 +23,8 @@ contract Deployer is Cutter {
         virtual
         returns (bytes memory ctor, bytes memory creationCode)
     {
-        return (_ctor, _creationCode);
+        ctor = _ctor;
+        creationCode = _creationCode;
     }
 
     function _functionCall()
@@ -31,32 +33,51 @@ contract Deployer is Cutter {
         virtual
         returns (bytes memory callData)
     {
-        return _callData;
+        callData = _callData;
+    }
+
+    modifier clear() {
+        _;
+        if (!_persistDeployment) {
+            delete _ctor;
+            delete _creationCode;
+            delete _callData;
+        }
     }
 
     function deploy(
         bytes32 salt,
         CreateMode mode
-    ) internal withJSON(deployId(salt, mode)) returns (FactoryContract memory) {
+    )
+        internal
+        withJSON(deployId(salt, mode))
+        clear
+        returns (FactoryContract memory)
+    {
         return execFactory(_getData(salt, mode, address(0)));
     }
 
     function upgrade(
         address proxy
-    ) internal withJSON(upgradeId(proxy)) returns (FactoryContract memory) {
+    )
+        internal
+        withJSON(upgradeId(proxy))
+        clear
+        returns (FactoryContract memory)
+    {
         return execFactory(_getData(0, CreateMode.Create1, proxy));
     }
 
     function deployBatch(
         bytes32 salt,
         CreateMode mode
-    ) internal returns (uint256) {
+    ) internal clear returns (uint256) {
         _startBatch();
         _batch.push(_getData(salt, mode, address(0)));
         return _batch.length;
     }
 
-    function upgradeBatch(address proxy) internal returns (uint256) {
+    function upgradeBatch(address proxy) internal clear returns (uint256) {
         _startBatch();
         _batch.push(_getData(0, CreateMode.Create1, proxy));
         return _batch.length;
