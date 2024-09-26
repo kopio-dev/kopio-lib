@@ -43,6 +43,10 @@ library Times {
         if (time.day > monthDays) {
             time.day = time.day - monthDays;
             time.month++;
+            if (time.month > 12) {
+                time.month = time.month - 12;
+                time.year++;
+            }
         }
 
         time.str = string.concat(
