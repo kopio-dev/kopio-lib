@@ -483,6 +483,36 @@ library Utils {
     function sub(bytes32 a, uint256 b) internal pure returns (bytes32) {
         return bytes32(uint256(a) - b);
     }
+
+    function padLeft(
+        string memory val,
+        uint256 len,
+        string memory char
+    ) internal pure returns (string memory result) {
+        result = val;
+
+        uint256 strLen = bytes(val).length;
+        if (strLen >= len) return result;
+
+        for (uint256 i = strLen; i < len; i++) {
+            result = string.concat(char, result);
+        }
+    }
+
+    function padRight(
+        string memory val,
+        uint256 len,
+        string memory char
+    ) internal pure returns (string memory result) {
+        result = val;
+
+        uint256 strLen = bytes(val).length;
+        if (strLen >= len) return result;
+
+        for (uint256 i = strLen; i < len; i++) {
+            result = string.concat(result, char);
+        }
+    }
 }
 
 library Meta {

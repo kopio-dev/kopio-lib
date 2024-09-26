@@ -17,6 +17,7 @@ using Times for Time global;
 
 library Times {
     using Utils for uint256;
+    using Utils for string;
     function toApproxDate(
         uint256 sepoch
     ) internal pure returns (Time memory time) {
@@ -50,18 +51,22 @@ library Times {
         }
 
         time.str = string.concat(
-            time.year.str(),
+            str(time.year),
             "-",
-            time.month.str(),
+            str(time.month),
             "-",
-            time.day.str(),
+            str(time.day),
             "T",
-            time.hour.str(),
+            str(time.hour),
             ":",
-            time.minute.str(),
+            str(time.minute),
             ":",
-            time.second.str()
+            str(time.second)
         );
+    }
+
+    function str(uint256 value) internal pure returns (string memory) {
+        return value.str().padLeft(2, "0");
     }
 
     function daysInMonth(
