@@ -7,6 +7,7 @@ import {Purify} from "../utils/Purify.sol";
 import {Utils} from "../utils/Libs.sol";
 import {File} from "./Files.s.sol";
 import {IERC20} from "../token/IERC20.sol";
+import {Times, Time} from "../Utils/Time.sol";
 
 library VmCaller {
     struct Values {
@@ -146,6 +147,22 @@ library VmCaller {
 }
 
 library VmHelp {
+    function getApproxDate() internal returns (Time memory) {
+        return Times.toApproxDate(getSeconds());
+    }
+
+    function getRelativeTime(
+        Time memory past
+    ) internal returns (Time memory result) {
+        return past.getRelativeTime(getSeconds());
+    }
+
+    function getRelativeTimeString(
+        uint256 past
+    ) internal returns (string memory) {
+        return Times.getRelativeTimeString(past, getSeconds());
+    }
+
     function getAddr(
         string memory _mEnv,
         uint32 _idx

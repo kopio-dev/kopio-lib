@@ -123,7 +123,7 @@ contract Deployer is Cutter {
         if (info.prevImpl != address(0)) info.prevHash = info.prevImpl.codehash;
         info.newHash = upgraded.implementation.codehash;
 
-        return _toJSON(info);
+        return _toJSON(upgraded, info);
     }
 
     function _startBatch() internal {
@@ -369,21 +369,15 @@ contract Deployer is Cutter {
     }
 
     function _toJSON(
+        Deployment memory upgraded,
         FactoryContract memory data
     ) private returns (FactoryContract memory) {
         if (data.prevImpl != address(0)) {
             jsonKey(
-                string.concat(
-                    "upgrade-",
-                    data.proxy.txt(),
-                    "-",
-                    data.version.str()
-                )
+                string.concat("upgrade-", data.id, "-", data.version.str())
             );
-        } else {
-            address addr = data.proxy != address(0) ? data.proxy : data.newImpl;
-            jsonKey(deployId(addr.txt(), data.mode));
-        }
+        } else jsonKey(deployId(data.id, data.mode));
+
         json(data.proxy, "proxyAddr");
         json(data.salt, "salt");
         json(data.version, "version");
@@ -393,7 +387,16 @@ contract Deployer is Cutter {
         json(data.prevImpl, "prevImplAddr");
         json(bytes.concat(data.prevHash), "prevImplCodehash");
         json(data.ctor, "ctor");
+        json(
+            abi.encode(data.newImpl, address(factory), data.functionCall),
+            "proxyCtor"
+        );
         json(data.functionCall, "functionCall");
+        Time memory updatedAt = Times.toApproxDate(upgraded.updatedAt);
+        Time memory createdAt = Times.toApproxDate(upgraded.createdAt);
+        json(updatedAt.str, "updatedAt");
+        json(createdAt.str, "createdAt");
+        json(createdAt.getRelativeTimeString(updatedAt), "createdAtRelative");
         json(uint8(data.mode), "mode");
         jsonKey();
 

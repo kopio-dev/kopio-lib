@@ -68,6 +68,7 @@ abstract contract Cutter is DeployerBase {
         bool exec
     ) internal ensureCuts returns (bytes memory callData) {
         jsonKey("diamondCut");
+        json(VmHelp.getApproxDate().str, "createdAt");
         json(address(d().diamond), "to");
         json(
             callData = abi.encodeWithSelector(

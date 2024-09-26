@@ -10,6 +10,7 @@ abstract contract Json {
         _;
         Factory.writeJSON();
     }
+
     modifier withJSONDir(string memory _dir, string memory _id) {
         _dir.initJSON(_id);
         _;
@@ -48,6 +49,10 @@ abstract contract Json {
     }
 
     function json(address _val, string memory _key) internal {
+        _val.set(_key);
+    }
+
+    function json(string memory _val, string memory _key) internal {
         _val.set(_key);
     }
 

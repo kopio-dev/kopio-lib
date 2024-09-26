@@ -100,6 +100,10 @@ library Factory {
         );
     }
 
+    function set(string memory _val, string memory _key) internal {
+        data().currentJson = mvm.serializeString(data().currentKey, _key, _val);
+    }
+
     function set(bool _val, string memory _key) internal {
         data().currentJson = mvm.serializeBool(data().currentKey, _key, _val);
     }
