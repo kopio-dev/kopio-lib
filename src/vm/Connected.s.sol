@@ -4,7 +4,7 @@ pragma solidity ^0.8.0;
 
 import "./Scripted.s.sol";
 import {PythScript} from "../vm-ffi/PythScript.s.sol";
-import {ArbDeploy, ArbDeployAddr} from "../info/ArbDeploy.sol";
+import {ArbDeploy, addr as Addr, iCore, iPythUpdater, iMulticall, iONE, iVault, iData, iFactory} from "../info/ArbDeploy.sol";
 import {Connections, Connection} from "./Connections.s.sol";
 
 contract Connected is PythScript, Scripted {
