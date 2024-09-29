@@ -39,6 +39,7 @@ library addr {
     address constant kXAU = 0xa47A706F0f07715760f96C4c2E322D25cDCb0A06;
     address constant kXAG = 0xA40c5780044fa125160770Cd29Bdbb631eA8ed0f;
     address constant kDOGE = 0x9DA7799E7896c542C13aD01Db5A9DC3A95Df193A;
+    address constant kBNB = 0x70D33747846F8936Ffa23cB5e611849Ae76d9B11;
     address constant skETH = 0x2aE27010F340062ceaAB3591B62351737f9E77B4;
     address constant skBTC = 0x8616281a8F9cA1860fbedf096581Db08B02A0297;
     address constant skSOL = 0x34b322DcA665754D5B1B07871aF8Ad2AD021d44D;
@@ -48,6 +49,7 @@ library addr {
     address constant skXAU = 0xd53FD8d8b0bF7116aeA20d8465c9A013002C5b6F;
     address constant skXAG = 0x77606e3670273A489234B11571EfAC4163aC93cD;
     address constant skDOGE = 0x100210d2d6058B9Aee92306aAe144944A756ff26;
+    address constant skBNB = 0xB52461BcB44c6994C2047E1E74028D376fc5C00A;
 
     address constant safe = 0xd884451eC95721BcF05948C37a9F939059c87E6a;
 }
@@ -100,6 +102,7 @@ abstract contract ArbDeployAddr is ArbAddr {
     address constant kXAUAddr = addr.kXAU;
     address constant kXAGAddr = addr.kXAG;
     address constant kDOGEAddr = addr.kDOGE;
+    address constant kBNBAddr = addr.kBNB;
 
     address constant skETHAddr = addr.skETH;
     address constant skBTCAddr = addr.skBTC;
@@ -110,6 +113,7 @@ abstract contract ArbDeployAddr is ArbAddr {
     address constant skXAUAddr = addr.skXAU;
     address constant skXAGAddr = addr.skXAG;
     address constant skDOGEAddr = addr.skDOGE;
+    address constant skBNBAddr = addr.skBNB;
 
     address constant safe = addr.safe;
 }
