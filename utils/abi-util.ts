@@ -3,10 +3,10 @@ import * as path from 'node:path'
 import type { Address, Hex } from 'viem'
 import { existsSync, mkdirSync } from 'node:fs'
 
-type AbiItem = {
+type AbiItem<T = any[]> = {
 	type: 'function' | 'event' | 'constructor' | 'fallback' | 'error' | 'receive'
 	name: string
-	inputs: any[]
+	inputs: T
 	outputs: any[]
 	stateMutability?: 'view' | 'pure' | 'nonpayable' | 'payable'
 }
